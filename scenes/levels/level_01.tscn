@@ -6,7 +6,3 @@
 script = ExtResource("1_level")
 
 [node name="Floor" type="TileMapLayer" parent="."]
-
-
-[node name="YardRobot" parent="." instance=ExtResource("9_enemy")]
-position = Vector2(800, 840)

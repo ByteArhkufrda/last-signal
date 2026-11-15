@@ -220,25 +220,28 @@ func _build_area_tints() -> void:
 ## the level's signal wiring picks them up like the .tscn ones.
 func _build_area_props() -> void:
 	# Lines owned by a split room are skipped here: the room builds
-	# them. (Medical Wing, Laboratory and Power Station are split;
-	# the other rooms still build legacy until their own branches land.)
+	# them. (All five rooms are split now; these legacy lines only
+	# run for a room whose branch has not landed — none is left.)
 	var medical_split: bool = "بخش پزشکی" in _instanced_area_names()
 	var lab_split: bool = "آزمایشگاه تحقیقاتی" in _instanced_area_names()
 	var engine_split: bool = "نیروگاه" in _instanced_area_names()
+	var comms_split: bool = "محوطه‌ی مخابرات" in _instanced_area_names()
 	if not medical_split:
 		_add_area_console(Vector2(760, 80), "گزارش پزشکی: بعد از تمرین شیوع بیماری، این بخش بسته شد. آذوقه کم است.", "monitor_vitals")
 	if not lab_split:
 		_add_area_console(Vector2(120, 560), "یادداشت‌های تحقیقاتی: برای آرایه‌ی سیگنال باید هر 3 دکل روشن باشند.")
 	if not engine_split:
 		_add_area_console(Vector2(1100, 560), "گزارش ژنراتور: کلیدها دکل 1 را تغذیه می‌کنند، سیم‌کشی دکل 2 را، و فیوز دکل 3 را.")
-	_add_area_console(Vector2(900, 820), "گزارش محوطه: آرایه‌ی بشقاب به ماهواره‌ی رله اشاره می‌کند. بدون دکل‌ها سیگنالی نیست.")
+	if not comms_split:
+		_add_area_console(Vector2(900, 820), "گزارش محوطه: آرایه‌ی بشقاب به ماهواره‌ی رله اشاره می‌کند. بدون دکل‌ها سیگنالی نیست.")
 	if not medical_split:
 		_add_prop(CRATE_TEXTURE, Vector2(1120, 300))
 	if not lab_split:
 		_add_prop(CRATE_TEXTURE, Vector2(480, 640))
 	if not engine_split:
 		_add_prop(CRATE_TEXTURE, Vector2(700, 680))
-	_add_prop(DISH_TEXTURE, Vector2(1150, 820))
+	if not comms_split:
+		_add_prop(DISH_TEXTURE, Vector2(1150, 820))
 	if not medical_split:
 		_add_decor(PANEL_TEXTURE, Vector2(700, 340))
 	if not engine_split:
