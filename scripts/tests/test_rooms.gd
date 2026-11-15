@@ -239,6 +239,19 @@ func test_assembled_level_keeps_positions() -> bool:
 			assert_true(node != null, "assembled level has %s" % node_name)
 			if node != null:
 				assert_eq(node.global_position, check["nodes"][node_name], "assembled %s position" % node_name)
+	# No duplicates from the split: exactly 16 textured wall visuals
+	# (one per AREA_WALL_RECTS rect) and exactly 5 area zones.
+	var walls: StaticBody2D = level.get_node("AreaWalls")
+	var visuals := 0
+	for child in walls.get_children():
+		if child is Polygon2D and (child as Polygon2D).texture != null:
+			visuals += 1
+	assert_eq(visuals, 16, "assembled AreaWalls has exactly 16 textured wall visuals")
+	var zones := 0
+	for child in level.get_children():
+		if child is Area2D and child.name.begins_with("AreaZone_"):
+			zones += 1
+	assert_eq(zones, 5, "assembled level has exactly 5 area zones")
 	# All five area zones exist with their area names.
 	for area in ["کنترل مرکزی", "بخش پزشکی", "آزمایشگاه تحقیقاتی", "نیروگاه", "محوطه‌ی مخابرات"]:
 		var zone: Area2D = level.get_node_or_null("AreaZone_" + area.replace(" ", ""))
