@@ -215,14 +215,20 @@ func _build_area_tints() -> void:
 ## decorative atlas panel sprites. Consoles are added before wiring, so
 ## the level's signal wiring picks them up like the .tscn ones.
 func _build_area_props() -> void:
+	# Lines owned by a split room are skipped here: the room builds
+	# them. (Communications Yard is split; the other rooms still build
+	# legacy until their own branches land.)
+	var comms_split: bool = "محوطه‌ی مخابرات" in _instanced_area_names()
 	_add_area_console(Vector2(760, 80), "گزارش پزشکی: بعد از تمرین شیوع بیماری، این بخش بسته شد. آذوقه کم است.", "monitor_vitals")
 	_add_area_console(Vector2(120, 560), "یادداشت‌های تحقیقاتی: برای آرایه‌ی سیگنال باید هر 3 دکل روشن باشند.")
 	_add_area_console(Vector2(1100, 560), "گزارش ژنراتور: کلیدها دکل 1 را تغذیه می‌کنند، سیم‌کشی دکل 2 را، و فیوز دکل 3 را.")
-	_add_area_console(Vector2(900, 820), "گزارش محوطه: آرایه‌ی بشقاب به ماهواره‌ی رله اشاره می‌کند. بدون دکل‌ها سیگنالی نیست.")
+	if not comms_split:
+		_add_area_console(Vector2(900, 820), "گزارش محوطه: آرایه‌ی بشقاب به ماهواره‌ی رله اشاره می‌کند. بدون دکل‌ها سیگنالی نیست.")
 	_add_prop(CRATE_TEXTURE, Vector2(1120, 300))
 	_add_prop(CRATE_TEXTURE, Vector2(480, 640))
 	_add_prop(CRATE_TEXTURE, Vector2(700, 680))
-	_add_prop(DISH_TEXTURE, Vector2(1150, 820))
+	if not comms_split:
+		_add_prop(DISH_TEXTURE, Vector2(1150, 820))
 	_add_decor(PANEL_TEXTURE, Vector2(700, 340))
 	_add_decor(FUSEBOX_TEXTURE, Vector2(1200, 640))
 	_add_decor(RIVET_TEXTURE, Vector2(1240, 80))
