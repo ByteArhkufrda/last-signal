@@ -221,8 +221,17 @@ func test_communications_standalone() -> bool:
 
 ## The assembled level keeps every room's key nodes at their exact
 ## positions, whether the room is split yet or still built by legacy code.
+## Uses a FRESH level instance and checks synchronously (no await):
+## the cached level has already run physics frames, and its patrolling
+## robots have walked off their spawn points by then.
 func test_assembled_level_keeps_positions() -> bool:
-	var level: Node2D = _get_level()
+	if _level != null:
+		_level.queue_free()
+		_level = null
+	var scene: PackedScene = load("res://scenes/levels/level_01.tscn")
+	var level: Node2D = scene.instantiate()
+	root.add_child(level)
+	_level = level
 	for room_key in ROOM_CHECKS.keys():
 		var check: Dictionary = ROOM_CHECKS[room_key]
 		for node_name in (check["nodes"] as Dictionary).keys():

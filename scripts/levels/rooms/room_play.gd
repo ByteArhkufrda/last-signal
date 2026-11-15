@@ -54,9 +54,10 @@ func _ready() -> void:
 	mission = MISSION_SCRIPT.new()
 	mission.name = "Mission"
 	add_child(mission)
+	var inflatable: Array[Rect2] = [Rect2(160, 80, 16, 16)]
+	inflatable.append_array(LevelData.PROP_SOLID_RECTS)
 	var nav_grid: AStarGrid2D = RoomBase.build_nav_grid(
-		room.room_tile_rect, room.blocked_rects(),
-		[Rect2(160, 80, 16, 16)] + LevelData.PROP_SOLID_RECTS)
+		room.room_tile_rect, room.blocked_rects(), inflatable)
 	self.nav_grid = nav_grid
 	var camera: Camera2D = player.get_node("Camera2D")
 	camera.limit_left = int(room.room_rect.position.x)
