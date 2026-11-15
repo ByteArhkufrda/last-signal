@@ -220,9 +220,6 @@ position = Vector2(900, 120)
 [node name="LabRobot" parent="." instance=ExtResource("9_enemy")]
 position = Vector2(200, 560)
 
-[node name="PowerScanner" parent="." instance=ExtResource("19_scanner")]
-position = Vector2(1000, 520)
-
 [node name="YardRobot" parent="." instance=ExtResource("9_enemy")]
 position = Vector2(800, 840)
 
