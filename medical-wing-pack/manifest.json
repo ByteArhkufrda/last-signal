@@ -1,0 +1,1684 @@
+{
+ "pack": "last-signal-medical-wing",
+ "base_tile_px": 48,
+ "sprite_unit_px": 16,
+ "scale": 3,
+ "gutter_px": 6,
+ "counts": {
+  "atlas": 44,
+  "drawn": 39,
+  "missing": []
+ },
+ "sprites": [
+  {
+   "key": "floor_standard",
+   "fa": "کف استاندارد پزشکی",
+   "stage": 1,
+   "sheet": "stage1.png",
+   "x": 6,
+   "y": 6,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": true,
+   "source": {
+    "type": "atlas",
+    "row_id": 183112,
+    "shard": "train-01.parquet",
+    "subject": "floor tile",
+    "caption": "gray floor tile",
+    "term": "subject:floor tile",
+    "file": "atlas/floor_standard.png"
+   }
+  },
+  {
+   "key": "floor_alt",
+   "fa": "کف متناوب سفید/خاکستری",
+   "stage": 1,
+   "sheet": "stage1.png",
+   "x": 60,
+   "y": 6,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": true,
+   "source": {
+    "type": "atlas",
+    "row_id": 1002,
+    "shard": "train-000.parquet",
+    "subject": "floor tile",
+    "caption": "floor tile",
+    "term": "subject:floor tile",
+    "file": "atlas/floor_alt.png"
+   }
+  },
+  {
+   "key": "floor_cracked",
+   "fa": "کف ترک‌خورده",
+   "stage": 1,
+   "sheet": "stage1.png",
+   "x": 114,
+   "y": 6,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": true,
+   "source": {
+    "type": "procedural",
+    "draw": "floor_cracked",
+    "file": "drawn/floor_cracked.png"
+   }
+  },
+  {
+   "key": "floor_broken",
+   "fa": "کف شکسته / کاشی گمشده",
+   "stage": 1,
+   "sheet": "stage1.png",
+   "x": 168,
+   "y": 6,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": true,
+   "source": {
+    "type": "procedural",
+    "draw": "floor_broken",
+    "file": "drawn/floor_broken.png"
+   }
+  },
+  {
+   "key": "floor_stain_water",
+   "fa": "لکه آب",
+   "stage": 1,
+   "sheet": "stage1.png",
+   "x": 222,
+   "y": 6,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": true,
+   "source": {
+    "type": "procedural",
+    "draw": "floor_stain_water",
+    "file": "drawn/floor_stain_water.png"
+   }
+  },
+  {
+   "key": "floor_stain_chemical",
+   "fa": "لکه شیمیایی",
+   "stage": 1,
+   "sheet": "stage1.png",
+   "x": 276,
+   "y": 6,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": true,
+   "source": {
+    "type": "procedural",
+    "draw": "floor_stain_chemical",
+    "file": "drawn/floor_stain_chemical.png"
+   }
+  },
+  {
+   "key": "floor_footprints",
+   "fa": "رد پا",
+   "stage": 1,
+   "sheet": "stage1.png",
+   "x": 330,
+   "y": 6,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": true,
+   "source": {
+    "type": "procedural",
+    "draw": "floor_footprints",
+    "file": "drawn/floor_footprints.png"
+   }
+  },
+  {
+   "key": "floor_wheel_tracks",
+   "fa": "رد چرخ تخت",
+   "stage": 1,
+   "sheet": "stage1.png",
+   "x": 384,
+   "y": 6,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": true,
+   "source": {
+    "type": "procedural",
+    "draw": "floor_wheel_tracks",
+    "file": "drawn/floor_wheel_tracks.png"
+   }
+  },
+  {
+   "key": "floor_debris",
+   "fa": "خرده‌های پزشکی پراکنده",
+   "stage": 1,
+   "sheet": "stage1.png",
+   "x": 6,
+   "y": 60,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": true,
+   "source": {
+    "type": "procedural",
+    "draw": "floor_debris",
+    "file": "drawn/floor_debris.png"
+   }
+  },
+  {
+   "key": "floor_hatch",
+   "fa": "دریچه فلزی کف",
+   "stage": 1,
+   "sheet": "stage1.png",
+   "x": 60,
+   "y": 60,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": true,
+   "source": {
+    "type": "procedural",
+    "draw": "floor_hatch",
+    "file": "drawn/floor_hatch.png"
+   }
+  },
+  {
+   "key": "floor_grille",
+   "fa": "گریل تهویه کف",
+   "stage": 1,
+   "sheet": "stage1.png",
+   "x": 114,
+   "y": 60,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": true,
+   "source": {
+    "type": "procedural",
+    "draw": "floor_grille",
+    "file": "drawn/floor_grille.png"
+   }
+  },
+  {
+   "key": "floor_panel",
+   "fa": "پنل نگهداری کف",
+   "stage": 1,
+   "sheet": "stage1.png",
+   "x": 168,
+   "y": 60,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": true,
+   "source": {
+    "type": "procedural",
+    "draw": "floor_panel",
+    "file": "drawn/floor_panel.png"
+   }
+  },
+  {
+   "key": "wall_h",
+   "fa": "دیوار افقی",
+   "stage": 1,
+   "sheet": "stage1.png",
+   "x": 222,
+   "y": 60,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": true,
+   "source": {
+    "type": "procedural",
+    "draw": "wall_h",
+    "file": "drawn/wall_h.png"
+   }
+  },
+  {
+   "key": "wall_v",
+   "fa": "دیوار عمودی",
+   "stage": 1,
+   "sheet": "stage1.png",
+   "x": 276,
+   "y": 60,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": true,
+   "source": {
+    "type": "procedural",
+    "draw": "wall_v",
+    "file": "drawn/wall_v.png"
+   }
+  },
+  {
+   "key": "wall_corner_inner",
+   "fa": "گوشه داخلی دیوار",
+   "stage": 1,
+   "sheet": "stage1.png",
+   "x": 330,
+   "y": 60,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": true,
+   "source": {
+    "type": "procedural",
+    "draw": "wall_corner_inner",
+    "file": "drawn/wall_corner_inner.png"
+   }
+  },
+  {
+   "key": "wall_corner_outer",
+   "fa": "گوشه خارجی دیوار",
+   "stage": 1,
+   "sheet": "stage1.png",
+   "x": 384,
+   "y": 60,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": true,
+   "source": {
+    "type": "procedural",
+    "draw": "wall_corner_outer",
+    "file": "drawn/wall_corner_outer.png"
+   }
+  },
+  {
+   "key": "wall_end",
+   "fa": "انتهای دیوار",
+   "stage": 1,
+   "sheet": "stage1.png",
+   "x": 6,
+   "y": 114,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": true,
+   "source": {
+    "type": "procedural",
+    "draw": "wall_end",
+    "file": "drawn/wall_end.png"
+   }
+  },
+  {
+   "key": "wall_trim",
+   "fa": "تریم فلزی دیوار",
+   "stage": 1,
+   "sheet": "stage1.png",
+   "x": 60,
+   "y": 114,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": true,
+   "source": {
+    "type": "procedural",
+    "draw": "wall_trim",
+    "file": "drawn/wall_trim.png"
+   }
+  },
+  {
+   "key": "wall_access_panel",
+   "fa": "پنل دسترسی دیوار",
+   "stage": 1,
+   "sheet": "stage1.png",
+   "x": 114,
+   "y": 114,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": true,
+   "source": {
+    "type": "procedural",
+    "draw": "wall_access_panel",
+    "file": "drawn/wall_access_panel.png"
+   }
+  },
+  {
+   "key": "wall_cabinet_section",
+   "fa": "کابینت دیواری توکار",
+   "stage": 1,
+   "sheet": "stage1.png",
+   "x": 168,
+   "y": 114,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": true,
+   "source": {
+    "type": "procedural",
+    "draw": "wall_cabinet_section",
+    "file": "drawn/wall_cabinet_section.png"
+   }
+  },
+  {
+   "key": "window_observation",
+   "fa": "پنجره مشاهده بزرگ",
+   "stage": 1,
+   "sheet": "stage1.png",
+   "x": 222,
+   "y": 114,
+   "w": 96,
+   "h": 48,
+   "tiles_w": 2,
+   "tiles_h": 1,
+   "opaque": true,
+   "source": {
+    "type": "atlas",
+    "row_id": 19716,
+    "shard": "train-000.parquet",
+    "subject": "window",
+    "caption": "gray window with light shining through",
+    "term": "subject:window",
+    "file": "atlas/window_observation.png"
+   }
+  },
+  {
+   "key": "window_small",
+   "fa": "پنجره کوچک تقویت‌شده",
+   "stage": 1,
+   "sheet": "stage1.png",
+   "x": 330,
+   "y": 114,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": true,
+   "source": {
+    "type": "atlas",
+    "row_id": 89782,
+    "shard": "train-000.parquet",
+    "subject": "window",
+    "caption": "glowing blue window",
+    "term": "subject:window",
+    "file": "atlas/window_small.png"
+   }
+  },
+  {
+   "key": "door_closed",
+   "fa": "در اتوماتیک بسته",
+   "stage": 1,
+   "sheet": "stage1.png",
+   "x": 384,
+   "y": 114,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": true,
+   "source": {
+    "type": "atlas",
+    "row_id": 47212,
+    "shard": "train-000.parquet",
+    "subject": "door",
+    "caption": "white door",
+    "term": "subject:door",
+    "file": "atlas/door_closed.png"
+   }
+  },
+  {
+   "key": "door_open",
+   "fa": "در اتوماتیک باز",
+   "stage": 1,
+   "sheet": "stage1.png",
+   "x": 6,
+   "y": 168,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": true,
+   "source": {
+    "type": "procedural",
+    "draw": "door_open",
+    "file": "drawn/door_open.png"
+   }
+  },
+  {
+   "key": "door_frame",
+   "fa": "چارچوب در پزشکی",
+   "stage": 1,
+   "sheet": "stage1.png",
+   "x": 60,
+   "y": 168,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": true,
+   "source": {
+    "type": "procedural",
+    "draw": "door_frame",
+    "file": "drawn/door_frame.png"
+   }
+  },
+  {
+   "key": "bed_standard",
+   "fa": "تخت بیمارستان استاندارد",
+   "stage": 2,
+   "sheet": "stage2.png",
+   "x": 6,
+   "y": 6,
+   "w": 96,
+   "h": 48,
+   "tiles_w": 2,
+   "tiles_h": 1,
+   "opaque": false,
+   "source": {
+    "type": "atlas",
+    "row_id": 5764,
+    "shard": "train-000.parquet",
+    "subject": "bed",
+    "caption": "blue bed with white piping",
+    "term": "subject:bed",
+    "file": "atlas/bed_standard.png"
+   }
+  },
+  {
+   "key": "bed_empty",
+   "fa": "تخت خالی",
+   "stage": 2,
+   "sheet": "stage2.png",
+   "x": 114,
+   "y": 6,
+   "w": 96,
+   "h": 48,
+   "tiles_w": 2,
+   "tiles_h": 1,
+   "opaque": false,
+   "source": {
+    "type": "atlas",
+    "row_id": 11323,
+    "shard": "train-000.parquet",
+    "subject": "bed",
+    "caption": "plush bed with white piping",
+    "term": "subject:bed",
+    "file": "atlas/bed_empty.png"
+   }
+  },
+  {
+   "key": "bed_disorganized",
+   "fa": "تخت با ملحفه به‌هم‌ریخته",
+   "stage": 2,
+   "sheet": "stage2.png",
+   "x": 222,
+   "y": 6,
+   "w": 96,
+   "h": 48,
+   "tiles_w": 2,
+   "tiles_h": 1,
+   "opaque": false,
+   "source": {
+    "type": "atlas",
+    "row_id": 11998,
+    "shard": "train-000.parquet",
+    "subject": "bed",
+    "caption": "gray bed with a polka dot pattern",
+    "term": "subject:bed",
+    "file": "atlas/bed_disorganized.png"
+   }
+  },
+  {
+   "key": "bedside_table",
+   "fa": "میز کنار تخت",
+   "stage": 2,
+   "sheet": "stage2.png",
+   "x": 330,
+   "y": 6,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": false,
+   "source": {
+    "type": "atlas",
+    "row_id": 32581,
+    "shard": "train-000.parquet",
+    "subject": "table",
+    "caption": "white table with brass accents",
+    "term": "subject:table",
+    "file": "atlas/bedside_table.png"
+   }
+  },
+  {
+   "key": "exam_bed",
+   "fa": "تخت معاینه قابل‌تنظیم",
+   "stage": 2,
+   "sheet": "stage2.png",
+   "x": 6,
+   "y": 60,
+   "w": 96,
+   "h": 48,
+   "tiles_w": 2,
+   "tiles_h": 1,
+   "opaque": false,
+   "source": {
+    "type": "atlas",
+    "row_id": 12555,
+    "shard": "train-000.parquet",
+    "subject": "bed",
+    "caption": "plush green bed",
+    "term": "subject:bed",
+    "file": "atlas/exam_bed.png"
+   }
+  },
+  {
+   "key": "stretcher",
+   "fa": "برانکارد چرخ‌دار",
+   "stage": 2,
+   "sheet": "stage2.png",
+   "x": 114,
+   "y": 60,
+   "w": 96,
+   "h": 48,
+   "tiles_w": 2,
+   "tiles_h": 1,
+   "opaque": false,
+   "source": {
+    "type": "atlas",
+    "row_id": 27746,
+    "shard": "train-000.parquet",
+    "subject": "stretcher",
+    "caption": "spotless green stretcher with a blue accent",
+    "term": "subject:stretcher",
+    "file": "atlas/stretcher.png"
+   }
+  },
+  {
+   "key": "chair_rolling",
+   "fa": "صندلی چرخ‌دار پزشکی",
+   "stage": 2,
+   "sheet": "stage2.png",
+   "x": 222,
+   "y": 60,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": false,
+   "source": {
+    "type": "atlas",
+    "row_id": 41617,
+    "shard": "train-000.parquet",
+    "subject": "chair",
+    "caption": "giant green chair",
+    "term": "subject:chair",
+    "file": "atlas/chair_rolling.png"
+   }
+  },
+  {
+   "key": "desk_doctor",
+   "fa": "میز دکتر",
+   "stage": 2,
+   "sheet": "stage2.png",
+   "x": 276,
+   "y": 60,
+   "w": 96,
+   "h": 48,
+   "tiles_w": 2,
+   "tiles_h": 1,
+   "opaque": false,
+   "source": {
+    "type": "atlas",
+    "row_id": 16663,
+    "shard": "train-000.parquet",
+    "subject": "desk",
+    "caption": "blue desk with white paint",
+    "term": "subject:desk",
+    "file": "atlas/desk_doctor.png"
+   }
+  },
+  {
+   "key": "chair_office",
+   "fa": "صندلی اداری",
+   "stage": 2,
+   "sheet": "stage2.png",
+   "x": 384,
+   "y": 60,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": false,
+   "source": {
+    "type": "atlas",
+    "row_id": 42150,
+    "shard": "train-000.parquet",
+    "subject": "chair",
+    "caption": "polished green chair",
+    "term": "subject:chair",
+    "file": "atlas/chair_office.png"
+   }
+  },
+  {
+   "key": "side_table",
+   "fa": "میز کوچک پزشکی",
+   "stage": 2,
+   "sheet": "stage2.png",
+   "x": 6,
+   "y": 114,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": false,
+   "source": {
+    "type": "atlas",
+    "row_id": 83051,
+    "shard": "validation-000.parquet",
+    "subject": "table",
+    "caption": "elegant oak table with white paint",
+    "term": "subject:table",
+    "file": "atlas/side_table.png"
+   }
+  },
+  {
+   "key": "trolley",
+   "fa": "ترولی لوازم پزشکی",
+   "stage": 2,
+   "sheet": "stage2.png",
+   "x": 60,
+   "y": 114,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": false,
+   "source": {
+    "type": "procedural",
+    "draw": "cart",
+    "file": "drawn/trolley.png"
+   }
+  },
+  {
+   "key": "monitor_vitals",
+   "fa": "مانیتور علائم حیاتی",
+   "stage": 2,
+   "sheet": "stage2.png",
+   "x": 114,
+   "y": 114,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": false,
+   "source": {
+    "type": "atlas",
+    "row_id": 29958,
+    "shard": "train-000.parquet",
+    "subject": "computer monitor",
+    "caption": "gray computer monitor with a green screen",
+    "term": "subj_like:computer monitor",
+    "file": "atlas/monitor_vitals.png"
+   }
+  },
+  {
+   "key": "monitor_heart",
+   "fa": "مانیتور قلب قابل‌حمل",
+   "stage": 2,
+   "sheet": "stage2.png",
+   "x": 168,
+   "y": 114,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": false,
+   "source": {
+    "type": "atlas",
+    "row_id": 17424,
+    "shard": "train-000.parquet",
+    "subject": "crt monitor",
+    "caption": "futuristic crt monitor with a green screen",
+    "term": "subj_like:monitor",
+    "file": "atlas/monitor_heart.png"
+   }
+  },
+  {
+   "key": "oxygen_cylinder",
+   "fa": "کپسول اکسیژن",
+   "stage": 2,
+   "sheet": "stage2.png",
+   "x": 222,
+   "y": 114,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": false,
+   "source": {
+    "type": "atlas",
+    "row_id": 273397,
+    "shard": "train-02.parquet",
+    "subject": "oxygen tank",
+    "caption": "futuristic blue oxygen tank",
+    "term": "subject:oxygen tank",
+    "file": "atlas/oxygen_cylinder.png"
+   }
+  },
+  {
+   "key": "oxygen_unit",
+   "fa": "واحد تأمین اکسیژن",
+   "stage": 2,
+   "sheet": "stage2.png",
+   "x": 276,
+   "y": 114,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": false,
+   "source": {
+    "type": "atlas",
+    "row_id": 37754,
+    "shard": "train-000.parquet",
+    "subject": "oxygen tank",
+    "caption": "glowing white oxygen tank with a sparkle",
+    "term": "subject:oxygen tank",
+    "file": "atlas/oxygen_unit.png"
+   }
+  },
+  {
+   "key": "iv_stand",
+   "fa": "پایه سرم با کیسه",
+   "stage": 2,
+   "sheet": "stage2.png",
+   "x": 330,
+   "y": 114,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": false,
+   "source": {
+    "type": "atlas",
+    "row_id": 463305,
+    "shard": "train-04.parquet",
+    "subject": "iv stand",
+    "caption": "top-down rolling blue iv stand in warm colors",
+    "term": "cap_like:IV stand",
+    "file": "atlas/iv_stand.png"
+   }
+  },
+  {
+   "key": "infusion_pump",
+   "fa": "پمپ تزریق",
+   "stage": 2,
+   "sheet": "stage2.png",
+   "x": 384,
+   "y": 114,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": false,
+   "source": {
+    "type": "procedural",
+    "draw": "infusion_pump",
+    "file": "drawn/infusion_pump.png"
+   }
+  },
+  {
+   "key": "exam_lamp",
+   "fa": "چراغ معاینه",
+   "stage": 2,
+   "sheet": "stage2.png",
+   "x": 6,
+   "y": 168,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": false,
+   "source": {
+    "type": "atlas",
+    "row_id": 49509,
+    "shard": "train-000.parquet",
+    "subject": "desk lamp",
+    "caption": "sleek red desk lamp with a blue accent",
+    "term": "subject:desk lamp",
+    "file": "atlas/exam_lamp.png"
+   }
+  },
+  {
+   "key": "cart_emergency",
+   "fa": "ترولی اورژانس",
+   "stage": 2,
+   "sheet": "stage2.png",
+   "x": 60,
+   "y": 168,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": false,
+   "source": {
+    "type": "procedural",
+    "draw": "cart",
+    "file": "drawn/cart_emergency.png"
+   }
+  },
+  {
+   "key": "defibrillator",
+   "fa": "دفیبریلاتور",
+   "stage": 2,
+   "sheet": "stage2.png",
+   "x": 114,
+   "y": 168,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": false,
+   "source": {
+    "type": "atlas",
+    "row_id": 516187,
+    "shard": "train-05.parquet",
+    "subject": "defibrillator",
+    "caption": "top-down compact blue defibrillator with a heart symbol",
+    "term": "subject:defibrillator",
+    "file": "atlas/defibrillator.png"
+   }
+  },
+  {
+   "key": "waste_bin",
+   "fa": "سطل زباله پزشکی",
+   "stage": 2,
+   "sheet": "stage2.png",
+   "x": 168,
+   "y": 168,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": false,
+   "source": {
+    "type": "atlas",
+    "row_id": 91408,
+    "shard": "validation-000.parquet",
+    "subject": "trash can",
+    "caption": "shiny green trash can with a blue stripe",
+    "term": "subj_like:trash",
+    "file": "atlas/waste_bin.png"
+   }
+  },
+  {
+   "key": "cabinet_storage",
+   "fa": "کابینت ذخیره پزشکی",
+   "stage": 2,
+   "sheet": "stage2.png",
+   "x": 222,
+   "y": 168,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": false,
+   "source": {
+    "type": "atlas",
+    "row_id": 3340,
+    "shard": "train-000.parquet",
+    "subject": "cabinet",
+    "caption": "black cabinet with white paint",
+    "term": "subject:cabinet",
+    "file": "atlas/cabinet_storage.png"
+   }
+  },
+  {
+   "key": "cabinet_medicine",
+   "fa": "کابینت دارو",
+   "stage": 2,
+   "sheet": "stage2.png",
+   "x": 276,
+   "y": 168,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": false,
+   "source": {
+    "type": "atlas",
+    "row_id": 12064,
+    "shard": "train-000.parquet",
+    "subject": "cabinet",
+    "caption": "cabinet with brass accents",
+    "term": "subject:cabinet",
+    "file": "atlas/cabinet_medicine.png"
+   }
+  },
+  {
+   "key": "shelf_medicine",
+   "fa": "قفسه دارو",
+   "stage": 2,
+   "sheet": "stage2.png",
+   "x": 330,
+   "y": 168,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": false,
+   "source": {
+    "type": "atlas",
+    "row_id": 73461,
+    "shard": "train-000.parquet",
+    "subject": "wall shelf",
+    "caption": "blue wall shelf",
+    "term": "subject:wall shelf",
+    "file": "atlas/shelf_medicine.png"
+   }
+  },
+  {
+   "key": "supply_boxes",
+   "fa": "جعبه‌های لوازم پزشکی",
+   "stage": 2,
+   "sheet": "stage2.png",
+   "x": 384,
+   "y": 168,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": false,
+   "source": {
+    "type": "atlas",
+    "row_id": 13697,
+    "shard": "train-000.parquet",
+    "subject": "box of bandages",
+    "caption": "spotless gray box of bandages with a green cross",
+    "term": "subject:box of bandages",
+    "file": "atlas/supply_boxes.png"
+   }
+  },
+  {
+   "key": "documents",
+   "fa": "اسناد پزشکی پراکنده",
+   "stage": 2,
+   "sheet": "stage2.png",
+   "x": 6,
+   "y": 222,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": false,
+   "source": {
+    "type": "procedural",
+    "draw": "documents",
+    "file": "drawn/documents.png"
+   }
+  },
+  {
+   "key": "bottles_medicine",
+   "fa": "بطری‌های دارو",
+   "stage": 2,
+   "sheet": "stage2.png",
+   "x": 60,
+   "y": 222,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": false,
+   "source": {
+    "type": "atlas",
+    "row_id": 13360,
+    "shard": "train-000.parquet",
+    "subject": "bottle",
+    "caption": "tiny glass bottle with a blue painted pattern",
+    "term": "subject:bottle",
+    "file": "atlas/bottles_medicine.png"
+   }
+  },
+  {
+   "key": "packages_medicine",
+   "fa": "بسته‌های دارو",
+   "stage": 2,
+   "sheet": "stage2.png",
+   "x": 114,
+   "y": 222,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": false,
+   "source": {
+    "type": "atlas",
+    "row_id": 57429,
+    "shard": "train-000.parquet",
+    "subject": "blister pack of pills",
+    "caption": "white blister pack of pills with a blue accent",
+    "term": "subject:blister pack of pills",
+    "file": "atlas/packages_medicine.png"
+   }
+  },
+  {
+   "key": "gloves",
+   "fa": "دستکش پزشکی",
+   "stage": 2,
+   "sheet": "stage2.png",
+   "x": 168,
+   "y": 222,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": false,
+   "source": {
+    "type": "atlas",
+    "row_id": 81932,
+    "shard": "train-000.parquet",
+    "subject": "gloves",
+    "caption": "gloves with silver studs",
+    "term": "subject:gloves",
+    "file": "atlas/gloves.png"
+   }
+  },
+  {
+   "key": "bandages",
+   "fa": "بسته بانداژ",
+   "stage": 2,
+   "sheet": "stage2.png",
+   "x": 222,
+   "y": 222,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": false,
+   "source": {
+    "type": "atlas",
+    "row_id": 163506,
+    "shard": "train-01.parquet",
+    "subject": "adhesive bandage",
+    "caption": "clean white adhesive bandage with a blue stripe",
+    "term": "subject:adhesive bandage",
+    "file": "atlas/bandages.png"
+   }
+  },
+  {
+   "key": "syringes",
+   "fa": "سرنگ یک‌بارمصرف",
+   "stage": 2,
+   "sheet": "stage2.png",
+   "x": 276,
+   "y": 222,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": false,
+   "source": {
+    "type": "atlas",
+    "row_id": 140356,
+    "shard": "train-01.parquet",
+    "subject": "syringe",
+    "caption": "spotless gray syringe with a green accent",
+    "term": "subject:syringe",
+    "file": "atlas/syringes.png"
+   }
+  },
+  {
+   "key": "tray_instruments",
+   "fa": "سینی ابزار",
+   "stage": 2,
+   "sheet": "stage2.png",
+   "x": 330,
+   "y": 222,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": false,
+   "source": {
+    "type": "procedural",
+    "draw": "tray",
+    "file": "drawn/tray_instruments.png"
+   }
+  },
+  {
+   "key": "clock_wall",
+   "fa": "ساعت دیواری",
+   "stage": 2,
+   "sheet": "stage2.png",
+   "x": 384,
+   "y": 222,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": false,
+   "source": {
+    "type": "atlas",
+    "row_id": 1791,
+    "shard": "train-000.parquet",
+    "subject": "clock icon",
+    "caption": "blue clock icon",
+    "term": "subject:clock icon",
+    "file": "atlas/clock_wall.png"
+   }
+  },
+  {
+   "key": "sign_warning",
+   "fa": "تابلوی هشدار پزشکی",
+   "stage": 2,
+   "sheet": "stage2.png",
+   "x": 6,
+   "y": 276,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": false,
+   "source": {
+    "type": "procedural",
+    "draw": "sign_warning",
+    "file": "drawn/sign_warning.png"
+   }
+  },
+  {
+   "key": "light_ceiling",
+   "fa": "چراغ سقفی پزشکی",
+   "stage": 2,
+   "sheet": "stage2.png",
+   "x": 60,
+   "y": 276,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": false,
+   "source": {
+    "type": "atlas",
+    "row_id": 59955,
+    "shard": "train-000.parquet",
+    "subject": "ceiling lamp",
+    "caption": "modern gray ceiling lamp with a green glow",
+    "term": "subject:ceiling lamp",
+    "file": "atlas/light_ceiling.png"
+   }
+  },
+  {
+   "key": "indicator_emergency",
+   "fa": "چراغ نشانگر اضطراری",
+   "stage": 2,
+   "sheet": "stage2.png",
+   "x": 114,
+   "y": 276,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": false,
+   "source": {
+    "type": "procedural",
+    "draw": "indicator_red",
+    "file": "drawn/indicator_emergency.png"
+   }
+  },
+  {
+   "key": "grille_vent",
+   "fa": "گریل تهویه دیواری",
+   "stage": 2,
+   "sheet": "stage2.png",
+   "x": 168,
+   "y": 276,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": false,
+   "source": {
+    "type": "atlas",
+    "row_id": 36568,
+    "shard": "train-000.parquet",
+    "subject": "steam vent",
+    "caption": "dark gray steam vent",
+    "term": "subj_like:vent",
+    "file": "atlas/grille_vent.png"
+   }
+  },
+  {
+   "key": "panel_wall_small",
+   "fa": "پنل کنترل دیواری کوچک",
+   "stage": 2,
+   "sheet": "stage2.png",
+   "x": 222,
+   "y": 276,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": false,
+   "source": {
+    "type": "procedural",
+    "draw": "panel_small",
+    "file": "drawn/panel_wall_small.png"
+   }
+  },
+  {
+   "key": "cabinet_closed",
+   "fa": "کمد فلزی بسته (فیوز A)",
+   "stage": 3,
+   "sheet": "stage3.png",
+   "x": 6,
+   "y": 6,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": false,
+   "source": {
+    "type": "atlas",
+    "row_id": 44168,
+    "shard": "train-000.parquet",
+    "subject": "cabinet",
+    "caption": "cabinet",
+    "term": "subject:cabinet",
+    "file": "atlas/cabinet_closed.png"
+   }
+  },
+  {
+   "key": "cabinet_open",
+   "fa": "کمد باز با قفسه‌ها",
+   "stage": 3,
+   "sheet": "stage3.png",
+   "x": 60,
+   "y": 6,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": false,
+   "source": {
+    "type": "procedural",
+    "draw": "cabinet_open",
+    "file": "drawn/cabinet_open.png"
+   }
+  },
+  {
+   "key": "cabinet_worn",
+   "fa": "کمد فلزی فرسوده",
+   "stage": 3,
+   "sheet": "stage3.png",
+   "x": 114,
+   "y": 6,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": false,
+   "source": {
+    "type": "atlas",
+    "row_id": 79249,
+    "shard": "train-000.parquet",
+    "subject": "cabinet",
+    "caption": "brand new cabinet",
+    "term": "subject:cabinet",
+    "file": "atlas/cabinet_worn.png"
+   }
+  },
+  {
+   "key": "fuse_a",
+   "fa": "فیوز A — سفید",
+   "stage": 3,
+   "sheet": "stage3.png",
+   "x": 168,
+   "y": 6,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": false,
+   "source": {
+    "type": "atlas",
+    "row_id": 165,
+    "shard": "train-000.parquet",
+    "subject": "fuse",
+    "caption": "white fuse",
+    "term": "row:165",
+    "file": "atlas/fuse_a.png"
+   }
+  },
+  {
+   "key": "fuse_b",
+   "fa": "فیوز B — زرد با نوار قرمز",
+   "stage": 3,
+   "sheet": "stage3.png",
+   "x": 222,
+   "y": 6,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": false,
+   "source": {
+    "type": "atlas",
+    "row_id": 4172,
+    "shard": "train-000.parquet",
+    "subject": "fuse",
+    "caption": "yellow fuse with a red stripe",
+    "term": "row:4172",
+    "file": "atlas/fuse_b.png"
+   }
+  },
+  {
+   "key": "fuse_c",
+   "fa": "فیوز C — نقره‌ای با نماد برق",
+   "stage": 3,
+   "sheet": "stage3.png",
+   "x": 276,
+   "y": 6,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": false,
+   "source": {
+    "type": "atlas",
+    "row_id": 4282,
+    "shard": "train-000.parquet",
+    "subject": "fuse",
+    "caption": "tiny silver fuse with a lightning bolt symbol",
+    "term": "row:4282",
+    "file": "atlas/fuse_c.png"
+   }
+  },
+  {
+   "key": "flashlight",
+   "fa": "چراغ‌قوه روی میز دکتر",
+   "stage": 3,
+   "sheet": "stage3.png",
+   "x": 330,
+   "y": 6,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": false,
+   "source": {
+    "type": "atlas",
+    "row_id": 4782,
+    "shard": "train-000.parquet",
+    "subject": "flashlight",
+    "caption": "sleek gray flashlight",
+    "term": "subject:flashlight",
+    "file": "atlas/flashlight.png"
+   }
+  },
+  {
+   "key": "note_doctor",
+   "fa": "یادداشت دست‌نویس دکتر",
+   "stage": 3,
+   "sheet": "stage3.png",
+   "x": 384,
+   "y": 6,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": false,
+   "source": {
+    "type": "atlas",
+    "row_id": 12656,
+    "shard": "train-000.parquet",
+    "subject": "sticky note pad",
+    "caption": "tiny white sticky note pad with a blue accent",
+    "term": "subj_like:note",
+    "file": "atlas/note_doctor.png"
+   }
+  },
+  {
+   "key": "fusebox_closed",
+   "fa": "جعبه فیوز بسته",
+   "stage": 3,
+   "sheet": "stage3.png",
+   "x": 6,
+   "y": 60,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": false,
+   "source": {
+    "type": "procedural",
+    "draw": "fusebox_closed",
+    "file": "drawn/fusebox_closed.png"
+   }
+  },
+  {
+   "key": "fusebox_open",
+   "fa": "جعبه فیوز باز — ۳ شیار خالی",
+   "stage": 3,
+   "sheet": "stage3.png",
+   "x": 60,
+   "y": 60,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": false,
+   "source": {
+    "type": "procedural",
+    "draw": "fusebox_open",
+    "file": "drawn/fusebox_open.png"
+   }
+  },
+  {
+   "key": "light_blue",
+   "fa": "چراغ آبی ملایم سقفی",
+   "stage": 3,
+   "sheet": "stage3.png",
+   "x": 114,
+   "y": 60,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": false,
+   "source": {
+    "type": "procedural",
+    "draw": "light_blue",
+    "file": "drawn/light_blue.png"
+   }
+  },
+  {
+   "key": "light_green",
+   "fa": "چراغ سبز نشانگر پزشکی",
+   "stage": 3,
+   "sheet": "stage3.png",
+   "x": 168,
+   "y": 60,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": false,
+   "source": {
+    "type": "procedural",
+    "draw": "light_green",
+    "file": "drawn/light_green.png"
+   }
+  },
+  {
+   "key": "light_red",
+   "fa": "چراغ قرمز اضطراری",
+   "stage": 3,
+   "sheet": "stage3.png",
+   "x": 222,
+   "y": 60,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": false,
+   "source": {
+    "type": "procedural",
+    "draw": "light_red",
+    "file": "drawn/light_red.png"
+   }
+  },
+  {
+   "key": "light_flicker",
+   "fa": "چراغ چشمک‌زن",
+   "stage": 3,
+   "sheet": "stage3.png",
+   "x": 276,
+   "y": 60,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": false,
+   "source": {
+    "type": "procedural",
+    "draw": "light_flicker",
+    "file": "drawn/light_flicker.png"
+   }
+  },
+  {
+   "key": "light_damaged",
+   "fa": "چراغ سقفی آسیب‌دیده",
+   "stage": 3,
+   "sheet": "stage3.png",
+   "x": 330,
+   "y": 60,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": false,
+   "source": {
+    "type": "procedural",
+    "draw": "light_damaged",
+    "file": "drawn/light_damaged.png"
+   }
+  },
+  {
+   "key": "spark",
+   "fa": "جرقه الکتریکی",
+   "stage": 3,
+   "sheet": "stage3.png",
+   "x": 384,
+   "y": 60,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": false,
+   "source": {
+    "type": "atlas",
+    "row_id": 364722,
+    "shard": "train-03.parquet",
+    "subject": "spark burst",
+    "caption": "blue spark burst with a bright white core",
+    "term": "subject:spark burst",
+    "file": "atlas/spark.png"
+   }
+  },
+  {
+   "key": "steam",
+   "fa": "بخار تهویه",
+   "stage": 3,
+   "sheet": "stage3.png",
+   "x": 6,
+   "y": 114,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": false,
+   "source": {
+    "type": "procedural",
+    "draw": "steam",
+    "file": "drawn/steam.png"
+   }
+  },
+  {
+   "key": "dust",
+   "fa": "ذرات غبار",
+   "stage": 3,
+   "sheet": "stage3.png",
+   "x": 60,
+   "y": 114,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": false,
+   "source": {
+    "type": "atlas",
+    "row_id": 441351,
+    "shard": "train-04.parquet",
+    "subject": "dust puff",
+    "caption": "clumped white dust puff with curled edges",
+    "term": "subject:dust puff",
+    "file": "atlas/dust.png"
+   }
+  },
+  {
+   "key": "paper_scattered",
+   "fa": "کاغذهای پراکنده (شواهد تخلیه)",
+   "stage": 3,
+   "sheet": "stage3.png",
+   "x": 114,
+   "y": 114,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": false,
+   "source": {
+    "type": "procedural",
+    "draw": "paper_scattered",
+    "file": "drawn/paper_scattered.png"
+   }
+  },
+  {
+   "key": "chair_fallen",
+   "fa": "صندلی افتاده",
+   "stage": 3,
+   "sheet": "stage3.png",
+   "x": 168,
+   "y": 114,
+   "w": 48,
+   "h": 48,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": false,
+   "source": {
+    "type": "procedural",
+    "draw": "chair_fallen",
+    "file": "drawn/chair_fallen.png"
+   }
+  }
+ ]
+}

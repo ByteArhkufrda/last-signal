@@ -1,0 +1,19 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://csy5a63ycg3jl"
+
+[deps]
+
+files=["res://medical-wing-pack/_manifest.fa.translation", "res://medical-wing-pack/_manifest.stage.translation", "res://medical-wing-pack/_manifest.sheet.translation", "res://medical-wing-pack/_manifest.x.translation", "res://medical-wing-pack/_manifest.y.translation", "res://medical-wing-pack/_manifest.w.translation", "res://medical-wing-pack/_manifest.h.translation", "res://medical-wing-pack/_manifest.tiles.translation", "res://medical-wing-pack/_manifest.tiles.translation", "res://medical-wing-pack/_manifest.source.translation", "res://medical-wing-pack/_manifest.row.translation", "res://medical-wing-pack/_manifest.caption.translation"]
+
+source_file="res://medical-wing-pack/_manifest.csv"
+dest_files=["res://medical-wing-pack/_manifest.fa.translation", "res://medical-wing-pack/_manifest.stage.translation", "res://medical-wing-pack/_manifest.sheet.translation", "res://medical-wing-pack/_manifest.x.translation", "res://medical-wing-pack/_manifest.y.translation", "res://medical-wing-pack/_manifest.w.translation", "res://medical-wing-pack/_manifest.h.translation", "res://medical-wing-pack/_manifest.tiles.translation", "res://medical-wing-pack/_manifest.tiles.translation", "res://medical-wing-pack/_manifest.source.translation", "res://medical-wing-pack/_manifest.row.translation", "res://medical-wing-pack/_manifest.caption.translation"]
+
+[params]
+
+compress=1
+delimiter=0
+unescape_keys=false
+unescape_translations=true

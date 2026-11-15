@@ -1,0 +1,10 @@
+[gd_scene load_steps=3 format=3 uid="uid://lastsignalhidden"]
+
+[ext_resource type="Script" path="res://scripts/interaction/hidden_object.gd" id="1_hidden"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/hidden_energy_cell.png" id="2_tex"]
+
+[node name="HiddenObject" type="Node2D" groups=["hidden"]]
+script = ExtResource("1_hidden")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("2_tex")

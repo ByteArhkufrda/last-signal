@@ -1,0 +1,66 @@
+[gd_scene load_steps=6 format=3 uid="uid://lastsignalwire"]
+
+[ext_resource type="Script" path="res://scripts/interaction/wire_panel.gd" id="1_panel"]
+[ext_resource type="Script" path="res://scripts/interaction/puzzle_terminal.gd" id="2_term"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_panel"]
+size = Vector2(16, 72)
+
+[node name="WirePanel" type="StaticBody2D" groups=["puzzles"]]
+collision_layer = 1
+collision_mask = 1
+script = ExtResource("1_panel")
+
+[node name="PanelBox" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(-8, -36, 8, -36, 8, 36, -8, 36)
+color = Color(0.16, 0.17, 0.22, 1)
+
+[node name="Light" type="Polygon2D" parent="."]
+position = Vector2(0, -32)
+polygon = PackedVector2Array(3, 0, 2.1, 2.1, 0, 3, -2.1, 2.1, -3, 0, -2.1, -2.1, 0, -3, 2.1, -2.1)
+color = Color(0.9, 0.2, 0.2, 1)
+
+[node name="Terminal1" type="Node2D" parent="." groups=["interactable"]]
+script = ExtResource("2_term")
+position = Vector2(0, -24)
+terminal_index = 1
+interact_label = "ترمینال 1 را تغییر بده"
+
+[node name="Circle" type="Polygon2D" parent="Terminal1"]
+polygon = PackedVector2Array(6, 0, 4.2, 4.2, 0, 6, -4.2, 4.2, -6, 0, -4.2, -4.2, 0, -6, 4.2, -4.2)
+color = Color(0.9, 0.2, 0.2, 1)
+
+[node name="TargetDot" type="Polygon2D" parent="Terminal1"]
+polygon = PackedVector2Array(0, -14, 3, -11, 0, -8, -3, -11)
+color = Color(0.2, 0.9, 0.3, 1)
+
+[node name="Terminal2" type="Node2D" parent="." groups=["interactable"]]
+script = ExtResource("2_term")
+position = Vector2(0, 0)
+terminal_index = 2
+interact_label = "ترمینال 2 را تغییر بده"
+
+[node name="Circle" type="Polygon2D" parent="Terminal2"]
+polygon = PackedVector2Array(6, 0, 4.2, 4.2, 0, 6, -4.2, 4.2, -6, 0, -4.2, -4.2, 0, -6, 4.2, -4.2)
+color = Color(0.9, 0.2, 0.2, 1)
+
+[node name="TargetDot" type="Polygon2D" parent="Terminal2"]
+polygon = PackedVector2Array(0, -14, 3, -11, 0, -8, -3, -11)
+color = Color(0.2, 0.9, 0.3, 1)
+
+[node name="Terminal3" type="Node2D" parent="." groups=["interactable"]]
+script = ExtResource("2_term")
+position = Vector2(0, 24)
+terminal_index = 3
+interact_label = "ترمینال 3 را تغییر بده"
+
+[node name="Circle" type="Polygon2D" parent="Terminal3"]
+polygon = PackedVector2Array(6, 0, 4.2, 4.2, 0, 6, -4.2, 4.2, -6, 0, -4.2, -4.2, 0, -6, 4.2, -4.2)
+color = Color(0.9, 0.2, 0.2, 1)
+
+[node name="TargetDot" type="Polygon2D" parent="Terminal3"]
+polygon = PackedVector2Array(0, -14, 3, -11, 0, -8, -3, -11)
+color = Color(0.2, 0.9, 0.3, 1)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_panel")

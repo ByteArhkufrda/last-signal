@@ -1,0 +1,116 @@
+[gd_scene load_steps=4 format=3 uid="uid://lastsignalmenu1"]
+
+[ext_resource type="Script" path="res://scripts/ui/main_menu.gd" id="1_menu"]
+[ext_resource type="Script" path="res://scripts/audio/audio_manager.gd" id="2_audio"]
+[ext_resource type="PackedScene" path="res://scenes/ui/help_screen.tscn" id="3_help"]
+
+[node name="MainMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_menu")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.05, 0.06, 0.09, 1)
+
+[node name="TitleLabel" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -300.0
+offset_top = 56.0
+offset_right = 300.0
+offset_bottom = 124.0
+grow_horizontal = 2
+theme_override_font_sizes/font_size = 48
+text = "آخرین سیگنال"
+horizontal_alignment = 1
+text_direction = 3
+
+[node name="SubtitleLabel" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -300.0
+offset_top = 132.0
+offset_right = 300.0
+offset_bottom = 156.0
+grow_horizontal = 2
+theme_override_font_sizes/font_size = 16
+text = "ایستگاه K-17 — برق را وصل کن، دکل‌ها را روشن کن، سیگنال را بفرست."
+horizontal_alignment = 1
+text_direction = 3
+
+[node name="StartButton" type="Button" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -100.0
+offset_top = 184.0
+offset_right = 100.0
+offset_bottom = 232.0
+grow_horizontal = 2
+theme_override_font_sizes/font_size = 18
+text = "شروع بازی"
+text_direction = 3
+
+[node name="HelpButton" type="Button" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -100.0
+offset_top = 244.0
+offset_right = 100.0
+offset_bottom = 292.0
+grow_horizontal = 2
+theme_override_font_sizes/font_size = 18
+text = "راهنما"
+text_direction = 3
+
+[node name="QuitButton" type="Button" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -100.0
+offset_top = 304.0
+offset_right = 100.0
+offset_bottom = 352.0
+grow_horizontal = 2
+theme_override_font_sizes/font_size = 18
+text = "خروج"
+text_direction = 3
+
+[node name="ControlsLabel" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -300.0
+offset_top = 372.0
+offset_right = 300.0
+offset_bottom = 396.0
+grow_horizontal = 2
+theme_override_font_sizes/font_size = 14
+text = "حرکت: WASD / جهت‌ها · E تعامل · Q پالس رادار · Esc مکث"
+horizontal_alignment = 1
+text_direction = 3
+
+[node name="HelpScreen" parent="." instance=ExtResource("3_help")]
+visible = false
+
+[node name="AudioManager" type="Node" parent="."]
+script = ExtResource("2_audio")

@@ -1,0 +1,84 @@
+key,fa,stage,sheet,x,y,w,h,tiles_w,tiles_h,source_type,row_id,caption
+floor_standard,کف استاندارد پزشکی,1,stage1.png,6,6,48,48,1,1,atlas,183112,gray floor tile
+floor_alt,کف متناوب سفید/خاکستری,1,stage1.png,60,6,48,48,1,1,atlas,1002,floor tile
+floor_cracked,کف ترک‌خورده,1,stage1.png,114,6,48,48,1,1,procedural,,
+floor_broken,کف شکسته / کاشی گمشده,1,stage1.png,168,6,48,48,1,1,procedural,,
+floor_stain_water,لکه آب,1,stage1.png,222,6,48,48,1,1,procedural,,
+floor_stain_chemical,لکه شیمیایی,1,stage1.png,276,6,48,48,1,1,procedural,,
+floor_footprints,رد پا,1,stage1.png,330,6,48,48,1,1,procedural,,
+floor_wheel_tracks,رد چرخ تخت,1,stage1.png,384,6,48,48,1,1,procedural,,
+floor_debris,خرده‌های پزشکی پراکنده,1,stage1.png,6,60,48,48,1,1,procedural,,
+floor_hatch,دریچه فلزی کف,1,stage1.png,60,60,48,48,1,1,procedural,,
+floor_grille,گریل تهویه کف,1,stage1.png,114,60,48,48,1,1,procedural,,
+floor_panel,پنل نگهداری کف,1,stage1.png,168,60,48,48,1,1,procedural,,
+wall_h,دیوار افقی,1,stage1.png,222,60,48,48,1,1,procedural,,
+wall_v,دیوار عمودی,1,stage1.png,276,60,48,48,1,1,procedural,,
+wall_corner_inner,گوشه داخلی دیوار,1,stage1.png,330,60,48,48,1,1,procedural,,
+wall_corner_outer,گوشه خارجی دیوار,1,stage1.png,384,60,48,48,1,1,procedural,,
+wall_end,انتهای دیوار,1,stage1.png,6,114,48,48,1,1,procedural,,
+wall_trim,تریم فلزی دیوار,1,stage1.png,60,114,48,48,1,1,procedural,,
+wall_access_panel,پنل دسترسی دیوار,1,stage1.png,114,114,48,48,1,1,procedural,,
+wall_cabinet_section,کابینت دیواری توکار,1,stage1.png,168,114,48,48,1,1,procedural,,
+window_observation,پنجره مشاهده بزرگ,1,stage1.png,222,114,96,48,2,1,atlas,19716,gray window with light shining through
+window_small,پنجره کوچک تقویت‌شده,1,stage1.png,330,114,48,48,1,1,atlas,89782,glowing blue window
+door_closed,در اتوماتیک بسته,1,stage1.png,384,114,48,48,1,1,atlas,47212,white door
+door_open,در اتوماتیک باز,1,stage1.png,6,168,48,48,1,1,procedural,,
+door_frame,چارچوب در پزشکی,1,stage1.png,60,168,48,48,1,1,procedural,,
+bed_standard,تخت بیمارستان استاندارد,2,stage2.png,6,6,96,48,2,1,atlas,5764,blue bed with white piping
+bed_empty,تخت خالی,2,stage2.png,114,6,96,48,2,1,atlas,11323,plush bed with white piping
+bed_disorganized,تخت با ملحفه به‌هم‌ریخته,2,stage2.png,222,6,96,48,2,1,atlas,11998,gray bed with a polka dot pattern
+bedside_table,میز کنار تخت,2,stage2.png,330,6,48,48,1,1,atlas,32581,white table with brass accents
+exam_bed,تخت معاینه قابل‌تنظیم,2,stage2.png,6,60,96,48,2,1,atlas,12555,plush green bed
+stretcher,برانکارد چرخ‌دار,2,stage2.png,114,60,96,48,2,1,atlas,27746,spotless green stretcher with a blue accent
+chair_rolling,صندلی چرخ‌دار پزشکی,2,stage2.png,222,60,48,48,1,1,atlas,41617,giant green chair
+desk_doctor,میز دکتر,2,stage2.png,276,60,96,48,2,1,atlas,16663,blue desk with white paint
+chair_office,صندلی اداری,2,stage2.png,384,60,48,48,1,1,atlas,42150,polished green chair
+side_table,میز کوچک پزشکی,2,stage2.png,6,114,48,48,1,1,atlas,83051,elegant oak table with white paint
+trolley,ترولی لوازم پزشکی,2,stage2.png,60,114,48,48,1,1,procedural,,
+monitor_vitals,مانیتور علائم حیاتی,2,stage2.png,114,114,48,48,1,1,atlas,29958,gray computer monitor with a green screen
+monitor_heart,مانیتور قلب قابل‌حمل,2,stage2.png,168,114,48,48,1,1,atlas,17424,futuristic crt monitor with a green screen
+oxygen_cylinder,کپسول اکسیژن,2,stage2.png,222,114,48,48,1,1,atlas,273397,futuristic blue oxygen tank
+oxygen_unit,واحد تأمین اکسیژن,2,stage2.png,276,114,48,48,1,1,atlas,37754,glowing white oxygen tank with a sparkle
+iv_stand,پایه سرم با کیسه,2,stage2.png,330,114,48,48,1,1,atlas,463305,top-down rolling blue iv stand in warm colors
+infusion_pump,پمپ تزریق,2,stage2.png,384,114,48,48,1,1,procedural,,
+exam_lamp,چراغ معاینه,2,stage2.png,6,168,48,48,1,1,atlas,49509,sleek red desk lamp with a blue accent
+cart_emergency,ترولی اورژانس,2,stage2.png,60,168,48,48,1,1,procedural,,
+defibrillator,دفیبریلاتور,2,stage2.png,114,168,48,48,1,1,atlas,516187,top-down compact blue defibrillator with a heart symbol
+waste_bin,سطل زباله پزشکی,2,stage2.png,168,168,48,48,1,1,atlas,91408,shiny green trash can with a blue stripe
+cabinet_storage,کابینت ذخیره پزشکی,2,stage2.png,222,168,48,48,1,1,atlas,3340,black cabinet with white paint
+cabinet_medicine,کابینت دارو,2,stage2.png,276,168,48,48,1,1,atlas,12064,cabinet with brass accents
+shelf_medicine,قفسه دارو,2,stage2.png,330,168,48,48,1,1,atlas,73461,blue wall shelf
+supply_boxes,جعبه‌های لوازم پزشکی,2,stage2.png,384,168,48,48,1,1,atlas,13697,spotless gray box of bandages with a green cross
+documents,اسناد پزشکی پراکنده,2,stage2.png,6,222,48,48,1,1,procedural,,
+bottles_medicine,بطری‌های دارو,2,stage2.png,60,222,48,48,1,1,atlas,13360,tiny glass bottle with a blue painted pattern
+packages_medicine,بسته‌های دارو,2,stage2.png,114,222,48,48,1,1,atlas,57429,white blister pack of pills with a blue accent
+gloves,دستکش پزشکی,2,stage2.png,168,222,48,48,1,1,atlas,81932,gloves with silver studs
+bandages,بسته بانداژ,2,stage2.png,222,222,48,48,1,1,atlas,163506,clean white adhesive bandage with a blue stripe
+syringes,سرنگ یک‌بارمصرف,2,stage2.png,276,222,48,48,1,1,atlas,140356,spotless gray syringe with a green accent
+tray_instruments,سینی ابزار,2,stage2.png,330,222,48,48,1,1,procedural,,
+clock_wall,ساعت دیواری,2,stage2.png,384,222,48,48,1,1,atlas,1791,blue clock icon
+sign_warning,تابلوی هشدار پزشکی,2,stage2.png,6,276,48,48,1,1,procedural,,
+light_ceiling,چراغ سقفی پزشکی,2,stage2.png,60,276,48,48,1,1,atlas,59955,modern gray ceiling lamp with a green glow
+indicator_emergency,چراغ نشانگر اضطراری,2,stage2.png,114,276,48,48,1,1,procedural,,
+grille_vent,گریل تهویه دیواری,2,stage2.png,168,276,48,48,1,1,atlas,36568,dark gray steam vent
+panel_wall_small,پنل کنترل دیواری کوچک,2,stage2.png,222,276,48,48,1,1,procedural,,
+cabinet_closed,کمد فلزی بسته (فیوز A),3,stage3.png,6,6,48,48,1,1,atlas,44168,cabinet
+cabinet_open,کمد باز با قفسه‌ها,3,stage3.png,60,6,48,48,1,1,procedural,,
+cabinet_worn,کمد فلزی فرسوده,3,stage3.png,114,6,48,48,1,1,atlas,79249,brand new cabinet
+fuse_a,فیوز A — سفید,3,stage3.png,168,6,48,48,1,1,atlas,165,white fuse
+fuse_b,فیوز B — زرد با نوار قرمز,3,stage3.png,222,6,48,48,1,1,atlas,4172,yellow fuse with a red stripe
+fuse_c,فیوز C — نقره‌ای با نماد برق,3,stage3.png,276,6,48,48,1,1,atlas,4282,tiny silver fuse with a lightning bolt symbol
+flashlight,چراغ‌قوه روی میز دکتر,3,stage3.png,330,6,48,48,1,1,atlas,4782,sleek gray flashlight
+note_doctor,یادداشت دست‌نویس دکتر,3,stage3.png,384,6,48,48,1,1,atlas,12656,tiny white sticky note pad with a blue accent
+fusebox_closed,جعبه فیوز بسته,3,stage3.png,6,60,48,48,1,1,procedural,,
+fusebox_open,جعبه فیوز باز — ۳ شیار خالی,3,stage3.png,60,60,48,48,1,1,procedural,,
+light_blue,چراغ آبی ملایم سقفی,3,stage3.png,114,60,48,48,1,1,procedural,,
+light_green,چراغ سبز نشانگر پزشکی,3,stage3.png,168,60,48,48,1,1,procedural,,
+light_red,چراغ قرمز اضطراری,3,stage3.png,222,60,48,48,1,1,procedural,,
+light_flicker,چراغ چشمک‌زن,3,stage3.png,276,60,48,48,1,1,procedural,,
+light_damaged,چراغ سقفی آسیب‌دیده,3,stage3.png,330,60,48,48,1,1,procedural,,
+spark,جرقه الکتریکی,3,stage3.png,384,60,48,48,1,1,atlas,364722,blue spark burst with a bright white core
+steam,بخار تهویه,3,stage3.png,6,114,48,48,1,1,procedural,,
+dust,ذرات غبار,3,stage3.png,60,114,48,48,1,1,atlas,441351,clumped white dust puff with curled edges
+paper_scattered,کاغذهای پراکنده (شواهد تخلیه),3,stage3.png,114,114,48,48,1,1,procedural,,
+chair_fallen,صندلی افتاده,3,stage3.png,168,114,48,48,1,1,procedural,,

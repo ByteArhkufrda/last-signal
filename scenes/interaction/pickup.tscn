@@ -1,0 +1,10 @@
+[gd_scene load_steps=3 format=3 uid="uid://lastsignalpickup"]
+
+[ext_resource type="Script" path="res://scripts/interaction/pickup.gd" id="1_pickup"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/hidden_energy_cell.png" id="2_tex"]
+
+[node name="Pickup" type="Node2D" groups=["interactable"]]
+script = ExtResource("1_pickup")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("2_tex")

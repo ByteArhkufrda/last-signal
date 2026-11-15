@@ -1,0 +1,6 @@
+# Godot
+.godot/
+# Export (user exports on Windows)
+exports/
+# Build artifacts (Windows exe/pck/zip) — never committed
+build/
