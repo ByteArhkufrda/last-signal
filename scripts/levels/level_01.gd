@@ -219,18 +219,26 @@ func _build_area_tints() -> void:
 ## decorative atlas panel sprites. Consoles are added before wiring, so
 ## the level's signal wiring picks them up like the .tscn ones.
 func _build_area_props() -> void:
-	_add_area_console(Vector2(760, 80), "گزارش پزشکی: بعد از تمرین شیوع بیماری، این بخش بسته شد. آذوقه کم است.", "monitor_vitals")
+	# Lines owned by a split room are skipped here: the room builds
+	# them. (Medical Wing is split; the other rooms still build legacy
+	# until their own branches land.)
+	var medical_split: bool = "بخش پزشکی" in _instanced_area_names()
+	if not medical_split:
+		_add_area_console(Vector2(760, 80), "گزارش پزشکی: بعد از تمرین شیوع بیماری، این بخش بسته شد. آذوقه کم است.", "monitor_vitals")
 	_add_area_console(Vector2(120, 560), "یادداشت‌های تحقیقاتی: برای آرایه‌ی سیگنال باید هر 3 دکل روشن باشند.")
 	_add_area_console(Vector2(1100, 560), "گزارش ژنراتور: کلیدها دکل 1 را تغذیه می‌کنند، سیم‌کشی دکل 2 را، و فیوز دکل 3 را.")
 	_add_area_console(Vector2(900, 820), "گزارش محوطه: آرایه‌ی بشقاب به ماهواره‌ی رله اشاره می‌کند. بدون دکل‌ها سیگنالی نیست.")
-	_add_prop(CRATE_TEXTURE, Vector2(1120, 300))
+	if not medical_split:
+		_add_prop(CRATE_TEXTURE, Vector2(1120, 300))
 	_add_prop(CRATE_TEXTURE, Vector2(480, 640))
 	_add_prop(CRATE_TEXTURE, Vector2(700, 680))
 	_add_prop(DISH_TEXTURE, Vector2(1150, 820))
-	_add_decor(PANEL_TEXTURE, Vector2(700, 340))
+	if not medical_split:
+		_add_decor(PANEL_TEXTURE, Vector2(700, 340))
 	_add_decor(FUSEBOX_TEXTURE, Vector2(1200, 640))
-	_add_decor(RIVET_TEXTURE, Vector2(1240, 80))
-	_build_medical_props()
+	if not medical_split:
+		_add_decor(RIVET_TEXTURE, Vector2(1240, 80))
+		_build_medical_props()
 
 
 ## Medical Wing furnishing (pack sprites, 2026-11-15). Solid props get
@@ -457,15 +465,54 @@ func _instance_rooms() -> void:
 
 func _flatten_rooms() -> void:
 	var walls_body: StaticBody2D = _get_or_create_area_walls()
+	# Shared dividers are built by BOTH neighbouring rooms (exact
+	# duplicates — e.g. the x=624 divider belongs to command_center
+	# and medical_wing alike). The assembler keeps only one copy:
+	# a wall rect already flattened from an earlier room is freed
+	# instead of moved into AreaWalls a second time. Without this,
+	# the second neighbouring room to land doubles its divider's
+	# shapes and visuals (seen at the medical-wing merge: 7 medical
+	# wall visuals instead of 5, 18 textured visuals instead of 16).
+	var seen_wall_rects: Array[Rect2] = []
 	for room in _instanced_rooms:
 		var children: Array[Node] = room.get_children()
 		for child in children:
 			# Wall bodies dissolve into the shared AreaWalls body.
 			if child.name == "Walls_" + room.room_key:
 				var wall_children: Array[Node] = child.get_children()
-				for grandchild in wall_children:
-					child.remove_child(grandchild)
-					walls_body.add_child(grandchild)
+				var i := 0
+				while i < wall_children.size():
+					# One wall rect = shape + visual + highlight, in
+					# that order (RoomBase._build_wall_rects). The
+					# visual's polygon encodes the rect: its first
+					# point is the position, its third point is
+					# position + size.
+					if (
+						i + 2 < wall_children.size()
+						and wall_children[i] is CollisionShape2D
+						and wall_children[i + 1] is Polygon2D
+						and wall_children[i + 2] is Polygon2D
+						and (wall_children[i + 1] as Polygon2D).polygon.size() >= 3
+					):
+						var visual: Polygon2D = wall_children[i + 1]
+						var r := Rect2(visual.polygon[0], visual.polygon[2] - visual.polygon[0])
+						if r in seen_wall_rects:
+							wall_children[i].queue_free()
+							wall_children[i + 1].queue_free()
+							wall_children[i + 2].queue_free()
+						else:
+							seen_wall_rects.append(r)
+							for k in range(3):
+								child.remove_child(wall_children[i + k])
+								walls_body.add_child(wall_children[i + k])
+						i += 3
+					else:
+						# Unexpected node shape: move it rather than
+						# lose it.
+						var grandchild: Node = wall_children[i]
+						child.remove_child(grandchild)
+						walls_body.add_child(grandchild)
+						i += 1
 				child.queue_free()
 				continue
 			room.remove_child(child)
