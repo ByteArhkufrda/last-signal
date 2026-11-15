@@ -95,8 +95,10 @@ var _med_tex: Dictionary = {}
 var current_area: String = "کنترل مرکزی"
 
 @onready var floor_layer: TileMapLayer = $Floor
-@onready var player: CharacterBody2D = $Player
-@onready var mission: Node = $Mission
+## Player and Mission live in the command_center room scene now, so
+## they only exist under this level after _flatten_rooms() in _ready.
+var player: CharacterBody2D = null
+var mission: Node = null
 
 
 func _ready() -> void:
@@ -104,6 +106,8 @@ func _ready() -> void:
 	_get_or_create_area_walls()
 	_instance_rooms()
 	_flatten_rooms()
+	player = get_node("Player")
+	mission = get_node("Mission")
 	_build_area_walls()
 	_build_area_tints()
 	_build_area_props()
