@@ -46,9 +46,9 @@ extends Node2D
 ## emergency signal once all towers are online.
 
 ## Shared level data lives in LevelData / MedicalData now (room split,
-## 2026-11-15). These aliases keep the old constant names working for
-## the legacy builders below and for the tests (which read this
-## script's MED_PROP_PATHS).
+## 2026-11-15). These aliases mirror the shared constants for the live
+## builders below. MED_PROP_PATHS is kept because the tests read it
+## from this script (test_medical_props_exist).
 const TILE_SIZE := LevelData.TILE_SIZE
 const ROOM_COLS := LevelData.ROOM_COLS
 const ROOM_ROWS := LevelData.ROOM_ROWS
@@ -74,11 +74,6 @@ const PROP_SOLID_RECTS := LevelData.PROP_SOLID_RECTS
 ## Medical Wing pack (2026-11-15): 83 sprites from the pixel-art atlas
 ## (CC0) + hand-drawn tiles, copied to res://assets/sprites/medical-wing/.
 ## Only the Medical Wing uses them; the other areas keep the old look.
-const MED_FLOOR_TEXTURE_PATH := MedicalData.MED_FLOOR_TEXTURE_PATH
-const MED_FLOOR_WEIGHTS := MedicalData.MED_FLOOR_WEIGHTS
-const MED_RECT_TILES := MedicalData.MED_RECT_TILES
-const MED_WALL_H_TEXTURE: Texture2D = MedicalData.MED_WALL_H_TEXTURE
-const MED_WALL_V_TEXTURE: Texture2D = MedicalData.MED_WALL_V_TEXTURE
 const MED_PROP_PATHS := MedicalData.MED_PROP_PATHS
 
 ## Solved-puzzle count (test hook: the tests read level._puzzles_solved).
@@ -95,8 +90,6 @@ var _instanced_rooms: Array[RoomBase] = []
 ## the freed room nodes.
 var _instanced_wall_rects_cache: Array[Rect2] = []
 var _instanced_area_names_cache: Array[String] = []
-## Cache for the medical prop textures (see _med_texture()).
-var _med_tex: Dictionary = {}
 ## Area the player is currently in (test hook + HUD naming).
 var current_area: String = "کنترل مرکزی"
 
@@ -116,7 +109,6 @@ func _ready() -> void:
 	mission = get_node("Mission")
 	_build_area_walls()
 	_build_area_tints()
-	_build_area_props()
 	_build_nav_grid()
 	_build_area_zones()
 	_apply_camera_limits()
@@ -146,13 +138,6 @@ func _build_floor() -> void:
 ## wall_metal. Only the Medical Wing's own walls are retextured.
 func _medical_wall_texture(r: Rect2) -> Texture2D:
 	return MedicalData.wall_texture_for(r)
-
-
-## Cached loader for the medical prop textures (MED_PROP_PATHS).
-func _med_texture(key: String) -> Texture2D:
-	if not _med_tex.has(key):
-		_med_tex[key] = load(MED_PROP_PATHS[key])
-	return _med_tex[key]
 
 
 func _build_area_walls() -> void:
@@ -213,162 +198,6 @@ func _build_area_tints() -> void:
 			r.position + r.size, r.position + Vector2(0, r.size.y)])
 		poly.color = tint
 		add_child(poly)
-
-
-## Area consoles (interactable logs), solid crate/dish props and
-## decorative atlas panel sprites. Consoles are added before wiring, so
-## the level's signal wiring picks them up like the .tscn ones.
-func _build_area_props() -> void:
-	# Lines owned by a split room are skipped here: the room builds
-	# them. (All five rooms are split now; these legacy lines only
-	# run for a room whose branch has not landed — none is left.)
-	var medical_split: bool = "بخش پزشکی" in _instanced_area_names()
-	var lab_split: bool = "آزمایشگاه تحقیقاتی" in _instanced_area_names()
-	var engine_split: bool = "نیروگاه" in _instanced_area_names()
-	var comms_split: bool = "محوطه‌ی مخابرات" in _instanced_area_names()
-	if not medical_split:
-		_add_area_console(Vector2(760, 80), "گزارش پزشکی: بعد از تمرین شیوع بیماری، این بخش بسته شد. آذوقه کم است.", "monitor_vitals")
-	if not lab_split:
-		_add_area_console(Vector2(120, 560), "یادداشت‌های تحقیقاتی: برای آرایه‌ی سیگنال باید هر 3 دکل روشن باشند.")
-	if not engine_split:
-		_add_area_console(Vector2(1100, 560), "گزارش ژنراتور: کلیدها دکل 1 را تغذیه می‌کنند، سیم‌کشی دکل 2 را، و فیوز دکل 3 را.")
-	if not comms_split:
-		_add_area_console(Vector2(900, 820), "گزارش محوطه: آرایه‌ی بشقاب به ماهواره‌ی رله اشاره می‌کند. بدون دکل‌ها سیگنالی نیست.")
-	if not medical_split:
-		_add_prop(CRATE_TEXTURE, Vector2(1120, 300))
-	if not lab_split:
-		_add_prop(CRATE_TEXTURE, Vector2(480, 640))
-	if not engine_split:
-		_add_prop(CRATE_TEXTURE, Vector2(700, 680))
-	if not comms_split:
-		_add_prop(DISH_TEXTURE, Vector2(1150, 820))
-	if not medical_split:
-		_add_decor(PANEL_TEXTURE, Vector2(700, 340))
-	if not engine_split:
-		_add_decor(FUSEBOX_TEXTURE, Vector2(1200, 640))
-	if not medical_split:
-		_add_decor(RIVET_TEXTURE, Vector2(1240, 80))
-		_build_medical_props()
-
-
-## Medical Wing furnishing (pack sprites, 2026-11-15). Solid props get
-## a physics body + a PROP_SOLID_RECTS entry (nav grid); wall decor and
-## small floor clutter are plain sprites. Nothing solid is placed in
-## either doorway approach, in the entry corridor (y 240-272, x 640-800)
-## or on the scanner's line of sight (x=900, y 120-200).
-func _build_medical_props() -> void:
-	# Ward row along the north edge: three beds, an exam bed, monitors.
-	_add_prop(_med_texture("bed_standard"), Vector2(700, 64), Vector2(32, 16), "MedBedStandard")
-	_add_prop(_med_texture("bed_empty"), Vector2(880, 64), Vector2(32, 16), "MedBedEmpty")
-	_add_prop(_med_texture("exam_bed"), Vector2(1080, 64), Vector2(32, 16), "MedExamBed")
-	_add_prop(_med_texture("bedside_table"), Vector2(732, 64), Vector2(16, 16), "MedBedsideTable")
-	_add_prop(_med_texture("monitor_heart"), Vector2(920, 64), Vector2(16, 16), "MedMonitorHeart")
-	_add_prop(_med_texture("defibrillator"), Vector2(1160, 64), Vector2(16, 16), "MedDefibrillator")
-	# West column: the disorganized bed, cabinets, oxygen, IV.
-	_add_prop(_med_texture("bed_disorganized"), Vector2(700, 160), Vector2(32, 16), "MedBedDisorganized")
-	_add_prop(_med_texture("monitor_vitals"), Vector2(732, 160), Vector2(16, 16), "MedMonitorVitals")
-	_add_prop(_med_texture("cabinet_open"), Vector2(660, 112), Vector2(16, 16), "MedCabinetOpen")
-	_add_prop(_med_texture("cabinet_closed"), Vector2(660, 160), Vector2(16, 16), "MedCabinetClosed")
-	_add_prop(_med_texture("oxygen_cylinder"), Vector2(660, 200), Vector2(16, 16), "MedOxygen")
-	_add_prop(_med_texture("iv_stand"), Vector2(660, 296), Vector2(16, 16), "MedIvStand")
-	_add_prop(_med_texture("cabinet_storage"), Vector2(660, 320), Vector2(16, 16), "MedCabinetStorage")
-	_add_prop(_med_texture("cabinet_medicine"), Vector2(700, 320), Vector2(16, 16), "MedCabinetMedicine")
-	# Center: lamp, chairs, infusion pump, side table.
-	_add_prop(_med_texture("exam_lamp"), Vector2(720, 200), Vector2(16, 16), "MedExamLamp")
-	_add_prop(_med_texture("chair_rolling"), Vector2(760, 200), Vector2(16, 16), "MedChairRolling")
-	_add_prop(_med_texture("infusion_pump"), Vector2(760, 120), Vector2(16, 16), "MedInfusionPump")
-	_add_prop(_med_texture("side_table"), Vector2(940, 240), Vector2(16, 16), "MedSideTable")
-	_add_prop(_med_texture("chair_office"), Vector2(1040, 200), Vector2(16, 16), "MedChairOffice")
-	# East side: stretcher, doctor's desk, trolley, cart, shelf, boxes.
-	_add_prop(_med_texture("stretcher"), Vector2(1080, 160), Vector2(32, 16), "MedStretcher")
-	_add_prop(_med_texture("desk_doctor"), Vector2(1080, 256), Vector2(32, 16), "MedDeskDoctor")
-	_add_prop(_med_texture("trolley"), Vector2(1160, 240), Vector2(16, 16), "MedTrolley")
-	_add_prop(_med_texture("cart_emergency"), Vector2(1020, 300), Vector2(16, 16), "MedCartEmergency")
-	_add_prop(_med_texture("shelf_medicine"), Vector2(1240, 200), Vector2(16, 16), "MedShelfMedicine")
-	_add_prop(_med_texture("oxygen_unit"), Vector2(1240, 140), Vector2(16, 16), "MedOxygenUnit")
-	_add_prop(_med_texture("supply_boxes"), Vector2(1180, 120), Vector2(16, 16), "MedSupplyBoxes")
-	_add_prop(_med_texture("waste_bin"), Vector2(1240, 320), Vector2(16, 16), "MedWasteBin")
-	_add_prop(_med_texture("cabinet_worn"), Vector2(1180, 320), Vector2(16, 16), "MedCabinetWorn")
-	# Wall decor: west divider, south divider, junctions, east wall.
-	_add_med_decor("clock_wall", Vector2(632, 40), "MedClock")
-	_add_med_decor("wall_access_panel", Vector2(632, 100), "MedAccessPanel")
-	_add_med_decor("window_small", Vector2(632, 160), "MedWindowSmall")
-	_add_med_decor("grille_vent", Vector2(632, 200), "MedGrilleVent")
-	_add_med_decor("panel_wall_small", Vector2(632, 300), "MedWallPanel")
-	_add_med_decor("sign_warning", Vector2(632, 320), "MedWarningSign")
-	_add_med_decor("window_observation", Vector2(1000, 360), "MedWindowObservation")
-	_add_med_decor("wall_cabinet_section", Vector2(1100, 360), "MedWallCabinet")
-	_add_med_decor("wall_corner_inner", Vector2(632, 360), "MedCornerSW")
-	_add_med_decor("wall_corner_outer", Vector2(1272, 360), "MedCornerSE")
-	_add_med_decor("fusebox_closed", Vector2(1272, 60), "MedFusebox")
-	_add_med_decor("indicator_emergency", Vector2(1272, 200), "MedIndicator")
-	# Lights: ceiling fixtures + small indicators.
-	_add_med_decor("light_ceiling", Vector2(800, 40), "MedLightCeilingA")
-	_add_med_decor("light_ceiling", Vector2(1100, 320), "MedLightCeilingB")
-	_add_med_decor("light_green", Vector2(760, 64), "MedLightGreen")
-	_add_med_decor("light_blue", Vector2(860, 40), "MedLightBlue")
-	_add_med_decor("light_red", Vector2(1240, 340), "MedLightRed")
-	_add_med_decor("light_flicker", Vector2(1100, 200), "MedLightFlicker")
-	_add_med_decor("light_damaged", Vector2(1200, 280), "MedLightDamaged")
-	# Small floor clutter: supplies, papers, storytelling details.
-	_add_med_decor("documents", Vector2(800, 150), "MedDocuments")
-	_add_med_decor("bottles_medicine", Vector2(860, 200), "MedBottles")
-	_add_med_decor("packages_medicine", Vector2(980, 120), "MedPackages")
-	_add_med_decor("gloves", Vector2(820, 300), "MedGloves")
-	_add_med_decor("bandages", Vector2(860, 300), "MedBandages")
-	_add_med_decor("syringes", Vector2(900, 300), "MedSyringes")
-	_add_med_decor("tray_instruments", Vector2(940, 300), "MedTray")
-	_add_med_decor("paper_scattered", Vector2(820, 180), "MedPapers")
-	_add_med_decor("chair_fallen", Vector2(960, 160), "MedChairFallen")
-	_add_med_decor("dust", Vector2(700, 300), "MedDust")
-	_add_med_decor("steam", Vector2(1180, 200), "MedSteam")
-	_add_med_decor("spark", Vector2(1240, 100), "MedSpark")
-	# The doctor's desk: flashlight + handwritten note on its surface.
-	_add_med_decor("flashlight", Vector2(1072, 252), "MedFlashlight")
-	_add_med_decor("note_doctor", Vector2(1090, 260), "MedNoteDoctor")
-
-
-func _add_area_console(pos: Vector2, message: String, texture_key: String = "") -> void:
-	var console: Node2D = CONSOLE_SCENE.instantiate()
-	console.position = pos
-	console.message = message
-	if texture_key != "":
-		console.sprite_texture = _med_texture(texture_key)
-	add_child(console)
-
-
-func _add_prop(texture: Texture2D, pos: Vector2, size: Vector2 = Vector2(16, 16), prop_name: String = "") -> void:
-	var body := StaticBody2D.new()
-	if prop_name != "":
-		body.name = prop_name
-	body.position = pos
-	body.collision_layer = 1
-	body.collision_mask = 0
-	var sprite := Sprite2D.new()
-	sprite.texture = texture
-	body.add_child(sprite)
-	var shape := CollisionShape2D.new()
-	var rect := RectangleShape2D.new()
-	rect.size = size
-	shape.shape = rect
-	body.add_child(shape)
-	add_child(body)
-
-
-## A named, non-solid medical decor sprite (pack texture by key).
-func _add_med_decor(key: String, pos: Vector2, node_name: String) -> void:
-	var sprite := Sprite2D.new()
-	sprite.name = node_name
-	sprite.texture = _med_texture(key)
-	sprite.position = pos
-	add_child(sprite)
-
-
-func _add_decor(texture: Texture2D, pos: Vector2) -> void:
-	var sprite := Sprite2D.new()
-	sprite.texture = texture
-	sprite.position = pos
-	add_child(sprite)
 
 
 func _build_nav_grid() -> void:
