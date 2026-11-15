@@ -89,6 +89,12 @@ var _nav_grid: AStarGrid2D = null
 ## instanced (kept for the flatten step in _ready).
 var _wiring: LevelWiring = null
 var _instanced_rooms: Array[RoomBase] = []
+## What the instanced rooms already built, cached as data (not nodes):
+## the rooms are queue_free'd by the flatten, so the legacy builders
+## below — which run AFTER the flatten — must read these caches, not
+## the freed room nodes.
+var _instanced_wall_rects_cache: Array[Rect2] = []
+var _instanced_area_names_cache: Array[String] = []
 ## Cache for the medical prop textures (see _med_texture()).
 var _med_tex: Dictionary = {}
 ## Area the player is currently in (test hook + HUD naming).
@@ -441,6 +447,8 @@ func _instance_rooms() -> void:
 		room.name = ROOM_NODE_NAMES[room_key]
 		add_child(room)
 		_instanced_rooms.append(room)
+		_instanced_wall_rects_cache.append_array(room.wall_rects())
+		_instanced_area_names_cache.append(room.area_name)
 
 
 func _flatten_rooms() -> void:
@@ -476,14 +484,8 @@ func _get_or_create_area_walls() -> StaticBody2D:
 ## Wall rects the instanced rooms already built (shared dividers are
 ## in here twice — once per neighbour — but a rect is a rect).
 func _instanced_wall_rects() -> Array[Rect2]:
-	var rects: Array[Rect2] = []
-	for room in _instanced_rooms:
-		rects.append_array(room.wall_rects())
-	return rects
+	return _instanced_wall_rects_cache
 
 
 func _instanced_area_names() -> Array[String]:
-	var names: Array[String] = []
-	for room in _instanced_rooms:
-		names.append(room.area_name)
-	return names
+	return _instanced_area_names_cache

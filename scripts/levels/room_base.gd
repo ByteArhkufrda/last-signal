@@ -60,9 +60,15 @@ func prop_solid_rects() -> Array[Rect2]:
 	return []
 
 
-## Wall texture for a code-built wall rect (medical rooms override).
-func _wall_texture_for(_r: Rect2) -> Texture2D:
-	return LevelData.WALL_TEXTURE
+## Wall texture for a code-built wall rect. The texture is a property
+## of the RECT, not the room: the Medical Wing's own walls (the x=624
+## divider, its south divider and its east wall) use the pack's wall
+## tiles, everything else uses wall_metal — the same rule the legacy
+## builder used, so a shared divider gets the same texture whichever
+## neighbour builds it.
+func _wall_texture_for(r: Rect2) -> Texture2D:
+	var med: Texture2D = MedicalData.wall_texture_for(r)
+	return med if med != null else LevelData.WALL_TEXTURE
 
 
 ## Build the room's code-built walls as one StaticBody2D named
