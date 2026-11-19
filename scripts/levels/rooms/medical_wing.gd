@@ -32,6 +32,9 @@ func wall_rects() -> Array[Rect2]:
 		Rect2(624, 0, 16, 240), Rect2(624, 272, 16, 96),
 		Rect2(640, 352, 288, 16), Rect2(960, 352, 320, 16),
 		Rect2(1264, 0, 16, 368),
+		# North exterior (2026-11-19: this edge had no wall — the
+		# player walked off the map above the wing, in the full game).
+		Rect2(640, 0, 640, 16),
 	]
 
 

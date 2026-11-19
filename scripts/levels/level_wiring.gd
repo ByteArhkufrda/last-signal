@@ -24,14 +24,21 @@ var _blocked: Array[Rect2] = []
 var _puzzles_solved: int = 0
 
 
+## Where a caught player respawns. The full game uses the entrance
+## (LevelData.SPAWN); a standalone room passes its own spawn point
+## (2026-11-19: the entrance is outside every room but Central).
+var _respawn_point: Vector2 = LevelData.SPAWN
+
+
 ## Wire `root` (the level, or a standalone room's root). The room
 ## launcher passes its own root; the assembler passes the level.
-func setup(root: Node2D, player: CharacterBody2D, mission: Node, nav_grid: AStarGrid2D, blocked: Array[Rect2]) -> void:
+func setup(root: Node2D, player: CharacterBody2D, mission: Node, nav_grid: AStarGrid2D, blocked: Array[Rect2], respawn_point: Vector2 = LevelData.SPAWN) -> void:
 	_root = root
 	_player = player
 	_mission = mission
 	_nav_grid = nav_grid
 	_blocked = blocked
+	_respawn_point = respawn_point
 	_wire_interactables()
 	for zone in _root.find_children("AreaZone_*", "Area2D", true, false):
 		zone.body_entered.connect(_on_area_body_entered.bind(str(zone.get_meta("area_name"))))
@@ -187,7 +194,11 @@ func _on_puzzle_solved(puzzle: Node) -> void:
 	# Mirror the count onto the level (test hook: level._puzzles_solved).
 	_root.set("_puzzles_solved", _puzzles_solved)
 	var tower_name: String = str(puzzle.get("powers_tower"))
-	var tower: StaticBody2D = _root.get_node_or_null(tower_name)
+	# find_child (recursive): in the full level the towers are direct
+	# children of the root; in a standalone room they sit under the
+	# room node, and get_node_or_null only looks one level down
+	# (2026-11-19: solved puzzles never powered a tower standalone).
+	var tower: StaticBody2D = _root.find_child(tower_name, true, false) as StaticBody2D
 	if tower != null:
 		tower.power_restored = true
 	_play_sound("chime")
@@ -224,7 +235,10 @@ func _on_transmit_console() -> void:
 	var hud: CanvasLayer = _get_hud()
 	if _mission.try_transmit():
 		_play_sound("fanfare")
-		var console: Node2D = _root.get_node_or_null("TransmitConsole")
+		# Same recursive lookup as _on_puzzle_solved: the console is
+		# a direct child in the full level, nested under the room
+		# standalone.
+		var console: Node2D = _root.find_child("TransmitConsole", true, false) as Node2D
 		if console != null:
 			_spawn_ring(console.global_position, Color(0.3, 1.0, 0.4), 64.0)
 		if hud != null:
@@ -270,7 +284,7 @@ func _on_item_collected(pickup: Node) -> void:
 
 
 func _on_player_caught() -> void:
-	_player.global_position = LevelData.SPAWN
+	_player.global_position = _respawn_point
 	_player.velocity = Vector2.ZERO
 	_play_sound("sting")
 	var hud: CanvasLayer = _get_hud()

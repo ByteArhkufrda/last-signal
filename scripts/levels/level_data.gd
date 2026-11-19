@@ -80,6 +80,13 @@ const AREA_WALL_RECTS := [
 	Rect2(640, 728, 288, 16), Rect2(960, 728, 320, 16),
 	# Communication Yard: west, east and south walls.
 	Rect2(624, 736, 16, 192), Rect2(1264, 736, 16, 192), Rect2(640, 920, 640, 16),
+	# Outer boundary, closed 2026-11-19 (debug: these two edges had no
+	# wall at all — the player walked off the map north of the Medical
+	# Wing and west of the Laboratory, in the full game).
+	Rect2(640, 0, 640, 16), Rect2(0, 368, 16, 368),
+	# South-west quarter (floored, no area): close its west/south edges
+	# so the dead space is sealed as well.
+	Rect2(0, 736, 16, 192), Rect2(0, 920, 640, 16),
 ]
 
 ## Solid props (crates + the yard dish) as 16x16 rects, for the nav grid.

@@ -46,13 +46,13 @@ const ROOM_CHECKS := {
 		"nodes": {
 			"ScannerRobot": Vector2(900, 120), "MedBedStandard": Vector2(700, 64),
 		},
-		"towers": 0, "puzzles": 0, "enemies": 1, "wall_children": 15,
+		"towers": 0, "puzzles": 0, "enemies": 1, "wall_children": 18,
 	},
 	"laboratory": {
 		"area": "آزمایشگاه تحقیقاتی", "tile_rect": Rect2i(0, 23, 40, 23),
 		"spawn": Vector2(320, 400), "target_cell": Vector2i(10, 30),
 		"nodes": {"LabRobot": Vector2(200, 560)},
-		"towers": 0, "puzzles": 0, "enemies": 1, "wall_children": 15,
+		"towers": 0, "puzzles": 0, "enemies": 1, "wall_children": 18,
 	},
 	"engine_room": {
 		"area": "نیروگاه", "tile_rect": Rect2i(40, 23, 40, 23),
@@ -98,7 +98,7 @@ func run_tests() -> void:
 	for t in ["test_command_center_standalone", "test_medical_wing_standalone",
 			"test_laboratory_standalone", "test_engine_room_standalone",
 			"test_communications_standalone", "test_assembled_level_keeps_positions",
-			"test_room_play_scene_loads"]:
+			"test_room_play_scene_loads", "test_standalone_room_fixes"]:
 		paused = false
 		var v = await call(t)
 		if v == true:
@@ -239,14 +239,14 @@ func test_assembled_level_keeps_positions() -> bool:
 			assert_true(node != null, "assembled level has %s" % node_name)
 			if node != null:
 				assert_eq(node.global_position, check["nodes"][node_name], "assembled %s position" % node_name)
-	# No duplicates from the split: exactly 16 textured wall visuals
-	# (one per AREA_WALL_RECTS rect) and exactly 5 area zones.
+	# No duplicates from the split: one textured wall visual per
+	# AREA_WALL_RECTS rect, and exactly 5 area zones.
 	var walls: StaticBody2D = level.get_node("AreaWalls")
 	var visuals := 0
 	for child in walls.get_children():
 		if child is Polygon2D and (child as Polygon2D).texture != null:
 			visuals += 1
-	assert_eq(visuals, 16, "assembled AreaWalls has exactly 16 textured wall visuals")
+	assert_eq(visuals, LevelData.AREA_WALL_RECTS.size(), "assembled AreaWalls has one textured wall visual per AREA_WALL_RECTS rect")
 	var zones := 0
 	for child in level.get_children():
 		if child is Area2D and child.name.begins_with("AreaZone_"):
@@ -265,4 +265,127 @@ func test_room_play_scene_loads() -> bool:
 	var play: Node2D = scene.instantiate()
 	assert_true(play.get("room_key_override") != null, "room_play has room_key_override")
 	play.queue_free()
+	return true
+
+
+## Regression tests for the six room bugs found by live debugging
+## (2026-11-19): twin players, towers never powering standalone,
+## open map edges, caught respawn outside the room, open doorway gaps
+## in standalone, and through-wall interaction.
+func test_standalone_room_fixes() -> bool:
+	# A cached assembled level from the earlier tests would pollute
+	# the global "interactable" group — its switches sit at the same
+	# coordinates as the room's, and the player would flip the
+	# level's panel instead of the room's. Free it first; _get_level()
+	# rebuilds a fresh one for the edge checks below.
+	if _level != null:
+		_level.queue_free()
+		_level = null
+		await process_frame
+		await process_frame
+	# Twin players (F): standalone Central has exactly one player
+	# and one Mission — the room's own, re-used by the launcher.
+	var play_scene: PackedScene = load("res://scenes/levels/rooms/room_play.tscn")
+	var play: Node2D = play_scene.instantiate()
+	play.room_key_override = "command_center"
+	root.add_child(play)
+	var players := 0
+	for node in get_nodes_in_group("player"):
+		if play.is_ancestor_of(node):
+			players += 1
+	assert_eq(players, 1, "standalone command_center has exactly one player")
+	assert_true(play.mission == play.room.get_node("Mission"), "launcher re-uses the room's Mission")
+	# Towers power standalone (A): solve all three puzzles and the
+	# mission reaches the transmit stage.
+	var panel: StaticBody2D = play.room.get_node("BreakerPanel")
+	var player: CharacterBody2D = play.player
+	for pos in [Vector2(64, 204), Vector2(64, 180), Vector2(64, 228)]:
+		player.global_position = pos
+		for i in 5:
+			await physics_frame
+		Input.action_press("interact")
+		for i in 3:
+			await physics_frame
+		Input.action_release("interact")
+	assert_true(panel.is_solved, "standalone breaker solves")
+	assert_true((play.room.get_node("Tower1") as StaticBody2D).power_restored, "standalone Tower1 powers on")
+	var wire: StaticBody2D = play.room.get_node("WirePanel")
+	for round in 2:
+		for pos in [Vector2(576, 180), Vector2(576, 204), Vector2(576, 228)]:
+			player.global_position = pos
+			for i in 5:
+				await physics_frame
+			Input.action_press("interact")
+			for i in 3:
+				await physics_frame
+			Input.action_release("interact")
+	assert_true(wire.is_solved, "standalone wire panel solves")
+	assert_true((play.room.get_node("Tower2") as StaticBody2D).power_restored, "standalone Tower2 powers on")
+	var box: StaticBody2D = play.room.get_node("FuseBox")
+	player.add_item("fuse", 1, 0.0)
+	player.global_position = Vector2(320, 312)
+	for i in 5:
+		await physics_frame
+	Input.action_press("interact")
+	for i in 3:
+		await physics_frame
+	Input.action_release("interact")
+	assert_true(box.is_solved, "standalone fuse box solves with a fuse")
+	assert_true((play.room.get_node("Tower3") as StaticBody2D).power_restored, "standalone Tower3 powers on")
+	# Powered is not active: each tower needs E once powered (the
+	# mission only reaches the transmit stage after all three).
+	for tower_pos in [Vector2(80, 80), Vector2(288, 48), Vector2(448, 320)]:
+		player.global_position = tower_pos
+		for i in 5:
+			await physics_frame
+		Input.action_press("interact")
+		for i in 3:
+			await physics_frame
+		Input.action_release("interact")
+	for tower_name in ["Tower1", "Tower2", "Tower3"]:
+		assert_true((play.room.get_node(tower_name) as StaticBody2D).is_active, "standalone %s activates" % tower_name)
+	assert_true(play.mission.try_transmit(), "standalone command_center is winnable")
+	play.queue_free()
+	await process_frame
+	await process_frame
+	# Doorway seals (D): every room seals its gaps in standalone
+	# (3 children per sealed rect: shape + visual + highlight).
+	for key in ["command_center", "medical_wing", "laboratory", "engine_room", "communications"]:
+		var p: Node2D = play_scene.instantiate()
+		p.room_key_override = key
+		root.add_child(p)
+		var rbase: RoomBase = p.room
+		var gaps: Array[Rect2] = rbase.doorway_gap_rects()
+		var seal: Node = p.room.get_node_or_null("WallsSeal_" + key)
+		assert_true(seal != null, "%s doorway seal exists" % key)
+		if seal != null:
+			assert_eq(seal.get_child_count(), gaps.size() * 3, "%s seal children" % key)
+		p.queue_free()
+		await process_frame
+		await process_frame
+	# Caught respawn (C): standalone Medical respawns inside its room.
+	var med: Node2D = play_scene.instantiate()
+	med.room_key_override = "medical_wing"
+	root.add_child(med)
+	var med_wiring: LevelWiring = med.wiring
+	med_wiring._on_player_caught()
+	assert_eq(med.player.global_position, Vector2(704, 256), "caught player respawns at the medical spawn")
+	med.queue_free()
+	await process_frame
+	await process_frame
+	# Map edges (B): the two missing outer walls are solid in the
+	# assembled grid — north row above Medical, west column of the Lab.
+	var level: Node2D = _get_level()
+	var grid: AStarGrid2D = level.get("_nav_grid")
+	assert_true(grid.is_point_solid(Vector2i(50, 0)), "assembled grid: medical north edge is solid")
+	assert_true(grid.is_point_solid(Vector2i(0, 30)), "assembled grid: laboratory west edge is solid")
+	# Through-wall interact (E1): the FuseBox is 39 px from the lab
+	# side of the divider — in range, but behind a wall.
+	var fuse: Node2D = level.get_node("FuseBox")
+	var lplayer: CharacterBody2D = level.get_node("Player")
+	lplayer.global_position = Vector2(320, 375)
+	for i in 5:
+		await physics_frame
+	assert_true(lplayer.global_position.distance_to(fuse.global_position) < 40.0, "player is within interact range of the fuse box")
+	assert_true(lplayer.get("_current_interactable") == null, "fuse box is not interactable through the wall")
 	return true

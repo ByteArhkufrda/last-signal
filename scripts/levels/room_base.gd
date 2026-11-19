@@ -71,13 +71,57 @@ func _wall_texture_for(r: Rect2) -> Texture2D:
 	return med if med != null else LevelData.WALL_TEXTURE
 
 
+## Doorway gaps in this room's walls, for the standalone launcher.
+## In the full map the gaps open into the neighbouring rooms; in
+## standalone there is nothing beyond them, so room_play seals them
+## with walls. Computed from wall_rects(): on each wall line (one x
+## for vertical walls, one y for horizontal), the intervals the
+## room's wall rects do not cover, bounded by the room's own extent.
+## Walls the .tscn builds (Central's north/west ring) are not in
+## wall_rects(), so they never produce a spurious gap here.
+func doorway_gap_rects() -> Array[Rect2]:
+	var gaps: Array[Rect2] = []
+	var vertical: Dictionary = {}
+	var horizontal: Dictionary = {}
+	for r in wall_rects():
+		if r.size.x == 16 and r.size.y > 16:
+			if not vertical.has(r.position.x):
+				vertical[r.position.x] = []
+			(vertical[r.position.x] as Array).append(r)
+		elif r.size.y == 16 and r.size.x > 16:
+			if not horizontal.has(r.position.y):
+				horizontal[r.position.y] = []
+			(horizontal[r.position.y] as Array).append(r)
+	for x in vertical.keys():
+		var rects: Array = vertical[x]
+		rects.sort_custom(func(a: Rect2, b: Rect2) -> bool: return a.position.y < b.position.y)
+		var covered: float = room_rect.position.y
+		for r in rects:
+			if r.position.y > covered:
+				gaps.append(Rect2(x, covered, 16, r.position.y - covered))
+			covered = maxf(covered, r.end.y)
+		if covered < room_rect.end.y:
+			gaps.append(Rect2(x, covered, 16, room_rect.end.y - covered))
+	for y in horizontal.keys():
+		var rects: Array = horizontal[y]
+		rects.sort_custom(func(a: Rect2, b: Rect2) -> bool: return a.position.x < b.position.x)
+		var covered: float = room_rect.position.x
+		for r in rects:
+			if r.position.x > covered:
+				gaps.append(Rect2(covered, y, r.position.x - covered, 16))
+			covered = maxf(covered, r.end.x)
+		if covered < room_rect.end.x:
+			gaps.append(Rect2(covered, y, room_rect.end.x - covered, 16))
+	return gaps
+
+
 ## Build the room's code-built walls as one StaticBody2D named
 ## "Walls_<room_key>". Visuals are built exactly like level_01.gd
 ## _build_area_walls: textured Polygon2D (UVs = world coords, texture
 ## repeats every 16 px, white color) + a darker edge highlight.
-func _build_wall_rects(rects: Array[Rect2]) -> StaticBody2D:
+func _build_wall_rects(rects: Array[Rect2], body_name: String = "") -> StaticBody2D:
 	var body := StaticBody2D.new()
-	body.name = "Walls_" + room_key
+	body.name = body_name if body_name != "" else "Walls_" + room_key
 	body.collision_layer = 1
 	body.collision_mask = 0
 	add_child(body)

@@ -313,10 +313,31 @@ func _find_nearest_interactable() -> Node:
 	var best_dist := INTERACT_RANGE
 	for node in get_tree().get_nodes_in_group("interactable"):
 		var d := global_position.distance_to((node as Node2D).global_position)
-		if d < best_dist:
+		if d < best_dist and _has_line_of_sight(node as Node2D):
 			best_dist = d
 			best = node
 	return best
+
+
+## True when no wall stands between the player and the target — the
+## same wall-layer raycast the robots and the radar pulse use
+## (2026-11-19: the FuseBox was reachable from the Laboratory, 39 px
+## away through the divider wall). The target's own body is excluded,
+## and so are the bodies of its assembly: the panel switches sit ON
+## the panel's body, so a ray to a switch must not stop at the panel.
+func _has_line_of_sight(target: Node2D) -> bool:
+	var exclude: Array[RID] = [get_rid()]
+	var node: Node = target
+	while node != null:
+		if node is CollisionObject2D:
+			exclude.append((node as CollisionObject2D).get_rid())
+		node = node.get_parent()
+	for desc in target.find_children("*", "CollisionObject2D", true, false):
+		exclude.append((desc as CollisionObject2D).get_rid())
+	var query := PhysicsRayQueryParameters2D.create(global_position, target.global_position, 1)
+	query.exclude = exclude
+	var result := get_world_2d().direct_space_state.intersect_ray(query)
+	return result.is_empty()
 
 
 func _get_hud() -> CanvasLayer:

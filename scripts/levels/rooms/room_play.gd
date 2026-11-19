@@ -47,13 +47,36 @@ func _ready() -> void:
 	room = room_scene.instantiate()
 	room.standalone = true
 	add_child(room)
-	player = PLAYER_SCENE.instantiate()
-	player.name = "Player"
+	# Central Control ships its own Player and Mission in the .tscn;
+	# re-use them instead of spawning a second pair (2026-11-19: two
+	# players fought each other — the pair drifted left on its own,
+	# input came out inverted, every E fired twice, and the fuse box
+	# read the wrong player's empty inventory).
+	var room_player: CharacterBody2D = room.get_node_or_null("Player") as CharacterBody2D
+	if room_player != null:
+		player = room_player
+	else:
+		player = PLAYER_SCENE.instantiate()
+		player.name = "Player"
+		add_child(player)
 	player.position = room.spawn_point
-	add_child(player)
-	mission = MISSION_SCRIPT.new()
-	mission.name = "Mission"
-	add_child(mission)
+	var room_mission: Node = room.get_node_or_null("Mission")
+	if room_mission != null:
+		mission = room_mission
+	else:
+		mission = MISSION_SCRIPT.new()
+		mission.name = "Mission"
+		add_child(mission)
+	# Seal the doorway gaps: in the full map they open into the
+	# neighbours, here there is nothing beyond them (2026-11-19: the
+	# player walked out of standalone rooms through the 32 px gaps).
+	# The seal is a separate body and stays OUT of the nav grid — same
+	# precedent as the alcove door: no path ever needs to cross it
+	# (the player is sealed inside), and the grid must keep agreeing
+	# with the full level's grid cell for cell.
+	var seal: Array[Rect2] = room.doorway_gap_rects()
+	if not seal.is_empty():
+		room._build_wall_rects(seal, "WallsSeal_" + room_key)
 	var inflatable: Array[Rect2] = [Rect2(160, 80, 16, 16)]
 	inflatable.append_array(LevelData.PROP_SOLID_RECTS)
 	var nav_grid: AStarGrid2D = RoomBase.build_nav_grid(
@@ -66,4 +89,6 @@ func _ready() -> void:
 	camera.limit_bottom = int(room.room_rect.end.y)
 	wiring = LevelWiring.new()
 	add_child(wiring)
-	wiring.setup(self, player, mission, nav_grid, room.blocked_rects())
+	# Caught in a standalone room, respawn at that room's spawn — the
+	# full game's entrance (320, 184) is outside every other room.
+	wiring.setup(self, player, mission, nav_grid, room.blocked_rects(), room.spawn_point)
