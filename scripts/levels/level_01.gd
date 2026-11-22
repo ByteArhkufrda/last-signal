@@ -104,7 +104,7 @@ var _nav_grid: AStarGrid2D = null
 ## Shared signal wiring (LevelWiring) and the room scenes this level
 ## instanced (kept for the flatten step in _ready).
 var _wiring: LevelWiring = null
-var _instanced_rooms: Array[RoomBase] = []
+var _instanced_rooms: Array[Node2D] = []
 ## What the instanced rooms already built, cached as data (not nodes):
 ## the rooms are queue_free'd by the flatten, so the legacy builders
 ## below — which run AFTER the flatten — must read these caches, not
@@ -137,8 +137,8 @@ func _ready() -> void:
 	_build_nav_grid()
 	_build_area_zones()
 	_apply_camera_limits()
-	# All signal wiring lives in LevelWiring now (shared with the
-	# standalone room launcher), so a room plays the same wired.
+	# All signal wiring lives in LevelWiring now; the standalone rooms
+	# have their own wiring copies, so a room plays the same wired.
 	_wiring = LevelWiring.new()
 	add_child(_wiring)
 	_wiring.setup(self, player, mission, _nav_grid, _blocked_rects())
@@ -163,7 +163,7 @@ func _build_floor() -> void:
 ## south-west quarter). Every other wall is built by its room and
 ## flattened into AreaWalls by _flatten_rooms. Wall art is plain metal
 ## here — the Medical Wing's pack tiles are chosen by the room itself
-## (RoomBase.wall_texture_for_local).
+## (the room's wall_texture_for_local).
 func _build_station_walls() -> void:
 	var body: StaticBody2D = _get_or_create_area_walls()
 	for wall in STATION_ONLY_WALLS:
@@ -220,8 +220,37 @@ func _build_area_tints() -> void:
 func _build_nav_grid() -> void:
 	# Inflatable props are the rooms' own prop rects, in world coords.
 	var inflatable: Array[Rect2] = _instanced_prop_rects()
-	_nav_grid = RoomBase.build_nav_grid(
+	_nav_grid = build_nav_grid(
 		Rect2i(0, 0, ROOM_COLS, ROOM_ROWS), _blocked_rects(), inflatable)
+
+
+## Navigation grid for a tile region. The assembler's own copy of the
+## grid builder (each room has its own copy too): walls are solid but
+## NOT inflated (the 32 px doorways would close); props are inflated
+## by one cell (a 12x14 body following a cell-center path passes
+## within 1 px of a 16x16 obstacle's corner and gets stuck sliding on
+## it — measured 2026-11-12).
+static func build_nav_grid(tile_rect: Rect2i, blocked: Array[Rect2], inflatable: Array[Rect2]) -> AStarGrid2D:
+	var grid := AStarGrid2D.new()
+	grid.region = tile_rect
+	grid.cell_size = Vector2(LevelData.TILE_SIZE, LevelData.TILE_SIZE)
+	grid.diagonal_mode = AStarGrid2D.DIAGONAL_MODE_ONLY_IF_NO_OBSTACLES
+	grid.update()
+	for x in range(tile_rect.position.x, tile_rect.end.x):
+		for y in range(tile_rect.position.y, tile_rect.end.y):
+			var cell := Rect2(x * LevelData.TILE_SIZE, y * LevelData.TILE_SIZE, LevelData.TILE_SIZE, LevelData.TILE_SIZE)
+			for r in blocked:
+				if cell.intersects(r):
+					grid.set_point_solid(Vector2i(x, y), true)
+					break
+	for r in inflatable:
+		var min_cell := Vector2i(int(r.position.x / LevelData.TILE_SIZE) - 1, int(r.position.y / LevelData.TILE_SIZE) - 1)
+		var max_cell := Vector2i(int(r.end.x / LevelData.TILE_SIZE) + 1, int(r.end.y / LevelData.TILE_SIZE) + 1)
+		for cx in range(min_cell.x, max_cell.x):
+			for cy in range(min_cell.y, max_cell.y):
+				if tile_rect.has_point(Vector2i(cx, cy)):
+					grid.set_point_solid(Vector2i(cx, cy), true)
+	return grid
 
 
 ## Every solid rect the grid must know about, derived from the rooms:
@@ -285,11 +314,11 @@ func _apply_camera_limits() -> void:
 ## instanced rooms already built), and walls come from the rooms too —
 ## the assembler only builds the station-only walls itself.
 const ROOM_SCENES := {
-	"command_center": "res://scenes/levels/rooms/command_center.tscn",
-	"medical_wing": "res://scenes/levels/rooms/medical_wing.tscn",
-	"laboratory": "res://scenes/levels/rooms/laboratory.tscn",
-	"engine_room": "res://scenes/levels/rooms/engine_room.tscn",
-	"communications": "res://scenes/levels/rooms/communications.tscn",
+	"command_center": "res://scenes/levels/rooms/command_center/command_center.tscn",
+	"medical_wing": "res://scenes/levels/rooms/medical_wing/medical_wing.tscn",
+	"laboratory": "res://scenes/levels/rooms/laboratory/laboratory.tscn",
+	"engine_room": "res://scenes/levels/rooms/engine_room/engine_room.tscn",
+	"communications": "res://scenes/levels/rooms/communications/communications.tscn",
 }
 const ROOM_NODE_NAMES := {
 	"command_center": "CommandCenter",
@@ -305,7 +334,7 @@ func _instance_rooms() -> void:
 		var path: String = ROOM_SCENES[room_key]
 		if not ResourceLoader.exists(path):
 			continue
-		var room: RoomBase = load(path).instantiate()
+		var room: Node2D = load(path).instantiate()
 		room.name = ROOM_NODE_NAMES[room_key]
 		# Place the room at its station offset BEFORE add_child, so
 		# _ready builds with the right tile offset (floor rolls) and
@@ -348,7 +377,7 @@ func _flatten_rooms() -> void:
 				var i := 0
 				while i < wall_children.size():
 					# One wall rect = shape + visual + highlight, in
-					# that order (RoomBase._build_wall_rects). The
+					# that order (the room's _build_wall_rects). The
 					# visual's polygon encodes the rect: its first
 					# point is the position, its third point is
 					# position + size.

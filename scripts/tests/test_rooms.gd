@@ -6,7 +6,8 @@ extends SceneTree
 ## the run). A room whose scene does not exist yet is SKIPPED (its
 ## branch has not landed), not failed — the split lands room by room.
 ##
-## For every split room this verifies, standalone via room_play.tscn:
+## For every split room this verifies, standalone via its own
+## play_<room>.tscn: the floor covers exactly the room's tile rect,
 ## the floor covers exactly the room's tile rect, the expected nodes
 ## exist at their exact positions, the wiring sets the area, the
 ## robot(s) patrol inside the room, a nav path exists from the spawn,
@@ -20,11 +21,20 @@ extends SceneTree
 ## (local) must match the assembled grid cell (local + offset).
 
 const ROOM_SCENES := {
-	"command_center": "res://scenes/levels/rooms/command_center.tscn",
-	"medical_wing": "res://scenes/levels/rooms/medical_wing.tscn",
-	"laboratory": "res://scenes/levels/rooms/laboratory.tscn",
-	"engine_room": "res://scenes/levels/rooms/engine_room.tscn",
-	"communications": "res://scenes/levels/rooms/communications.tscn",
+	"command_center": "res://scenes/levels/rooms/command_center/command_center.tscn",
+	"medical_wing": "res://scenes/levels/rooms/medical_wing/medical_wing.tscn",
+	"laboratory": "res://scenes/levels/rooms/laboratory/laboratory.tscn",
+	"engine_room": "res://scenes/levels/rooms/engine_room/engine_room.tscn",
+	"communications": "res://scenes/levels/rooms/communications/communications.tscn",
+}
+## Each room's own standalone launcher (absolute separation: no shared
+## launcher file).
+const PLAY_SCENES := {
+	"command_center": "res://scenes/levels/rooms/command_center/play_command_center.tscn",
+	"medical_wing": "res://scenes/levels/rooms/medical_wing/play_medical_wing.tscn",
+	"laboratory": "res://scenes/levels/rooms/laboratory/play_laboratory.tscn",
+	"engine_room": "res://scenes/levels/rooms/engine_room/play_engine_room.tscn",
+	"communications": "res://scenes/levels/rooms/communications/play_communications.tscn",
 }
 ## area, LOCAL tile rect, LOCAL standalone spawn, a walkable LOCAL
 ## target cell for the nav-path check, expected named nodes with LOCAL
@@ -149,9 +159,8 @@ func _test_room_standalone(room_key: String) -> bool:
 		skipped += 1
 		print("SKIP %s: scene not split yet" % room_key)
 		return true
-	var play_scene: PackedScene = load("res://scenes/levels/rooms/room_play.tscn")
+	var play_scene: PackedScene = load(PLAY_SCENES[room_key])
 	var play: Node2D = play_scene.instantiate()
-	play.room_key_override = room_key
 	root.add_child(play)
 	# No await: the room builds and wires in _ready (synchronous on
 	# add_child), and a frame would let its robot walk off its spawn.
@@ -242,7 +251,7 @@ func test_communications_standalone() -> bool:
 func test_rooms_are_local() -> bool:
 	for room_key in ROOM_CHECKS.keys():
 		var check: Dictionary = ROOM_CHECKS[room_key]
-		var room: RoomBase = load(ROOM_SCENES[room_key]).instantiate()
+		var room = load(ROOM_SCENES[room_key]).instantiate()
 		root.add_child(room)
 		assert_eq(room.room_rect.position, Vector2.ZERO, "%s room_rect starts at (0, 0)" % room_key)
 		assert_eq(room.room_tile_rect.position, Vector2i.ZERO, "%s room_tile_rect starts at (0, 0)" % room_key)
@@ -264,7 +273,7 @@ func test_exits_pair_up() -> bool:
 	for room_key in ROOM_CHECKS.keys():
 		var check: Dictionary = ROOM_CHECKS[room_key]
 		var offset_px := Vector2(check["offset"]) * 16.0
-		var room: RoomBase = load(ROOM_SCENES[room_key]).instantiate()
+		var room = load(ROOM_SCENES[room_key]).instantiate()
 		root.add_child(room)
 		for exit in room.exits():
 			var r: Rect2 = exit["rect"]
@@ -273,7 +282,7 @@ func test_exits_pair_up() -> bool:
 		await process_frame
 		await process_frame
 	for room_key in ROOM_CHECKS.keys():
-		var room: RoomBase = load(ROOM_SCENES[room_key]).instantiate()
+		var room = load(ROOM_SCENES[room_key]).instantiate()
 		root.add_child(room)
 		for exit in room.exits():
 			var target_key := "%s:%s" % [str(exit["target_room"]), str(exit["target_exit"])]
@@ -362,11 +371,16 @@ func test_assembled_level_keeps_positions() -> bool:
 
 
 func test_room_play_scene_loads() -> bool:
-	var scene: PackedScene = load("res://scenes/levels/rooms/room_play.tscn")
-	assert_true(scene != null, "room_play.tscn loads")
-	var play: Node2D = scene.instantiate()
-	assert_true(play.get("room_key_override") != null, "room_play has room_key_override")
-	play.queue_free()
+	for room_key in PLAY_SCENES.keys():
+		var scene: PackedScene = load(PLAY_SCENES[room_key])
+		assert_true(scene != null, "play_%s.tscn loads" % room_key)
+		var play: Node2D = scene.instantiate()
+		root.add_child(play)
+		assert_true(play.room != null, "play_%s builds its room" % room_key)
+		assert_eq(play.room.room_key, room_key, "play_%s room key" % room_key)
+		play.queue_free()
+		await process_frame
+		await process_frame
 	return true
 
 
@@ -387,9 +401,8 @@ func test_standalone_room_fixes() -> bool:
 		await process_frame
 	# Twin players (F): standalone Central has exactly one player
 	# and one Mission — the room's own, re-used by the launcher.
-	var play_scene: PackedScene = load("res://scenes/levels/rooms/room_play.tscn")
+	var play_scene: PackedScene = load(PLAY_SCENES["command_center"])
 	var play: Node2D = play_scene.instantiate()
-	play.room_key_override = "command_center"
 	root.add_child(play)
 	var players := 0
 	for node in get_nodes_in_group("player"):
@@ -453,10 +466,9 @@ func test_standalone_room_fixes() -> bool:
 	# Doorway seals (D): every room seals its gaps in standalone
 	# (3 children per sealed rect: shape + visual + highlight).
 	for key in ["command_center", "medical_wing", "laboratory", "engine_room", "communications"]:
-		var p: Node2D = play_scene.instantiate()
-		p.room_key_override = key
+		var p: Node2D = load(PLAY_SCENES[key]).instantiate()
 		root.add_child(p)
-		var rbase: RoomBase = p.room
+		var rbase = p.room
 		var gaps: Array[Rect2] = rbase.doorway_gap_rects()
 		var seal: Node = p.room.get_node_or_null("WallsSeal_" + key)
 		assert_true(seal != null, "%s doorway seal exists" % key)
@@ -466,10 +478,9 @@ func test_standalone_room_fixes() -> bool:
 		await process_frame
 		await process_frame
 	# Caught respawn (C): standalone Medical respawns inside its room.
-	var med: Node2D = play_scene.instantiate()
-	med.room_key_override = "medical_wing"
+	var med: Node2D = load(PLAY_SCENES["medical_wing"]).instantiate()
 	root.add_child(med)
-	var med_wiring: LevelWiring = med.wiring
+	var med_wiring = med.wiring
 	med_wiring._on_player_caught()
 	assert_eq(med.player.global_position, Vector2(64, 256), "caught player respawns at the medical spawn")
 	med.queue_free()

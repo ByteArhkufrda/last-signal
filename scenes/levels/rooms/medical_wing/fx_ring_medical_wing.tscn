@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/levels/rooms/medical_wing/fx_ring_medical_wing.gd" id="1_fx"]
+
+[node name="FXRing" type="Node2D"]
+script = ExtResource("1_fx")

@@ -6,7 +6,7 @@ extends Node
 ## the HUD: interactables, hidden objects, enemies (patrol assignment,
 ## pulse, caught), puzzles, towers, the transmit console, pickups, area
 ## zones, the minimap feed and the stage hints. The level assembler
-## (level_01.gd) and the room launcher (room_play.gd) both use it, so a
+## (level_01.gd) and the rooms' own launchers (play_<room>.gd) use it, so a
 ## room played standalone wires exactly like the full level.
 ##
 ## All lookups are scoped to the wired root's subtree: a freed level's
@@ -22,12 +22,12 @@ var _mission: Node = null
 var _nav_grid: AStarGrid2D = null
 var _blocked: Array[Rect2] = []
 var _puzzles_solved: int = 0
-## The single room being played standalone (room_play.gd passes its
+## The single room being played standalone (the room's play_<room>.gd passes its
 ## own root, which carries `.room`); null in the assembled level.
 ## Standalone, every position the wiring sees is a LOCAL one, so area,
 ## patrol and minimap all come from this room instead of the station
 ## layout in LevelData.
-var _standalone_room: RoomBase = null
+var _standalone_room: Node2D = null
 
 
 ## Where a caught player respawns. The full game uses the entrance
@@ -45,7 +45,7 @@ func setup(root: Node2D, player: CharacterBody2D, mission: Node, nav_grid: AStar
 	_nav_grid = nav_grid
 	_blocked = blocked
 	_respawn_point = respawn_point
-	_standalone_room = root.get("room") as RoomBase
+	_standalone_room = root.get("room") as Node2D
 	_wire_interactables()
 	for zone in _root.find_children("AreaZone_*", "Area2D", true, false):
 		zone.body_entered.connect(_on_area_body_entered.bind(str(zone.get_meta("area_name"))))

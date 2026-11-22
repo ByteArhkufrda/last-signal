@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/levels/rooms/communications/radar_pulse_communications.gd" id="1_pulse"]
+
+[node name="RadarPulse" type="Node2D" groups=["radar_pulse"]]
+script = ExtResource("1_pulse")
