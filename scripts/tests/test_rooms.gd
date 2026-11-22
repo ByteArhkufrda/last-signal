@@ -6,27 +6,45 @@ extends SceneTree
 ## the run). A room whose scene does not exist yet is SKIPPED (its
 ## branch has not landed), not failed — the split lands room by room.
 ##
-## For every split room this verifies, standalone via room_play.tscn:
+## For every split room this verifies, standalone via its own
+## play_<room>.tscn: the floor covers exactly the room's tile rect,
 ## the floor covers exactly the room's tile rect, the expected nodes
 ## exist at their exact positions, the wiring sets the area, the
 ## robot(s) patrol inside the room, a nav path exists from the spawn,
 ## and — against one assembled level instance — the standalone nav
 ## grid agrees cell for cell with the full level's grid.
+##
+## Local-coordinate contract (2026-11-23): every position in
+## ROOM_CHECKS is LOCAL — the room's own (0, 0) origin. "offset" is
+## the room's station position in tiles; the assembled level must show
+## each node at local + offset * 16, and the standalone nav grid cell
+## (local) must match the assembled grid cell (local + offset).
 
 const ROOM_SCENES := {
-	"command_center": "res://scenes/levels/rooms/command_center.tscn",
-	"medical_wing": "res://scenes/levels/rooms/medical_wing.tscn",
-	"laboratory": "res://scenes/levels/rooms/laboratory.tscn",
-	"engine_room": "res://scenes/levels/rooms/engine_room.tscn",
-	"communications": "res://scenes/levels/rooms/communications.tscn",
+	"command_center": "res://scenes/levels/rooms/command_center/command_center.tscn",
+	"medical_wing": "res://scenes/levels/rooms/medical_wing/medical_wing.tscn",
+	"laboratory": "res://scenes/levels/rooms/laboratory/laboratory.tscn",
+	"engine_room": "res://scenes/levels/rooms/engine_room/engine_room.tscn",
+	"communications": "res://scenes/levels/rooms/communications/communications.tscn",
 }
-## area, tile rect, standalone spawn, a walkable target cell for the
-## nav-path check, expected named nodes with positions, expected group
-## sizes inside the room, expected children of the "Walls_<key>" body
-## (3 per wall rect: shape + visual + highlight).
+## Each room's own standalone launcher (absolute separation: no shared
+## launcher file).
+const PLAY_SCENES := {
+	"command_center": "res://scenes/levels/rooms/command_center/play_command_center.tscn",
+	"medical_wing": "res://scenes/levels/rooms/medical_wing/play_medical_wing.tscn",
+	"laboratory": "res://scenes/levels/rooms/laboratory/play_laboratory.tscn",
+	"engine_room": "res://scenes/levels/rooms/engine_room/play_engine_room.tscn",
+	"communications": "res://scenes/levels/rooms/communications/play_communications.tscn",
+}
+## area, LOCAL tile rect, LOCAL standalone spawn, a walkable LOCAL
+## target cell for the nav-path check, expected named nodes with LOCAL
+## positions, expected group sizes inside the room, expected children
+## of the "Walls_<key>" body (3 per wall rect: shape + visual +
+## highlight), and the room's station offset in tiles.
 const ROOM_CHECKS := {
 	"command_center": {
 		"area": "کنترل مرکزی", "tile_rect": Rect2i(0, 0, 40, 23),
+		"offset": Vector2i(0, 0),
 		"spawn": Vector2(320, 184), "target_cell": Vector2i(10, 10),
 		"nodes": {
 			"Tower1": Vector2(80, 48), "Tower2": Vector2(320, 48),
@@ -41,29 +59,33 @@ const ROOM_CHECKS := {
 		"towers": 3, "puzzles": 3, "enemies": 1, "wall_children": 12,
 	},
 	"medical_wing": {
-		"area": "بخش پزشکی", "tile_rect": Rect2i(40, 0, 40, 23),
-		"spawn": Vector2(704, 256), "target_cell": Vector2i(50, 10),
+		"area": "بخش پزشکی", "tile_rect": Rect2i(0, 0, 40, 23),
+		"offset": Vector2i(40, 0),
+		"spawn": Vector2(64, 256), "target_cell": Vector2i(10, 10),
 		"nodes": {
-			"ScannerRobot": Vector2(900, 120), "MedBedStandard": Vector2(700, 64),
+			"ScannerRobot": Vector2(260, 120), "MedBedStandard": Vector2(60, 64),
 		},
 		"towers": 0, "puzzles": 0, "enemies": 1, "wall_children": 18,
 	},
 	"laboratory": {
-		"area": "آزمایشگاه تحقیقاتی", "tile_rect": Rect2i(0, 23, 40, 23),
-		"spawn": Vector2(320, 400), "target_cell": Vector2i(10, 30),
-		"nodes": {"LabRobot": Vector2(200, 560)},
+		"area": "آزمایشگاه تحقیقاتی", "tile_rect": Rect2i(0, 0, 40, 23),
+		"offset": Vector2i(0, 23),
+		"spawn": Vector2(320, 32), "target_cell": Vector2i(10, 7),
+		"nodes": {"LabRobot": Vector2(200, 192)},
 		"towers": 0, "puzzles": 0, "enemies": 1, "wall_children": 18,
 	},
 	"engine_room": {
-		"area": "نیروگاه", "tile_rect": Rect2i(40, 23, 40, 23),
-		"spawn": Vector2(700, 400), "target_cell": Vector2i(50, 30),
-		"nodes": {"PowerScanner": Vector2(1000, 520)},
+		"area": "نیروگاه", "tile_rect": Rect2i(0, 0, 40, 23),
+		"offset": Vector2i(40, 23),
+		"spawn": Vector2(60, 32), "target_cell": Vector2i(10, 7),
+		"nodes": {"PowerScanner": Vector2(360, 152)},
 		"towers": 0, "puzzles": 0, "enemies": 1, "wall_children": 21,
 	},
 	"communications": {
-		"area": "محوطه‌ی مخابرات", "tile_rect": Rect2i(40, 46, 40, 12),
-		"spawn": Vector2(944, 760), "target_cell": Vector2i(55, 50),
-		"nodes": {"YardRobot": Vector2(800, 840)},
+		"area": "محوطه‌ی مخابرات", "tile_rect": Rect2i(0, 0, 40, 12),
+		"offset": Vector2i(40, 46),
+		"spawn": Vector2(304, 24), "target_cell": Vector2i(15, 4),
+		"nodes": {"YardRobot": Vector2(160, 104)},
 		"towers": 0, "puzzles": 0, "enemies": 1, "wall_children": 15,
 	},
 }
@@ -98,7 +120,9 @@ func run_tests() -> void:
 	for t in ["test_command_center_standalone", "test_medical_wing_standalone",
 			"test_laboratory_standalone", "test_engine_room_standalone",
 			"test_communications_standalone", "test_assembled_level_keeps_positions",
-			"test_room_play_scene_loads", "test_standalone_room_fixes"]:
+			"test_room_play_scene_loads", "test_standalone_room_fixes",
+			"test_rooms_are_local", "test_exits_pair_up",
+			"test_station_layout_agrees_with_rooms"]:
 		paused = false
 		var v = await call(t)
 		if v == true:
@@ -135,9 +159,8 @@ func _test_room_standalone(room_key: String) -> bool:
 		skipped += 1
 		print("SKIP %s: scene not split yet" % room_key)
 		return true
-	var play_scene: PackedScene = load("res://scenes/levels/rooms/room_play.tscn")
+	var play_scene: PackedScene = load(PLAY_SCENES[room_key])
 	var play: Node2D = play_scene.instantiate()
-	play.room_key_override = room_key
 	root.add_child(play)
 	# No await: the room builds and wires in _ready (synchronous on
 	# add_child), and a frame would let its robot walk off its spawn.
@@ -184,13 +207,16 @@ func _test_room_standalone(room_key: String) -> bool:
 	var spawn_cell := Vector2i(int((check["spawn"] as Vector2).x / 16), int((check["spawn"] as Vector2).y / 16))
 	var path: Array = play.nav_grid.get_id_path(spawn_cell, check["target_cell"])
 	assert_true(path.size() > 0, "%s nav path from spawn" % room_key)
-	# Standalone grid agrees with the assembled level's grid, cell for cell.
+	# Standalone grid agrees with the assembled level's grid, cell for
+	# cell: the standalone cell is LOCAL, the assembled cell is the
+	# same cell translated by the room's station offset.
 	var level: Node2D = _get_level()
 	var level_grid: AStarGrid2D = level.get("_nav_grid")
+	var offset: Vector2i = check["offset"]
 	var mismatch := 0
 	for x in range(tile_rect.position.x, tile_rect.end.x):
 		for y in range(tile_rect.position.y, tile_rect.end.y):
-			if play.nav_grid.is_point_solid(Vector2i(x, y)) != level_grid.is_point_solid(Vector2i(x, y)):
+			if play.nav_grid.is_point_solid(Vector2i(x, y)) != level_grid.is_point_solid(Vector2i(x, y) + offset):
 				mismatch += 1
 	assert_eq(mismatch, 0, "%s standalone grid matches assembled grid" % room_key)
 	play.queue_free()
@@ -219,6 +245,88 @@ func test_communications_standalone() -> bool:
 	return await _test_room_standalone("communications")
 
 
+## Local-coordinate contract: every room's own rect starts at (0, 0),
+## its spawn sits inside it, and every exit it declares is one of its
+## doorway gaps (the launcher seals exactly those gaps standalone).
+func test_rooms_are_local() -> bool:
+	for room_key in ROOM_CHECKS.keys():
+		var check: Dictionary = ROOM_CHECKS[room_key]
+		var room = load(ROOM_SCENES[room_key]).instantiate()
+		root.add_child(room)
+		assert_eq(room.room_rect.position, Vector2.ZERO, "%s room_rect starts at (0, 0)" % room_key)
+		assert_eq(room.room_tile_rect.position, Vector2i.ZERO, "%s room_tile_rect starts at (0, 0)" % room_key)
+		assert_true((room.room_rect as Rect2).has_point(room.spawn_point), "%s spawn is inside its own rect" % room_key)
+		assert_eq(room.spawn_point, check["spawn"], "%s spawn is the local spawn" % room_key)
+		var gaps: Array[Rect2] = room.doorway_gap_rects()
+		for exit in room.exits():
+			assert_true((exit["rect"] as Rect2) in gaps, "%s exit %s is a doorway gap" % [room_key, str(exit["id"])])
+		room.queue_free()
+		await process_frame
+		await process_frame
+	return true
+
+
+## Exits pair up: for every exit, the neighbour's matching exit lands
+## on the same world rect once both rooms sit at their station offsets.
+func test_exits_pair_up() -> bool:
+	var world_exits := {}
+	for room_key in ROOM_CHECKS.keys():
+		var check: Dictionary = ROOM_CHECKS[room_key]
+		var offset_px := Vector2(check["offset"]) * 16.0
+		var room = load(ROOM_SCENES[room_key]).instantiate()
+		root.add_child(room)
+		for exit in room.exits():
+			var r: Rect2 = exit["rect"]
+			world_exits["%s:%s" % [room_key, str(exit["id"])]] = Rect2(r.position + offset_px, r.size)
+		room.queue_free()
+		await process_frame
+		await process_frame
+	for room_key in ROOM_CHECKS.keys():
+		var room = load(ROOM_SCENES[room_key]).instantiate()
+		root.add_child(room)
+		for exit in room.exits():
+			var target_key := "%s:%s" % [str(exit["target_room"]), str(exit["target_exit"])]
+			assert_true(world_exits.has(target_key), "%s exit %s has a target exit" % [room_key, str(exit["id"])])
+			if world_exits.has(target_key):
+				var offset_px := Vector2((ROOM_CHECKS[room_key] as Dictionary)["offset"]) * 16.0
+				var r: Rect2 = exit["rect"]
+				assert_eq(Rect2(r.position + offset_px, r.size), world_exits[target_key], "%s exit %s coincides with its pair" % [room_key, str(exit["id"])])
+		room.queue_free()
+		await process_frame
+		await process_frame
+	return true
+
+
+func _rect_set(rects: Array) -> Dictionary:
+	var s := {}
+	for r in rects:
+		s[r] = true
+	return s
+
+
+## The station layout in LevelData agrees with the rooms: the union of
+## the rooms' translated wall rects is AREA_WALL_RECTS minus the two
+## south-west-quarter walls no room owns, and the translated prop
+## rects are PROP_SOLID_RECTS plus Central's crate (which the global
+## list never contained — it lives in command_center's blocked rects).
+func test_station_layout_agrees_with_rooms() -> bool:
+	var level: Node2D = _get_level()
+	var walls := _rect_set(level.get("_instanced_wall_rects_cache"))
+	var expected_walls := _rect_set(LevelData.AREA_WALL_RECTS)
+	expected_walls.erase(Rect2(0, 736, 16, 192))
+	expected_walls.erase(Rect2(0, 920, 640, 16))
+	assert_eq(walls.size(), expected_walls.size(), "room wall count agrees with AREA_WALL_RECTS")
+	for r in walls.keys():
+		assert_true(expected_walls.has(r), "room wall %s is in AREA_WALL_RECTS" % str(r))
+	var props := _rect_set(level.get("_instanced_prop_cache"))
+	var expected_props := _rect_set(LevelData.PROP_SOLID_RECTS)
+	expected_props[Rect2(160, 80, 16, 16)] = true
+	assert_eq(props.size(), expected_props.size(), "room prop count agrees with PROP_SOLID_RECTS")
+	for r in props.keys():
+		assert_true(expected_props.has(r), "room prop %s is in PROP_SOLID_RECTS" % str(r))
+	return true
+
+
 ## The assembled level keeps every room's key nodes at their exact
 ## positions, whether the room is split yet or still built by legacy code.
 ## Uses a FRESH level instance and checks synchronously (no await):
@@ -234,11 +342,14 @@ func test_assembled_level_keeps_positions() -> bool:
 	_level = level
 	for room_key in ROOM_CHECKS.keys():
 		var check: Dictionary = ROOM_CHECKS[room_key]
+		# Assembled, a node sits at its LOCAL position plus the
+		# room's station offset in pixels.
+		var offset_px := Vector2(check["offset"]) * 16.0
 		for node_name in (check["nodes"] as Dictionary).keys():
 			var node: Node2D = level.get_node_or_null(node_name)
 			assert_true(node != null, "assembled level has %s" % node_name)
 			if node != null:
-				assert_eq(node.global_position, check["nodes"][node_name], "assembled %s position" % node_name)
+				assert_eq(node.global_position, (check["nodes"][node_name] as Vector2) + offset_px, "assembled %s position" % node_name)
 	# No duplicates from the split: one textured wall visual per
 	# AREA_WALL_RECTS rect, and exactly 5 area zones.
 	var walls: StaticBody2D = level.get_node("AreaWalls")
@@ -260,11 +371,16 @@ func test_assembled_level_keeps_positions() -> bool:
 
 
 func test_room_play_scene_loads() -> bool:
-	var scene: PackedScene = load("res://scenes/levels/rooms/room_play.tscn")
-	assert_true(scene != null, "room_play.tscn loads")
-	var play: Node2D = scene.instantiate()
-	assert_true(play.get("room_key_override") != null, "room_play has room_key_override")
-	play.queue_free()
+	for room_key in PLAY_SCENES.keys():
+		var scene: PackedScene = load(PLAY_SCENES[room_key])
+		assert_true(scene != null, "play_%s.tscn loads" % room_key)
+		var play: Node2D = scene.instantiate()
+		root.add_child(play)
+		assert_true(play.room != null, "play_%s builds its room" % room_key)
+		assert_eq(play.room.room_key, room_key, "play_%s room key" % room_key)
+		play.queue_free()
+		await process_frame
+		await process_frame
 	return true
 
 
@@ -285,9 +401,8 @@ func test_standalone_room_fixes() -> bool:
 		await process_frame
 	# Twin players (F): standalone Central has exactly one player
 	# and one Mission — the room's own, re-used by the launcher.
-	var play_scene: PackedScene = load("res://scenes/levels/rooms/room_play.tscn")
+	var play_scene: PackedScene = load(PLAY_SCENES["command_center"])
 	var play: Node2D = play_scene.instantiate()
-	play.room_key_override = "command_center"
 	root.add_child(play)
 	var players := 0
 	for node in get_nodes_in_group("player"):
@@ -351,10 +466,9 @@ func test_standalone_room_fixes() -> bool:
 	# Doorway seals (D): every room seals its gaps in standalone
 	# (3 children per sealed rect: shape + visual + highlight).
 	for key in ["command_center", "medical_wing", "laboratory", "engine_room", "communications"]:
-		var p: Node2D = play_scene.instantiate()
-		p.room_key_override = key
+		var p: Node2D = load(PLAY_SCENES[key]).instantiate()
 		root.add_child(p)
-		var rbase: RoomBase = p.room
+		var rbase = p.room
 		var gaps: Array[Rect2] = rbase.doorway_gap_rects()
 		var seal: Node = p.room.get_node_or_null("WallsSeal_" + key)
 		assert_true(seal != null, "%s doorway seal exists" % key)
@@ -364,12 +478,11 @@ func test_standalone_room_fixes() -> bool:
 		await process_frame
 		await process_frame
 	# Caught respawn (C): standalone Medical respawns inside its room.
-	var med: Node2D = play_scene.instantiate()
-	med.room_key_override = "medical_wing"
+	var med: Node2D = load(PLAY_SCENES["medical_wing"]).instantiate()
 	root.add_child(med)
-	var med_wiring: LevelWiring = med.wiring
+	var med_wiring = med.wiring
 	med_wiring._on_player_caught()
-	assert_eq(med.player.global_position, Vector2(704, 256), "caught player respawns at the medical spawn")
+	assert_eq(med.player.global_position, Vector2(64, 256), "caught player respawns at the medical spawn")
 	med.queue_free()
 	await process_frame
 	await process_frame

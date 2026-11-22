@@ -1,0 +1,66 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/levels/rooms/command_center/breaker_panel_command_center.gd" id="1_panel"]
+[ext_resource type="Script" path="res://scripts/levels/rooms/command_center/puzzle_switch_command_center.gd" id="2_switch"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_panel"]
+size = Vector2(16, 72)
+
+[node name="BreakerPanel" type="StaticBody2D" groups=["puzzles"]]
+collision_layer = 1
+collision_mask = 1
+script = ExtResource("1_panel")
+
+[node name="PanelBox" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(-8, -36, 8, -36, 8, 36, -8, 36)
+color = Color(0.16, 0.17, 0.22, 1)
+
+[node name="Light" type="Polygon2D" parent="."]
+position = Vector2(0, -32)
+polygon = PackedVector2Array(3, 0, 2.1, 2.1, 0, 3, -2.1, 2.1, -3, 0, -2.1, -2.1, 0, -3, 2.1, -2.1)
+color = Color(0.9, 0.2, 0.2, 1)
+
+[node name="Switch1" type="Node2D" parent="." groups=["interactable"]]
+script = ExtResource("2_switch")
+position = Vector2(0, -24)
+switch_index = 1
+interact_label = "کلید 1 را بزن"
+
+[node name="Box" type="Polygon2D" parent="Switch1"]
+polygon = PackedVector2Array(-5, -7, 5, -7, 5, 7, -5, 7)
+color = Color(0.25, 0.26, 0.32, 1)
+
+[node name="Lever" type="Polygon2D" parent="Switch1"]
+polygon = PackedVector2Array(-2, -5, 2, -5, 2, 5, -2, 5)
+color = Color(0.55, 0.55, 0.58, 1)
+
+[node name="Switch2" type="Node2D" parent="." groups=["interactable"]]
+script = ExtResource("2_switch")
+position = Vector2(0, 0)
+switch_index = 2
+interact_label = "کلید 2 را بزن"
+
+[node name="Box" type="Polygon2D" parent="Switch2"]
+polygon = PackedVector2Array(-5, -7, 5, -7, 5, 7, -5, 7)
+color = Color(0.25, 0.26, 0.32, 1)
+
+[node name="Lever" type="Polygon2D" parent="Switch2"]
+polygon = PackedVector2Array(-2, -5, 2, -5, 2, 5, -2, 5)
+color = Color(0.55, 0.55, 0.58, 1)
+
+[node name="Switch3" type="Node2D" parent="." groups=["interactable"]]
+script = ExtResource("2_switch")
+position = Vector2(0, 24)
+switch_index = 3
+interact_label = "کلید 3 را بزن"
+
+[node name="Box" type="Polygon2D" parent="Switch3"]
+polygon = PackedVector2Array(-5, -7, 5, -7, 5, 7, -5, 7)
+color = Color(0.25, 0.26, 0.32, 1)
+
+[node name="Lever" type="Polygon2D" parent="Switch3"]
+polygon = PackedVector2Array(-2, -5, 2, -5, 2, 5, -2, 5)
+color = Color(0.55, 0.55, 0.58, 1)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_panel")

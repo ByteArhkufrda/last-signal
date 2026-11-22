@@ -1,8 +1,11 @@
 # Last Signal — Project State
 
-Updated: 2026-11-15 (v1.4 Medical Wing pack wired in, verified — code only, no new export)
+Updated: 2026-11-23 (rooms fully separated — no shared files; branch `refactor/absolute-room-separation`, not merged)
 
 ## Current development phase
+**Rooms fully separate (local coordinates) — DONE, unmerged** (verified by test run, 2026-11-23: test_runner 661/661 + test_rooms 315/315; every room now builds in its own (0, 0) space with its own walls/props/patrol/exits, the assembler alone knows the station offsets, and the assembled world positions are unchanged; branch `refactor/standalone-rooms`, awaiting user review — no export taken, user said no builds until he says so)
+
+**Rooms absolutely separate — no shared file — DONE, unmerged** (verified by test run, 2026-11-23: test_runner 661/661 + test_rooms 328/328; every room is now a self-contained folder with its own copies of the room script (base helpers + floor builder inlined), wiring, player, mission, radar pulse, fx ring, launcher and the interaction/enemy scenes it uses — 98 files across 5 rooms, zero code references between rooms, verified by grep; `RoomBase` and the shared `room_play` are deleted; the shared originals (`level_wiring.gd`, `level_data.gd`, `floor_builder.gd`, `medical_data.gd`, player/mission/interaction/enemy scenes) remain only for the assembled level and the unit tests; branch `refactor/absolute-room-separation`, awaiting user review — no export taken, user said no builds until he says so)
 **v1.4 Medical Wing pack — DONE** (verified by test run, 2026-11-15: 661 passed, 0 failed; Xvfb screenshots in docs/medical-wing-preview-*.png; no export taken — user said no builds until he says so)
 **v1.3 Persian, help & hints, one robot per area — DONE** (verified by test run, 2026-11-12)
 **v1.2 minimap + real walls — DONE** (verified by test run, 2026-11-12)
@@ -28,6 +31,10 @@ Updated: 2026-11-15 (v1.4 Medical Wing pack wired in, verified — code only, no
 - Input Map: `move_left/right/up/down` (WASD + arrow keys)
 - Headless test runner: **661/661 tests pass, exit 0** (`scripts/tests/test_runner.gd`)
   (v1.3 was 512/512; v1.4 added 4 medical tests + ~145 assertions)
+- Headless room tests: **315/315 checks pass** (`scripts/tests/test_rooms.gd`,
+  2026-11-23: local-coordinate contract — standalone positions/nav are local,
+  assembled positions are local + station offset, exits pair up, and the
+  rooms' translated walls/props agree with the station layout in LevelData)
 - Post-Phase-10 review (2026-11-12): full code read + probes found and
   fixed 2 bugs — Esc unpausing the game behind the win screen, and the
   inventory label showing "fuse" instead of "Fuse" (see DEVELOPMENT_LOG)

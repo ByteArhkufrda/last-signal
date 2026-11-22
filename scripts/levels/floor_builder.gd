@@ -61,12 +61,18 @@ static func medical_floor_index(roll: float) -> int:
 ## Fill `layer` (which must already have the tileset from
 ## build_tileset()) for the given tile rect. Source 0 is the standard
 ## two-tile atlas, source 1 the medical 12-tile atlas.
-static func build_floor(layer: TileMapLayer, tile_rect: Rect2i) -> void:
+## `tile_rect` is in the layer's own (local) coordinates; `tile_offset`
+## is the room's position in the station map, in tiles. Rolls and the
+## medical-floor check use the GLOBAL cell (local + offset), so a room's
+## standalone floor matches the assembled floor cell for cell, while
+## the cells themselves are written at local coordinates.
+static func build_floor(layer: TileMapLayer, tile_rect: Rect2i, tile_offset: Vector2i = Vector2i.ZERO) -> void:
 	_ensure_rolls()
 	for x in range(tile_rect.position.x, tile_rect.end.x):
 		for y in range(tile_rect.position.y, tile_rect.end.y):
-			var roll: float = roll_at(Vector2i(x, y))
-			if MedicalData.MED_RECT_TILES.has_point(Vector2i(x, y)):
+			var global_cell := Vector2i(x, y) + tile_offset
+			var roll: float = roll_at(global_cell)
+			if MedicalData.MED_RECT_TILES.has_point(global_cell):
 				layer.set_cell(Vector2i(x, y), 1, Vector2i(medical_floor_index(roll), 0))
 			else:
 				var coord := Vector2i(1, 0) if roll < LevelData.FLOOR_VARIANT_CHANCE else Vector2i.ZERO
