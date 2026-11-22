@@ -2,10 +2,18 @@ class_name LevelData
 ## Last Signal — shared level data (split from level_01.gd, 2026-11-15).
 ##
 ## The constants that describe the whole station live here so the level
-## assembler (level_01.gd), the room modules (scripts/levels/rooms/*)
-## and the shared wiring (level_wiring.gd) all read the same values.
-## Gameplay values are unchanged: 80x58 tiles of 16 px = 1280x928,
-## five areas, three puzzles -> three towers -> transmit.
+## assembler (level_01.gd) and the shared wiring (level_wiring.gd) read
+## the same values. Gameplay values are unchanged: 80x58 tiles of
+## 16 px = 1280x928, five areas, three puzzles -> three towers ->
+## transmit.
+##
+## Local-coordinate rebase (2026-11-23): the room modules
+## (scripts/levels/rooms/*) NO LONGER read AREAS, AREA_WALL_RECTS,
+## PROP_SOLID_RECTS or PATROL_RECTS — each room owns its own geometry
+## in local coordinates. Those lists stay here as the STATION layout:
+## the assembled wiring/minimap read them, and the room tests assert
+## the rooms' translated geometry agrees with them, so the two can
+## never silently drift apart.
 
 const TILE_SIZE := 16
 const ROOM_COLS := 80

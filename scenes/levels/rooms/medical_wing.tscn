@@ -7,4 +7,4 @@
 script = ExtResource("1_room")
 
 [node name="ScannerRobot" parent="." instance=ExtResource("2_scanner")]
-position = Vector2(900, 120)
+position = Vector2(260, 120)

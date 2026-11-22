@@ -16,9 +16,18 @@ extends Node2D
 ## headless test runner instead.
 ## Walls: StaticBody2D ring in the .tscn (placeholder dark metal rectangles —
 ## the pixel atlas has no sci-fi wall segment; see docs/KNOWN_ISSUES.md)
-## plus code-built divider/exterior walls for the new areas (see
-## AREA_WALL_RECTS — the same list feeds the navigation grid, so walls
-## and pathfinding can never disagree about what is solid).
+## plus code-built divider/exterior walls, built by the rooms themselves
+## in LOCAL coordinates and translated here to world coordinates. The
+## same translated rects feed the navigation grid, so walls and
+## pathfinding can never disagree about what is solid.
+##
+## Assembly (2026-11-23, local-coordinate rebase): each room is a
+## self-contained module at its own (0, 0). This file is the ONLY place
+## that knows where rooms sit in the station (ROOM_TILE_OFFSETS). It
+## instances each room at its offset, flattens the children into the
+## level tree (translating every child by the offset, so assembled world
+## positions are unchanged), and derives the nav grid / blocked rects
+## from the rooms. No room knows any neighbour's coordinates.
 ## Phase 3: an alcove in the top-right corner, closed by an interactable
 ## door; Console B sits inside it. Interactable signals are wired here to
 ## the HUD message (consoles/door never touch the HUD themselves).
@@ -69,8 +78,20 @@ const PUZZLE_TOTAL := LevelData.PUZZLE_TOTAL
 const STAGE_HINTS := LevelData.STAGE_HINTS
 const AREA_HINTS := LevelData.AREA_HINTS
 const AREAS := LevelData.AREAS
-const AREA_WALL_RECTS := LevelData.AREA_WALL_RECTS
-const PROP_SOLID_RECTS := LevelData.PROP_SOLID_RECTS
+## Station position of each room, in tiles. The single source of
+## truth for where rooms sit; rooms themselves never see this.
+const ROOM_TILE_OFFSETS := {
+	"command_center": Vector2i(0, 0),
+	"medical_wing": Vector2i(40, 0),
+	"laboratory": Vector2i(0, 23),
+	"engine_room": Vector2i(40, 23),
+	"communications": Vector2i(40, 46),
+}
+## Walls no room owns: the south-west quarter (floored, no area) has
+## no room, so the assembler seals its west/south edges itself.
+const STATION_ONLY_WALLS := [
+	Rect2(0, 736, 16, 192), Rect2(0, 920, 640, 16),
+]
 ## Medical Wing pack (2026-11-15): 83 sprites from the pixel-art atlas
 ## (CC0) + hand-drawn tiles, copied to res://assets/sprites/medical-wing/.
 ## Only the Medical Wing uses them; the other areas keep the old look.
@@ -90,6 +111,10 @@ var _instanced_rooms: Array[RoomBase] = []
 ## the freed room nodes.
 var _instanced_wall_rects_cache: Array[Rect2] = []
 var _instanced_area_names_cache: Array[String] = []
+## The rooms' blocked / prop rects, translated to WORLD coordinates
+## (same reason as the wall cache above).
+var _instanced_blocked_cache: Array[Rect2] = []
+var _instanced_prop_cache: Array[Rect2] = []
 ## Area the player is currently in (test hook + HUD naming).
 var current_area: String = "کنترل مرکزی"
 
@@ -107,7 +132,7 @@ func _ready() -> void:
 	_flatten_rooms()
 	player = get_node("Player")
 	mission = get_node("Mission")
-	_build_area_walls()
+	_build_station_walls()
 	_build_area_tints()
 	_build_nav_grid()
 	_build_area_zones()
@@ -134,21 +159,15 @@ func _build_floor() -> void:
 	FloorBuilder.build_floor(floor_layer, Rect2i(0, 0, ROOM_COLS, ROOM_ROWS))
 
 
-## The pack's wall tile for a code-built wall rect, or null to keep
-## wall_metal. Only the Medical Wing's own walls are retextured.
-func _medical_wall_texture(r: Rect2) -> Texture2D:
-	return MedicalData.wall_texture_for(r)
-
-
-func _build_area_walls() -> void:
+## Build only the walls no room owns (STATION_ONLY_WALLS, the
+## south-west quarter). Every other wall is built by its room and
+## flattened into AreaWalls by _flatten_rooms. Wall art is plain metal
+## here — the Medical Wing's pack tiles are chosen by the room itself
+## (RoomBase.wall_texture_for_local).
+func _build_station_walls() -> void:
 	var body: StaticBody2D = _get_or_create_area_walls()
-	for wall in AREA_WALL_RECTS:
+	for wall in STATION_ONLY_WALLS:
 		var r: Rect2 = wall
-		# A wall an instanced room already built is skipped here: the
-		# room's copy was flattened into this same body, so building
-		# it again would double the shapes and the visuals.
-		if r in _instanced_wall_rects():
-			continue
 		var shape := CollisionShape2D.new()
 		var rect := RectangleShape2D.new()
 		rect.size = Vector2(r.size.x, r.size.y)
@@ -162,11 +181,9 @@ func _build_area_walls() -> void:
 		# Real wall art: the metal tile repeats every 16 px along the
 		# wall (UVs = world coords, texture_repeat tiles them). The
 		# color must be white — it multiplies the texture, and the old
-		# dark flat color would hide the tile entirely. The Medical
-		# Wing's own walls use the pack's wall tiles instead.
+		# dark flat color would hide the tile entirely.
 		visual.uv = visual.polygon
-		var wall_tex: Texture2D = _medical_wall_texture(r)
-		visual.texture = wall_tex if wall_tex != null else WALL_TEXTURE
+		visual.texture = WALL_TEXTURE
 		visual.texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
 		visual.color = Color.WHITE
 		body.add_child(visual)
@@ -201,27 +218,21 @@ func _build_area_tints() -> void:
 
 
 func _build_nav_grid() -> void:
-	var inflatable: Array[Rect2] = [Rect2(160, 80, 16, 16)]
-	inflatable.append_array(PROP_SOLID_RECTS)
+	# Inflatable props are the rooms' own prop rects, in world coords.
+	var inflatable: Array[Rect2] = _instanced_prop_rects()
 	_nav_grid = RoomBase.build_nav_grid(
 		Rect2i(0, 0, ROOM_COLS, ROOM_ROWS), _blocked_rects(), inflatable)
 
 
-## Every solid rect the grid must know about: the .tscn ring walls
-## (with the two doorway gaps), the alcove walls, the crate, all
-## code-built area walls, and the solid props. The alcove door itself
+## Every solid rect the grid must know about, derived from the rooms:
+## each room's blocked rects translated to world coordinates, plus the
+## station-only walls. The .tscn ring walls, alcove walls and crate
+## are inside command_center's blocked rects. The alcove door itself
 ## is NOT in the list — it opens and closes, so a static grid cannot
 ## own it; an enemy pathing through it slides on the door instead.
 func _blocked_rects() -> Array[Rect2]:
-	var rects: Array[Rect2] = [
-		Rect2(0, 0, 640, 16), Rect2(0, 0, 16, 368),
-		Rect2(624, 0, 16, 240), Rect2(624, 272, 16, 96),
-		Rect2(0, 352, 288, 16), Rect2(320, 352, 320, 16),
-		Rect2(496, 16, 16, 48), Rect2(512, 56, 40, 16), Rect2(584, 56, 40, 16),
-		Rect2(160, 80, 16, 16),
-	]
-	rects.append_array(AREA_WALL_RECTS)
-	rects.append_array(PROP_SOLID_RECTS)
+	var rects: Array[Rect2] = _instanced_blocked_cache.duplicate()
+	rects.append_array(STATION_ONLY_WALLS)
 	return rects
 
 
@@ -269,10 +280,10 @@ func _apply_camera_limits() -> void:
 ## its children (shapes, visuals, highlights) move into the shared
 ## "AreaWalls" body instead, so the wall-texture test still finds every
 ## Polygon2D directly under AreaWalls.
-## Rooms not split yet are still built by the legacy builders below
-## (_build_area_walls / _build_area_tints / _build_area_zones skip
-## whatever the instanced rooms already built), so the level stays
-## green at every step of the split.
+## Every room is split now: tints and zones are built by the rooms
+## themselves (_build_area_tints / _build_area_zones skip whatever the
+## instanced rooms already built), and walls come from the rooms too —
+## the assembler only builds the station-only walls itself.
 const ROOM_SCENES := {
 	"command_center": "res://scenes/levels/rooms/command_center.tscn",
 	"medical_wing": "res://scenes/levels/rooms/medical_wing.tscn",
@@ -296,9 +307,21 @@ func _instance_rooms() -> void:
 			continue
 		var room: RoomBase = load(path).instantiate()
 		room.name = ROOM_NODE_NAMES[room_key]
+		# Place the room at its station offset BEFORE add_child, so
+		# _ready builds with the right tile offset (floor rolls) and
+		# the node itself sits at the offset its children are local to.
+		var tile_offset: Vector2i = ROOM_TILE_OFFSETS[room_key]
+		room.tile_offset = tile_offset
+		room.map_offset = Vector2(tile_offset) * TILE_SIZE
+		room.position = room.map_offset
 		add_child(room)
 		_instanced_rooms.append(room)
-		_instanced_wall_rects_cache.append_array(room.wall_rects())
+		for r in room.wall_rects():
+			_instanced_wall_rects_cache.append(room.to_world_rect(r))
+		for r in room.blocked_rects():
+			_instanced_blocked_cache.append(room.to_world_rect(r))
+		for r in room.prop_solid_rects():
+			_instanced_prop_cache.append(room.to_world_rect(r))
 		_instanced_area_names_cache.append(room.area_name)
 
 
@@ -312,8 +335,11 @@ func _flatten_rooms() -> void:
 	# the second neighbouring room to land doubles its divider's
 	# shapes and visuals (seen at the medical-wing merge: 7 medical
 	# wall visuals instead of 5, 18 textured visuals instead of 16).
+	# All rects here are WORLD rects: the rooms' local geometry is
+	# translated by each room's map offset on the way in.
 	var seen_wall_rects: Array[Rect2] = []
 	for room in _instanced_rooms:
+		var offset: Vector2 = room.map_offset
 		var children: Array[Node] = room.get_children()
 		for child in children:
 			# Wall bodies dissolve into the shared AreaWalls body.
@@ -334,7 +360,7 @@ func _flatten_rooms() -> void:
 						and (wall_children[i + 1] as Polygon2D).polygon.size() >= 3
 					):
 						var visual: Polygon2D = wall_children[i + 1]
-						var r := Rect2(visual.polygon[0], visual.polygon[2] - visual.polygon[0])
+						var r := Rect2(visual.polygon[0] + offset, visual.polygon[2] - visual.polygon[0])
 						if r in seen_wall_rects:
 							wall_children[i].queue_free()
 							wall_children[i + 1].queue_free()
@@ -342,22 +368,60 @@ func _flatten_rooms() -> void:
 						else:
 							seen_wall_rects.append(r)
 							for k in range(3):
-								child.remove_child(wall_children[i + k])
-								walls_body.add_child(wall_children[i + k])
+								var piece: Node = wall_children[i + k]
+								_translate_wall_piece(piece, offset)
+								# A shared divider's texture is a
+								# property of its WORLD rect, not of
+								# whichever neighbour built the
+								# surviving copy (see MedicalData):
+								# retexture the visual on the way in.
+								if piece is Polygon2D and (piece as Polygon2D).texture != null:
+									var station_tex: Texture2D = MedicalData.wall_texture_for_station_rect(r)
+									if station_tex != null:
+										(piece as Polygon2D).texture = station_tex
+								child.remove_child(piece)
+								walls_body.add_child(piece)
 						i += 3
 					else:
 						# Unexpected node shape: move it rather than
 						# lose it.
 						var grandchild: Node = wall_children[i]
+						_translate_wall_piece(grandchild, offset)
 						child.remove_child(grandchild)
 						walls_body.add_child(grandchild)
 						i += 1
 				child.queue_free()
 				continue
+			# Every other child keeps its LOCAL geometry; translating
+			# the child's own position by the room offset puts it at
+			# its world position (zones, tints, consoles, robots,
+			# towers, puzzles, the player — all Node2D).
+			if child is Node2D:
+				(child as Node2D).position += offset
 			room.remove_child(child)
 			add_child(child)
 		room.queue_free()
 	_instanced_rooms.clear()
+
+
+## Translate one wall-body piece (shape / visual / highlight) from a
+## room's local coordinates to world coordinates. Shapes carry their
+## position; polygons carry their points (and UVs, which equal the
+## points for wall visuals).
+func _translate_wall_piece(node: Node, offset: Vector2) -> void:
+	if node is CollisionShape2D:
+		(node as CollisionShape2D).position += offset
+	elif node is Polygon2D:
+		var poly: Polygon2D = node as Polygon2D
+		var points := PackedVector2Array()
+		for p in poly.polygon:
+			points.append(p + offset)
+		poly.polygon = points
+		if not poly.uv.is_empty():
+			var uvs := PackedVector2Array()
+			for p in poly.uv:
+				uvs.append(p + offset)
+			poly.uv = uvs
 
 
 func _get_or_create_area_walls() -> StaticBody2D:
@@ -371,10 +435,21 @@ func _get_or_create_area_walls() -> StaticBody2D:
 	return body
 
 
-## Wall rects the instanced rooms already built (shared dividers are
-## in here twice — once per neighbour — but a rect is a rect).
+## Wall rects the instanced rooms already built, in WORLD coordinates
+## (shared dividers are in here twice — once per neighbour — but a
+## rect is a rect).
 func _instanced_wall_rects() -> Array[Rect2]:
 	return _instanced_wall_rects_cache
+
+
+## Blocked / solid-prop rects the instanced rooms already built, in
+## WORLD coordinates (feeds the nav grid and the minimap).
+func _instanced_blocked_rects() -> Array[Rect2]:
+	return _instanced_blocked_cache
+
+
+func _instanced_prop_rects() -> Array[Rect2]:
+	return _instanced_prop_cache
 
 
 func _instanced_area_names() -> Array[String]:

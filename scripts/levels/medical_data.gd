@@ -75,9 +75,20 @@ const MED_PROP_PATHS := {
 }
 
 
-## The pack's wall tile for a code-built wall rect, or null to keep
-## wall_metal. Only the Medical Wing's own walls are retextured.
-static func wall_texture_for(r: Rect2) -> Texture2D:
+## NOTE (2026-11-23, local-coordinate rebase): wall textures used to
+## be picked by matching ABSOLUTE rects here. That is gone — the
+## Medical Wing now overrides RoomBase.wall_texture_for_local() with
+## its own LOCAL rects, so no room matches wall rects by station
+## position anymore. MED_WALL_H/V_TEXTURE are still the pack tiles
+## that override uses.
+##
+## The one station-level rule left: a SHARED divider's texture is a
+## property of its world rect, not of whichever neighbour built it.
+## The assembler (level_01.gd) applies this on flatten — e.g. the
+## x=624 divider is pack-textured even though Central Control built
+## the surviving copy in metal. Standalone, each room keeps its own
+## local texture for its walls.
+static func wall_texture_for_station_rect(r: Rect2) -> Texture2D:
 	if r == Rect2(624, 0, 16, 240) or r == Rect2(624, 272, 16, 96):
 		return MED_WALL_V_TEXTURE
 	if r == Rect2(640, 352, 288, 16) or r == Rect2(960, 352, 320, 16):

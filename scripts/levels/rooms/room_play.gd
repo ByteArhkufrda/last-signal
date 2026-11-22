@@ -12,6 +12,16 @@ extends Node2D
 
 const PLAYER_SCENE: PackedScene = preload("res://scenes/characters/player.tscn")
 const MISSION_SCRIPT: Script = preload("res://scripts/systems/mission.gd")
+## Station position of each room, in tiles. Only the floor builder
+## reads this (rolls are station-global); the room itself is placed at
+## (0, 0), so every global position in standalone play is a LOCAL one.
+const ROOM_TILE_OFFSETS := {
+	"command_center": Vector2i(0, 0),
+	"medical_wing": Vector2i(40, 0),
+	"laboratory": Vector2i(0, 23),
+	"engine_room": Vector2i(40, 23),
+	"communications": Vector2i(40, 46),
+}
 const ROOM_SCENES := {
 	"command_center": "res://scenes/levels/rooms/command_center.tscn",
 	"medical_wing": "res://scenes/levels/rooms/medical_wing.tscn",
@@ -46,6 +56,12 @@ func _ready() -> void:
 	var room_scene: PackedScene = load(ROOM_SCENES[room_key])
 	room = room_scene.instantiate()
 	room.standalone = true
+	# Local play: the room sits at (0, 0), so global == local. The
+	# tile offset is still the station offset, so the floor pattern
+	# matches the assembled map cell for cell.
+	room.tile_offset = ROOM_TILE_OFFSETS[room_key]
+	room.map_offset = Vector2.ZERO
+	room.position = Vector2.ZERO
 	add_child(room)
 	# Central Control ships its own Player and Mission in the .tscn;
 	# re-use them instead of spawning a second pair (2026-11-19: two
@@ -77,8 +93,8 @@ func _ready() -> void:
 	var seal: Array[Rect2] = room.doorway_gap_rects()
 	if not seal.is_empty():
 		room._build_wall_rects(seal, "WallsSeal_" + room_key)
-	var inflatable: Array[Rect2] = [Rect2(160, 80, 16, 16)]
-	inflatable.append_array(LevelData.PROP_SOLID_RECTS)
+	# Inflatable props are the room's own, in local coordinates.
+	var inflatable: Array[Rect2] = room.prop_solid_rects()
 	var nav_grid: AStarGrid2D = RoomBase.build_nav_grid(
 		room.room_tile_rect, room.blocked_rects(), inflatable)
 	self.nav_grid = nav_grid

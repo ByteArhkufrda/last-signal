@@ -90,6 +90,31 @@ res://
 Atlas parquet store (398 MB) lives OUTSIDE the project at `~/workspace/pixel-atlas/`
 so it is never imported or exported with the game.
 
+## Rooms: separate modules, local coordinates (2026-11-23)
+
+Each room (`scenes/levels/rooms/<room>.tscn` + `scripts/levels/rooms/<room>.gd`,
+extending `RoomBase`) builds only its own area — walls, tint, zone, props,
+consoles, puzzles, its robot — in LOCAL coordinates, origin (0, 0). A room
+owns its wall rects, solid-prop rects, patrol loop, spawn and its doorway
+`exits()` (local gap rect + target room/exit); it never reads the global
+wall/prop/patrol tables in `LevelData` and never names a neighbour's
+coordinates. Shared systems (player, mission, radar, enemy AI, audio, HUD)
+stay shared — rooms only instance them.
+
+`level_01.gd` is the only place that knows the station layout
+(`ROOM_TILE_OFFSETS`): it instances each room at its offset, flattens the
+children into the level tree translating every child by the offset (so
+assembled world positions are unchanged), derives the nav grid / blocked
+rects from the rooms, and builds only the two south-west-quarter walls no
+room owns. A shared divider's texture is a property of its world rect
+(`MedicalData.wall_texture_for_station_rect`), applied by the assembler on
+flatten. Standalone, `room_play.tscn -- --room=<key>` plays a room at (0, 0)
+with its exits sealed; the floor pattern still matches the assembled map
+because rolls are read at the global cell (local + station tile offset).
+`LevelData.AREAS / AREA_WALL_RECTS / PROP_SOLID_RECTS / PATROL_RECTS`
+remain as the station-layout reference for assembled wiring/minimap, and
+`test_rooms.gd` asserts the rooms' translated geometry agrees with them.
+
 ## Design decisions (Phase 2)
 - **Movement state**: plain `is_moving` bool. Rejected: full state-machine node
   for two states (idle/moving) — the FSM arrived with enemy AI in Phase 5.

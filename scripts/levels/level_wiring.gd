@@ -22,6 +22,12 @@ var _mission: Node = null
 var _nav_grid: AStarGrid2D = null
 var _blocked: Array[Rect2] = []
 var _puzzles_solved: int = 0
+## The single room being played standalone (room_play.gd passes its
+## own root, which carries `.room`); null in the assembled level.
+## Standalone, every position the wiring sees is a LOCAL one, so area,
+## patrol and minimap all come from this room instead of the station
+## layout in LevelData.
+var _standalone_room: RoomBase = null
 
 
 ## Where a caught player respawns. The full game uses the entrance
@@ -39,6 +45,7 @@ func setup(root: Node2D, player: CharacterBody2D, mission: Node, nav_grid: AStar
 	_nav_grid = nav_grid
 	_blocked = blocked
 	_respawn_point = respawn_point
+	_standalone_room = root.get("room") as RoomBase
 	_wire_interactables()
 	for zone in _root.find_children("AreaZone_*", "Area2D", true, false):
 		zone.body_entered.connect(_on_area_body_entered.bind(str(zone.get_meta("area_name"))))
@@ -53,6 +60,9 @@ func puzzles_solved() -> int:
 
 
 func _area_name_at(pos: Vector2) -> String:
+	# Standalone, `pos` is local: the only area is this room's.
+	if _standalone_room != null:
+		return _standalone_room.area_name
 	for area in LevelData.AREAS:
 		if (area["rect"] as Rect2).has_point(pos):
 			return str(area["name"])
@@ -113,7 +123,14 @@ func _setup_minimap() -> void:
 	for node in _root.get_tree().get_nodes_in_group("enemies"):
 		if _root.is_ancestor_of(node):
 			enemy_nodes.append(node)
-	hud.setup_minimap(LevelData.AREAS, _blocked, _player, tower_nodes, hidden_nodes, enemy_nodes)
+	# Standalone, the minimap shows only this room (local rect, local
+	# walls); assembled, the whole station layout.
+	var areas: Array = LevelData.AREAS
+	if _standalone_room != null:
+		areas = [{"name": _standalone_room.area_name,
+			"rect": _standalone_room.room_rect,
+			"tint": _standalone_room.tint_color}]
+	hud.setup_minimap(areas, _blocked, _player, tower_nodes, hidden_nodes, enemy_nodes)
 	hud.set_minimap_area(str(_root.get("current_area")))
 
 
@@ -161,19 +178,25 @@ func _wire_interactables() -> void:
 			enemy.patrol_points = post_points
 		else:
 			# One robot per area: patrol the rectangle of the area the
-			# robot spawns in, never Central's loop by default. The
-			# dict holds plain Arrays, but patrol_points is typed
+			# robot spawns in, never Central's loop by default.
+			# Standalone, the rectangle comes from the room itself
+			# (local coordinates); assembled, from the station layout
+			# in LevelData.PATROL_RECTS (world coordinates).
+			# The dict holds plain Arrays, but patrol_points is typed
 			# Array[Vector2] — assigning a plain Array aborts the
 			# whole wiring function (measured 2026-11-12: pulse,
 			# puzzles and towers all stopped working), so convert
 			# with assign() first.
-			var area_name: String = _area_name_at(enemy.global_position)
-			if LevelData.PATROL_RECTS.has(area_name):
-				var points: Array[Vector2] = []
-				points.assign(LevelData.PATROL_RECTS[area_name])
-				enemy.patrol_points = points
+			if _standalone_room != null:
+				enemy.patrol_points = _standalone_room.patrol_points_local()
 			else:
-				enemy.patrol_points = LevelData.PATROL_POINTS
+				var area_name: String = _area_name_at(enemy.global_position)
+				if LevelData.PATROL_RECTS.has(area_name):
+					var points: Array[Vector2] = []
+					points.assign(LevelData.PATROL_RECTS[area_name])
+					enemy.patrol_points = points
+				else:
+					enemy.patrol_points = LevelData.PATROL_POINTS
 		_player.pulse_emitted.connect(enemy.investigate)
 		enemy.player_caught.connect(_on_player_caught)
 	for puzzle in _root.get_tree().get_nodes_in_group("puzzles"):
