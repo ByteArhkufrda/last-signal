@@ -10,6 +10,11 @@ class_name FloorBuilder
 ## map. Both read the same rolls, so assembled and standalone floors
 ## agree cell for cell.
 
+## The whole hospital floor is one uniform tile (2026-11-23):
+## the plain light tile (index 0) of the medical atlas — one
+## big block across the whole wing, no per-cell variation.
+const MED_FLOOR_TILE := Vector2i(0, 0)
+
 static var _rolls: PackedFloat32Array = PackedFloat32Array()
 
 
@@ -50,13 +55,6 @@ static func build_tileset() -> TileSet:
 	return tileset
 
 
-## First weight threshold above the roll: the medical floor tile index.
-static func medical_floor_index(roll: float) -> int:
-	for i in MedicalData.MED_FLOOR_WEIGHTS.size():
-		if roll < MedicalData.MED_FLOOR_WEIGHTS[i]:
-			return i
-	return 0
-
 
 ## Fill `layer` (which must already have the tileset from
 ## build_tileset()) for the given tile rect. Source 0 is the standard
@@ -73,7 +71,7 @@ static func build_floor(layer: TileMapLayer, tile_rect: Rect2i, tile_offset: Vec
 			var global_cell := Vector2i(x, y) + tile_offset
 			var roll: float = roll_at(global_cell)
 			if MedicalData.MED_RECT_TILES.has_point(global_cell):
-				layer.set_cell(Vector2i(x, y), 1, Vector2i(medical_floor_index(roll), 0))
+				layer.set_cell(Vector2i(x, y), 1, MED_FLOOR_TILE)
 			else:
 				var coord := Vector2i(1, 0) if roll < LevelData.FLOOR_VARIANT_CHANCE else Vector2i.ZERO
 				layer.set_cell(Vector2i(x, y), 0, coord)

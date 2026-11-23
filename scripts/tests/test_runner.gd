@@ -1792,7 +1792,10 @@ func test_medical_floor_uses_medical_atlas() -> bool:
 				wrong += 1
 			seen[floor_layer.get_cell_atlas_coords(Vector2i(x, y))] = true
 	assert_eq(wrong, 0, "all 920 medical floor cells use the medical atlas")
-	assert_true(seen.size() >= 10, "medical floor shows at least 10 of its 12 tiles (got %d)" % seen.size())
+	# The whole hospital floor is one uniform tile (2026-11-23): the
+	# plain light tile (0, 0) of the medical atlas — no variation.
+	assert_eq(seen.size(), 1, "medical floor is one uniform tile (got %d)" % seen.size())
+	assert_true(seen.has(Vector2i(0, 0)), "medical floor tile is the plain light tile (0, 0)")
 	level.queue_free()
 	return true
 
