@@ -11,9 +11,9 @@ class_name FloorBuilder
 ## agree cell for cell.
 
 ## The whole hospital floor is one uniform tile (2026-11-23):
-## the plain light tile (index 0) of the medical atlas — one
+## the plain light tile (index 4) of the medical atlas — one
 ## big block across the whole wing, no per-cell variation.
-const MED_FLOOR_TILE := Vector2i(0, 0)
+const MED_FLOOR_TILE := Vector2i(4, 0)
 
 static var _rolls: PackedFloat32Array = PackedFloat32Array()
 

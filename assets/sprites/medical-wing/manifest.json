@@ -5,7 +5,7 @@
  "scale": 3,
  "gutter_px": 6,
  "counts": {
-  "atlas": 44,
+  "atlas": 48,
   "drawn": 39,
   "missing": []
  },
@@ -1678,6 +1678,94 @@
     "type": "procedural",
     "draw": "chair_fallen",
     "file": "drawn/chair_fallen.png"
+   }
+  },
+  {
+   "key": "sink_ceramic",
+   "fa": "روشویی سرامیکی سفید",
+   "stage": 4,
+   "sheet": "sink_ceramic.png",
+   "x": 0,
+   "y": 0,
+   "w": 16,
+   "h": 16,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": false,
+   "source": {
+    "type": "atlas",
+    "row_id": 4928,
+    "shard": "train-000.parquet",
+    "subject": "bathroom sink",
+    "caption": "ceramic bathroom sink with water droplets",
+    "term": "subject:bathroom sink",
+    "file": "atlas/sink_ceramic.png"
+   }
+  },
+  {
+   "key": "wheelchair",
+   "fa": "ویلچر",
+   "stage": 4,
+   "sheet": "wheelchair.png",
+   "x": 0,
+   "y": 0,
+   "w": 16,
+   "h": 16,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": false,
+   "source": {
+    "type": "atlas",
+    "row_id": 429,
+    "shard": "train-000.parquet",
+    "subject": "wheelchair",
+    "caption": "wheelchair",
+    "term": "subject:wheelchair",
+    "file": "atlas/wheelchair.png"
+   }
+  },
+  {
+   "key": "curtain_privacy",
+   "fa": "پرده حریم خصوصی تخت",
+   "stage": 4,
+   "sheet": "curtain_privacy.png",
+   "x": 0,
+   "y": 0,
+   "w": 16,
+   "h": 16,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": false,
+   "source": {
+    "type": "atlas",
+    "row_id": 707,
+    "shard": "train-000.parquet",
+    "subject": "curtain",
+    "caption": "curtain",
+    "term": "subject:curtain",
+    "file": "atlas/curtain_privacy.png"
+   }
+  },
+  {
+   "key": "fridge_medical",
+   "fa": "یخچال دارویی با چراغ آبی",
+   "stage": 4,
+   "sheet": "fridge_medical.png",
+   "x": 0,
+   "y": 0,
+   "w": 16,
+   "h": 16,
+   "tiles_w": 1,
+   "tiles_h": 1,
+   "opaque": false,
+   "source": {
+    "type": "atlas",
+    "row_id": 6622,
+    "shard": "train-000.parquet",
+    "subject": "refrigerator",
+    "caption": "tiny refrigerator with a blue light",
+    "term": "subject:refrigerator",
+    "file": "atlas/fridge_medical.png"
    }
   }
  ]

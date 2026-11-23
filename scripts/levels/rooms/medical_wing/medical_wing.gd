@@ -18,7 +18,7 @@ const FLOOR_VARIANT_CHANCE := 0.15
 const FLOOR_RNG_SEED := 17
 const MED_FLOOR_TEXTURE_PATH := "res://assets/sprites/environment/floor_medical_atlas.png"
 const MED_RECT_TILES := Rect2i(40, 0, 40, 23)
-const MED_FLOOR_TILE := Vector2i(0, 0)
+const MED_FLOOR_TILE := Vector2i(4, 0)
 const WALL_TEXTURE: Texture2D = preload("res://assets/sprites/environment/wall_metal.png")
 const CONSOLE_SCENE: PackedScene = preload("res://scenes/levels/rooms/medical_wing/console_medical_wing.tscn")
 const MED_WALL_H_TEXTURE: Texture2D = preload("res://assets/sprites/medical-wing/wall_h.png")
@@ -84,6 +84,13 @@ const MED_PROP_PATHS := {
 	"spark": "res://assets/sprites/medical-wing/spark.png",
 	"flashlight": "res://assets/sprites/medical-wing/flashlight.png",
 	"note_doctor": "res://assets/sprites/medical-wing/note_doctor.png",
+	"sink_ceramic": "res://assets/sprites/medical-wing/sink_ceramic.png",
+	"wheelchair": "res://assets/sprites/medical-wing/wheelchair.png",
+	"curtain_privacy": "res://assets/sprites/medical-wing/curtain_privacy.png",
+	"fridge_medical": "res://assets/sprites/medical-wing/fridge_medical.png",
+	"door_open": "res://assets/sprites/medical-wing/door_open.png",
+	"door_frame": "res://assets/sprites/medical-wing/door_frame.png",
+	"door_closed": "res://assets/sprites/medical-wing/door_closed.png",
 }
 
 ## Last Signal — Medical Wing room (medical_wing), split from
@@ -110,7 +117,7 @@ func _ready() -> void:
 	_build_tint()
 	_build_zone()
 	_add_area_console(Vector2(120, 80), "گزارش پزشکی: بعد از تمرین شیوع بیماری، این بخش بسته شد. آذوقه کم است.", "monitor_vitals")
-	_add_prop(preload("res://assets/sprites/props/crate.png"), Vector2(480, 300))
+	_add_prop(preload("res://assets/sprites/props/crate.png"), Vector2(40, 296))
 	_add_decor(preload("res://assets/sprites/props/control_panel.png"), Vector2(60, 340))
 	_add_decor(preload("res://assets/sprites/props/riveted_panel.png"), Vector2(600, 80))
 	_build_medical_props()
@@ -137,16 +144,50 @@ func blocked_rects() -> Array[Rect2]:
 ## medical furniture plus the crate, whose centre is (480, 300)).
 func prop_solid_rects() -> Array[Rect2]:
 	return [
-		Rect2(44, 56, 32, 16), Rect2(224, 56, 32, 16), Rect2(424, 56, 32, 16),
-		Rect2(44, 152, 32, 16), Rect2(424, 152, 32, 16), Rect2(424, 248, 32, 16),
-		Rect2(84, 56, 16, 16), Rect2(84, 152, 16, 16), Rect2(272, 56, 16, 16),
-		Rect2(12, 152, 16, 16), Rect2(12, 104, 16, 16), Rect2(12, 192, 16, 16),
-		Rect2(12, 288, 16, 16), Rect2(12, 312, 16, 16), Rect2(52, 312, 16, 16),
-		Rect2(72, 192, 16, 16), Rect2(112, 192, 16, 16), Rect2(112, 112, 16, 16),
-		Rect2(592, 192, 16, 16), Rect2(592, 132, 16, 16), Rect2(532, 112, 16, 16),
-		Rect2(512, 56, 16, 16), Rect2(592, 312, 16, 16), Rect2(512, 232, 16, 16),
-		Rect2(372, 292, 16, 16), Rect2(392, 192, 16, 16), Rect2(292, 232, 16, 16),
-		Rect2(532, 312, 16, 16), Rect2(472, 292, 16, 16),
+		# Ward — four beds along the north wall, bedside tables in the 1-tile gaps, monitors above
+		Rect2(32, 48, 32, 16),
+		Rect2(80, 48, 32, 16),
+		Rect2(128, 48, 32, 16),
+		Rect2(176, 48, 32, 16),
+		Rect2(64, 48, 16, 16),
+		Rect2(112, 48, 16, 16),
+		Rect2(160, 48, 16, 16),
+		Rect2(208, 48, 16, 16),
+		Rect2(32, 32, 16, 16),
+		Rect2(128, 32, 16, 16),
+		# Exam — exam bed, lamp, monitor, sink and infusion pump
+		Rect2(336, 48, 32, 16),
+		Rect2(384, 48, 16, 16),
+		Rect2(320, 32, 16, 16),
+		Rect2(400, 32, 16, 16),
+		Rect2(416, 48, 16, 16),
+		# Emergency — stretcher, defibrillator and cart by the west entry; wheelchair parked by the door
+		Rect2(32, 208, 32, 16),
+		Rect2(64, 208, 16, 16),
+		Rect2(80, 208, 16, 16),
+		Rect2(16, 272, 16, 16),
+		Rect2(16, 192, 16, 16),
+		# Pharmacy — medicine cabinets, shelf and medical fridge along the south wall
+		Rect2(352, 336, 16, 16),
+		Rect2(384, 336, 16, 16),
+		Rect2(416, 336, 16, 16),
+		Rect2(448, 336, 16, 16),
+		Rect2(480, 336, 16, 16),
+		Rect2(512, 336, 16, 16),
+		# Doctor's office — desk, chair and side table (south-east)
+		Rect2(496, 288, 32, 16),
+		Rect2(528, 288, 16, 16),
+		Rect2(560, 272, 16, 16),
+		# Storage — supply boxes, oxygen, waste bin, worn cabinet (south-west)
+		Rect2(32, 320, 16, 16),
+		Rect2(48, 320, 16, 16),
+		Rect2(80, 320, 16, 16),
+		Rect2(64, 336, 16, 16),
+		# Center — waiting side table and chairs, trolley
+		Rect2(384, 144, 16, 16),
+		Rect2(400, 144, 16, 16),
+		Rect2(320, 160, 16, 16),
+		Rect2(32, 288, 16, 16),  # crate (props/crate.png)
 	]
 
 
@@ -171,44 +212,73 @@ func exits() -> Array[Dictionary]:
 	]
 
 
-## Medical Wing furnishing (pack sprites, 2026-11-15). Solid props get
-## a physics body + a prop_solid_rects() entry (nav grid); wall decor and
-## small floor clutter are plain sprites. Nothing solid is placed in
-## either doorway approach, in the entry corridor (y 240-272, x 0-160)
-## or on the scanner's line of sight (x=260, y 120-200).
+## Medical Wing furnishing — clinic redesign (2026-11-23): zones are
+## ward (4 beds north), exam (north-east), emergency (west, by the
+## entry), pharmacy (south wall), doctor's office (south-east) and
+## storage (south-west); doors are open double doors on both exits.
+## Solid props get a physics body + a prop_solid_rects() entry (nav
+## grid); wall decor and small floor clutter are plain sprites.
+## Nothing solid is placed in either doorway approach, in the entry
+## corridor (y 240-272, x 0-160) or on the scanner's line of sight
+## (x=260, y 120-200). Beds are 2x1 tiles with 1-tile gaps; main
+## circulation stays 2 tiles wide.
 func _build_medical_props() -> void:
-	# Ward row along the north edge: three beds, an exam bed, monitors.
-	_add_prop(_med_texture("bed_standard"), Vector2(60, 64), Vector2(32, 16), "MedBedStandard")
-	_add_prop(_med_texture("bed_empty"), Vector2(240, 64), Vector2(32, 16), "MedBedEmpty")
-	_add_prop(_med_texture("exam_bed"), Vector2(440, 64), Vector2(32, 16), "MedExamBed")
-	_add_prop(_med_texture("bedside_table"), Vector2(92, 64), Vector2(16, 16), "MedBedsideTable")
-	_add_prop(_med_texture("monitor_heart"), Vector2(280, 64), Vector2(16, 16), "MedMonitorHeart")
-	_add_prop(_med_texture("defibrillator"), Vector2(520, 64), Vector2(16, 16), "MedDefibrillator")
-	# West column: the disorganized bed, cabinets, oxygen, IV.
-	_add_prop(_med_texture("bed_disorganized"), Vector2(60, 160), Vector2(32, 16), "MedBedDisorganized")
-	_add_prop(_med_texture("monitor_vitals"), Vector2(92, 160), Vector2(16, 16), "MedMonitorVitals")
-	_add_prop(_med_texture("cabinet_open"), Vector2(20, 112), Vector2(16, 16), "MedCabinetOpen")
-	_add_prop(_med_texture("cabinet_closed"), Vector2(20, 160), Vector2(16, 16), "MedCabinetClosed")
-	_add_prop(_med_texture("oxygen_cylinder"), Vector2(20, 200), Vector2(16, 16), "MedOxygen")
-	_add_prop(_med_texture("iv_stand"), Vector2(20, 296), Vector2(16, 16), "MedIvStand")
-	_add_prop(_med_texture("cabinet_storage"), Vector2(20, 320), Vector2(16, 16), "MedCabinetStorage")
-	_add_prop(_med_texture("cabinet_medicine"), Vector2(60, 320), Vector2(16, 16), "MedCabinetMedicine")
-	# Center: lamp, chairs, infusion pump, side table.
-	_add_prop(_med_texture("exam_lamp"), Vector2(80, 200), Vector2(16, 16), "MedExamLamp")
-	_add_prop(_med_texture("chair_rolling"), Vector2(120, 200), Vector2(16, 16), "MedChairRolling")
-	_add_prop(_med_texture("infusion_pump"), Vector2(120, 120), Vector2(16, 16), "MedInfusionPump")
-	_add_prop(_med_texture("side_table"), Vector2(300, 240), Vector2(16, 16), "MedSideTable")
-	_add_prop(_med_texture("chair_office"), Vector2(400, 200), Vector2(16, 16), "MedChairOffice")
-	# East side: stretcher, doctor's desk, trolley, cart, shelf, boxes.
-	_add_prop(_med_texture("stretcher"), Vector2(440, 160), Vector2(32, 16), "MedStretcher")
-	_add_prop(_med_texture("desk_doctor"), Vector2(440, 256), Vector2(32, 16), "MedDeskDoctor")
-	_add_prop(_med_texture("trolley"), Vector2(520, 240), Vector2(16, 16), "MedTrolley")
-	_add_prop(_med_texture("cart_emergency"), Vector2(380, 300), Vector2(16, 16), "MedCartEmergency")
-	_add_prop(_med_texture("shelf_medicine"), Vector2(600, 200), Vector2(16, 16), "MedShelfMedicine")
-	_add_prop(_med_texture("oxygen_unit"), Vector2(600, 140), Vector2(16, 16), "MedOxygenUnit")
-	_add_prop(_med_texture("supply_boxes"), Vector2(540, 120), Vector2(16, 16), "MedSupplyBoxes")
-	_add_prop(_med_texture("waste_bin"), Vector2(600, 320), Vector2(16, 16), "MedWasteBin")
-	_add_prop(_med_texture("cabinet_worn"), Vector2(540, 320), Vector2(16, 16), "MedCabinetWorn")
+	# Ward — four beds along the north wall, bedside tables in the 1-tile gaps, monitors above
+	_add_prop(_med_texture("bed_standard"), Vector2(48, 56), Vector2(32, 16), "MedBedStandard")
+	_add_prop(_med_texture("bed_empty"), Vector2(96, 56), Vector2(32, 16), "MedBedEmpty")
+	_add_prop(_med_texture("bed_standard"), Vector2(144, 56), Vector2(32, 16), "MedBed3")
+	_add_prop(_med_texture("bed_disorganized"), Vector2(192, 56), Vector2(32, 16), "MedBedDisorganized")
+	_add_prop(_med_texture("bedside_table"), Vector2(72, 56), Vector2(16, 16), "MedBedside1")
+	_add_prop(_med_texture("bedside_table"), Vector2(120, 56), Vector2(16, 16), "MedBedside2")
+	_add_prop(_med_texture("bedside_table"), Vector2(168, 56), Vector2(16, 16), "MedBedside3")
+	_add_prop(_med_texture("bedside_table"), Vector2(216, 56), Vector2(16, 16), "MedBedside4")
+	_add_prop(_med_texture("monitor_vitals"), Vector2(40, 40), Vector2(16, 16), "MedMonitorWard1")
+	_add_prop(_med_texture("monitor_heart"), Vector2(136, 40), Vector2(16, 16), "MedMonitorWard2")
+
+	# Exam — exam bed, lamp, monitor, sink and infusion pump
+	_add_prop(_med_texture("exam_bed"), Vector2(352, 56), Vector2(32, 16), "MedExamBed")
+	_add_prop(_med_texture("exam_lamp"), Vector2(392, 56), Vector2(16, 16), "MedExamLamp")
+	_add_prop(_med_texture("monitor_heart"), Vector2(328, 40), Vector2(16, 16), "MedMonitorExam")
+	_add_prop(_med_texture("sink_ceramic"), Vector2(408, 40), Vector2(16, 16), "MedSink")
+	_add_prop(_med_texture("infusion_pump"), Vector2(424, 56), Vector2(16, 16), "MedInfusionPump")
+
+	# Emergency — stretcher, defibrillator and cart by the west entry; wheelchair parked by the door
+	_add_prop(_med_texture("stretcher"), Vector2(48, 216), Vector2(32, 16), "MedStretcher")
+	_add_prop(_med_texture("defibrillator"), Vector2(72, 216), Vector2(16, 16), "MedDefibrillator")
+	_add_prop(_med_texture("cart_emergency"), Vector2(88, 216), Vector2(16, 16), "MedCartEmergency")
+	_add_prop(_med_texture("wheelchair"), Vector2(24, 280), Vector2(16, 16), "MedWheelchair")
+	_add_prop(_med_texture("oxygen_cylinder"), Vector2(24, 200), Vector2(16, 16), "MedOxygenCyl")
+
+	# Pharmacy — medicine cabinets, shelf and medical fridge along the south wall
+	_add_prop(_med_texture("cabinet_medicine"), Vector2(360, 344), Vector2(16, 16), "MedCabinetMedicine")
+	_add_prop(_med_texture("shelf_medicine"), Vector2(392, 344), Vector2(16, 16), "MedShelfMedicine")
+	_add_prop(_med_texture("cabinet_storage"), Vector2(424, 344), Vector2(16, 16), "MedCabinetStorage")
+	_add_prop(_med_texture("fridge_medical"), Vector2(456, 344), Vector2(16, 16), "MedFridge")
+	_add_prop(_med_texture("cabinet_closed"), Vector2(488, 344), Vector2(16, 16), "MedCabinetClosed")
+	_add_prop(_med_texture("cabinet_open"), Vector2(520, 344), Vector2(16, 16), "MedCabinetOpen")
+
+	# Doctor's office — desk, chair and side table (south-east)
+	_add_prop(_med_texture("desk_doctor"), Vector2(512, 296), Vector2(32, 16), "MedDeskDoctor")
+	_add_prop(_med_texture("chair_office"), Vector2(536, 296), Vector2(16, 16), "MedChairOffice")
+	_add_prop(_med_texture("side_table"), Vector2(568, 280), Vector2(16, 16), "MedSideTableOffice")
+
+	# Storage — supply boxes, oxygen, waste bin, worn cabinet (south-west)
+	_add_prop(_med_texture("supply_boxes"), Vector2(40, 328), Vector2(16, 16), "MedSupplyBoxes")
+	_add_prop(_med_texture("oxygen_unit"), Vector2(56, 328), Vector2(16, 16), "MedOxygenUnit")
+	_add_prop(_med_texture("waste_bin"), Vector2(88, 328), Vector2(16, 16), "MedWasteBin")
+	_add_prop(_med_texture("cabinet_worn"), Vector2(72, 344), Vector2(16, 16), "MedCabinetWorn")
+
+	# Center — waiting side table and chairs, trolley
+	_add_prop(_med_texture("side_table"), Vector2(392, 152), Vector2(16, 16), "MedSideTable")
+	_add_prop(_med_texture("chair_rolling"), Vector2(408, 152), Vector2(16, 16), "MedChairRolling")
+	_add_prop(_med_texture("trolley"), Vector2(328, 168), Vector2(16, 16), "MedTrolley")
+
+	# Doors — open double doors on both exits (non-solid decor).
+	_add_med_decor("door_open", Vector2(-8, 248), "MedDoorWestA")
+	_add_med_decor("door_open", Vector2(-8, 264), "MedDoorWestB")
+	_add_med_decor("door_open", Vector2(296, 360), "MedDoorSouthA")
+	_add_med_decor("door_open", Vector2(312, 360), "MedDoorSouthB")
+
 	# Wall decor: west divider, south divider, junctions, east wall.
 	_add_med_decor("clock_wall", Vector2(-8, 40), "MedClock")
 	_add_med_decor("wall_access_panel", Vector2(-8, 100), "MedAccessPanel")
@@ -232,21 +302,21 @@ func _build_medical_props() -> void:
 	_add_med_decor("light_damaged", Vector2(560, 280), "MedLightDamaged")
 	# Small floor clutter: supplies, papers, storytelling details.
 	_add_med_decor("documents", Vector2(160, 150), "MedDocuments")
-	_add_med_decor("bottles_medicine", Vector2(220, 200), "MedBottles")
-	_add_med_decor("packages_medicine", Vector2(340, 120), "MedPackages")
+	_add_med_decor("bottles_medicine", Vector2(376, 328), "MedBottles")
+	_add_med_decor("packages_medicine", Vector2(440, 328), "MedPackages")
 	_add_med_decor("gloves", Vector2(180, 300), "MedGloves")
 	_add_med_decor("bandages", Vector2(220, 300), "MedBandages")
 	_add_med_decor("syringes", Vector2(260, 300), "MedSyringes")
-	_add_med_decor("tray_instruments", Vector2(300, 300), "MedTray")
-	_add_med_decor("paper_scattered", Vector2(180, 180), "MedPapers")
-	_add_med_decor("chair_fallen", Vector2(320, 160), "MedChairFallen")
+	_add_med_decor("tray_instruments", Vector2(376, 72), "MedTray")
+	_add_med_decor("paper_scattered", Vector2(360, 136), "MedPapers")
+	_add_med_decor("chair_fallen", Vector2(456, 184), "MedChairFallen")
 	_add_med_decor("dust", Vector2(60, 300), "MedDust")
 	_add_med_decor("steam", Vector2(540, 200), "MedSteam")
 	_add_med_decor("spark", Vector2(600, 100), "MedSpark")
-	# The doctor's desk: flashlight + handwritten note on its surface.
-	_add_med_decor("flashlight", Vector2(432, 252), "MedFlashlight")
-	_add_med_decor("note_doctor", Vector2(450, 260), "MedNoteDoctor")
-
+	# The doctor's desk: flashlight, documents and handwritten note on its surface.
+	_add_med_decor("flashlight", Vector2(504, 292), "MedFlashlight")
+	_add_med_decor("documents", Vector2(516, 292), "MedDocumentsDesk")
+	_add_med_decor("note_doctor", Vector2(520, 300), "MedNoteDoctor")
 
 ## Room key, e.g. "command_center". Also the wall-body suffix.
 var room_key: String = ""
@@ -533,8 +603,9 @@ static func build_tileset() -> TileSet:
 	source.create_tile(Vector2i.ZERO)
 	source.create_tile(Vector2i(1, 0))
 	tileset.add_source(source)
-	# Medical Wing floor: the pack's 12-tile atlas. Cells outside the
-	# wing keep the old two tiles.
+	# Medical Wing floor: the pack's 12-tile atlas is loaded, but
+	# only its plain tile (index 4) is used — the whole wing is one
+	# uniform block. Cells outside the wing keep the old two tiles.
 	var med_source := TileSetAtlasSource.new()
 	med_source.texture = load(MED_FLOOR_TEXTURE_PATH)
 	med_source.texture_region_size = Vector2i(TILE_SIZE, TILE_SIZE)
