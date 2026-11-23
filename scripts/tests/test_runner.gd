@@ -1793,9 +1793,9 @@ func test_medical_floor_uses_medical_atlas() -> bool:
 			seen[floor_layer.get_cell_atlas_coords(Vector2i(x, y))] = true
 	assert_eq(wrong, 0, "all 920 medical floor cells use the medical atlas")
 	# The whole hospital floor is one uniform tile (2026-11-23): the
-	# plain light tile (0, 0) of the medical atlas — no variation.
+	# plain light tile (4, 0) of the medical atlas — no variation.
 	assert_eq(seen.size(), 1, "medical floor is one uniform tile (got %d)" % seen.size())
-	assert_true(seen.has(Vector2i(0, 0)), "medical floor tile is the plain light tile (0, 0)")
+	assert_true(seen.has(Vector2i(4, 0)), "medical floor tile is the plain light tile (4, 0)")
 	level.queue_free()
 	return true
 
@@ -1814,7 +1814,7 @@ func test_medical_props_exist() -> bool:
 	var level: Node2D = scene.instantiate()
 	root.add_child(level)
 	await process_frame
-	for node_name in ["MedBedStandard", "MedBedEmpty", "MedExamBed", "MedBedDisorganized", "MedStretcher", "MedDeskDoctor", "MedCabinetOpen", "MedShelfMedicine", "MedFlashlight", "MedNoteDoctor", "MedWindowObservation", "MedCornerSW", "MedCornerSE"]:
+	for node_name in ["MedBedStandard", "MedBedEmpty", "MedBed3", "MedExamBed", "MedBedDisorganized", "MedStretcher", "MedDeskDoctor", "MedCabinetOpen", "MedShelfMedicine", "MedSink", "MedFridge", "MedWheelchair", "MedFlashlight", "MedNoteDoctor", "MedWindowObservation", "MedCornerSW", "MedCornerSE"]:
 		assert_true(level.get_node_or_null(node_name) != null, "medical prop placed: " + node_name)
 	var monitor_tex: Texture2D = load("res://assets/sprites/medical-wing/monitor_vitals.png")
 	var found := false

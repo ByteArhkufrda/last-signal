@@ -18,7 +18,7 @@ const FLOOR_VARIANT_CHANCE := 0.15
 const FLOOR_RNG_SEED := 17
 const MED_FLOOR_TEXTURE_PATH := "res://assets/sprites/environment/floor_medical_atlas.png"
 const MED_RECT_TILES := Rect2i(40, 0, 40, 23)
-const MED_FLOOR_TILE := Vector2i(0, 0)
+const MED_FLOOR_TILE := Vector2i(4, 0)
 const WALL_TEXTURE: Texture2D = preload("res://assets/sprites/environment/wall_metal.png")
 const CONSOLE_SCENE: PackedScene = preload("res://scenes/levels/rooms/laboratory/console_laboratory.tscn")
 

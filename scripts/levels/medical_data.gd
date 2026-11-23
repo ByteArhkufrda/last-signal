@@ -72,6 +72,13 @@ const MED_PROP_PATHS := {
 	"spark": "res://assets/sprites/medical-wing/spark.png",
 	"flashlight": "res://assets/sprites/medical-wing/flashlight.png",
 	"note_doctor": "res://assets/sprites/medical-wing/note_doctor.png",
+	"sink_ceramic": "res://assets/sprites/medical-wing/sink_ceramic.png",
+	"wheelchair": "res://assets/sprites/medical-wing/wheelchair.png",
+	"curtain_privacy": "res://assets/sprites/medical-wing/curtain_privacy.png",
+	"fridge_medical": "res://assets/sprites/medical-wing/fridge_medical.png",
+	"door_open": "res://assets/sprites/medical-wing/door_open.png",
+	"door_frame": "res://assets/sprites/medical-wing/door_frame.png",
+	"door_closed": "res://assets/sprites/medical-wing/door_closed.png",
 }
 
 

@@ -63,7 +63,7 @@ const ROOM_CHECKS := {
 		"offset": Vector2i(40, 0),
 		"spawn": Vector2(64, 256), "target_cell": Vector2i(10, 10),
 		"nodes": {
-			"ScannerRobot": Vector2(260, 120), "MedBedStandard": Vector2(60, 64),
+			"ScannerRobot": Vector2(260, 120), "MedBedStandard": Vector2(48, 56),
 		},
 		"towers": 0, "puzzles": 0, "enemies": 1, "wall_children": 18,
 	},
