@@ -22,7 +22,7 @@ func _ready() -> void:
 
 func _on_start_pressed() -> void:
 	audio.play("click")
-	get_tree().change_scene_to_file("res://scenes/main.tscn")
+	get_tree().change_scene_to_file("res://scenes/opening/opening_sequence.tscn")
 
 
 func _on_help_pressed() -> void:
