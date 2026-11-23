@@ -1,5 +1,7 @@
 extends Node2D
-## Last Signal — medical_wing (self-contained room module, 2026-11-23).
+## Last Signal — medical_wing (Godot 4.3+).
+## Data-driven props, optional atmospheric effects and a room-local objective.
+## Existing scenes, art and room/level integration remain external dependencies.
 ##
 ## Absolute separation: this file shares NOTHING with the other
 ## rooms. The former RoomBase helpers, the floor builder, the
@@ -93,6 +95,89 @@ const MED_PROP_PATHS := {
 	"door_closed": "res://assets/sprites/medical-wing/door_closed.png",
 }
 
+## One source of truth for sprite, body and navigation geometry.
+## Entries: [texture key, local centre, collision size, node name].
+const MED_SOLID_LAYOUT := [
+	["bed_standard", Vector2(48, 56), Vector2(32, 16), "MedBedStandard"],
+	["bed_empty", Vector2(96, 56), Vector2(32, 16), "MedBedEmpty"],
+	["bed_standard", Vector2(144, 56), Vector2(32, 16), "MedBed3"],
+	["bed_disorganized", Vector2(192, 56), Vector2(32, 16), "MedBedDisorganized"],
+	["bedside_table", Vector2(72, 56), Vector2(16, 16), "MedBedside1"],
+	["bedside_table", Vector2(120, 56), Vector2(16, 16), "MedBedside2"],
+	["bedside_table", Vector2(168, 56), Vector2(16, 16), "MedBedside3"],
+	["bedside_table", Vector2(216, 56), Vector2(16, 16), "MedBedside4"],
+	["monitor_vitals", Vector2(40, 40), Vector2(16, 16), "MedMonitorWard1"],
+	["monitor_heart", Vector2(136, 40), Vector2(16, 16), "MedMonitorWard2"],
+	["exam_bed", Vector2(352, 56), Vector2(32, 16), "MedExamBed"],
+	["exam_lamp", Vector2(392, 56), Vector2(16, 16), "MedExamLamp"],
+	["monitor_heart", Vector2(328, 40), Vector2(16, 16), "MedMonitorExam"],
+	["sink_ceramic", Vector2(408, 40), Vector2(16, 16), "MedSink"],
+	["infusion_pump", Vector2(424, 56), Vector2(16, 16), "MedInfusionPump"],
+	["stretcher", Vector2(48, 216), Vector2(32, 16), "MedStretcher"],
+	["defibrillator", Vector2(72, 216), Vector2(16, 16), "MedDefibrillator"],
+	["cart_emergency", Vector2(88, 216), Vector2(16, 16), "MedCartEmergency"],
+	["wheelchair", Vector2(24, 280), Vector2(16, 16), "MedWheelchair"],
+	["oxygen_cylinder", Vector2(24, 200), Vector2(16, 16), "MedOxygenCyl"],
+	["cabinet_medicine", Vector2(360, 344), Vector2(16, 16), "MedCabinetMedicine"],
+	["shelf_medicine", Vector2(392, 344), Vector2(16, 16), "MedShelfMedicine"],
+	["cabinet_storage", Vector2(424, 344), Vector2(16, 16), "MedCabinetStorage"],
+	["fridge_medical", Vector2(456, 344), Vector2(16, 16), "MedFridge"],
+	["cabinet_closed", Vector2(488, 344), Vector2(16, 16), "MedCabinetClosed"],
+	["cabinet_open", Vector2(520, 344), Vector2(16, 16), "MedCabinetOpen"],
+	["desk_doctor", Vector2(512, 296), Vector2(32, 16), "MedDeskDoctor"],
+	["chair_office", Vector2(536, 296), Vector2(16, 16), "MedChairOffice"],
+	["side_table", Vector2(568, 280), Vector2(16, 16), "MedSideTableOffice"],
+	["supply_boxes", Vector2(40, 328), Vector2(16, 16), "MedSupplyBoxes"],
+	["oxygen_unit", Vector2(56, 328), Vector2(16, 16), "MedOxygenUnit"],
+	["waste_bin", Vector2(88, 328), Vector2(16, 16), "MedWasteBin"],
+	["cabinet_worn", Vector2(72, 344), Vector2(16, 16), "MedCabinetWorn"],
+	["side_table", Vector2(392, 152), Vector2(16, 16), "MedSideTable"],
+	["chair_rolling", Vector2(408, 152), Vector2(16, 16), "MedChairRolling"],
+	["trolley", Vector2(328, 168), Vector2(16, 16), "MedTrolley"],
+]
+
+## Non-solid decoration: [texture key, local centre, node name].
+const MED_DECOR_LAYOUT := [
+	["door_open", Vector2(-8, 248), "MedDoorWestA"],
+	["door_open", Vector2(-8, 264), "MedDoorWestB"],
+	["door_open", Vector2(296, 360), "MedDoorSouthA"],
+	["door_open", Vector2(312, 360), "MedDoorSouthB"],
+	["clock_wall", Vector2(-8, 40), "MedClock"],
+	["wall_access_panel", Vector2(-8, 100), "MedAccessPanel"],
+	["window_small", Vector2(-8, 160), "MedWindowSmall"],
+	["grille_vent", Vector2(-8, 200), "MedGrilleVent"],
+	["panel_wall_small", Vector2(-8, 300), "MedWallPanel"],
+	["sign_warning", Vector2(-8, 320), "MedWarningSign"],
+	["window_observation", Vector2(360, 360), "MedWindowObservation"],
+	["wall_cabinet_section", Vector2(460, 360), "MedWallCabinet"],
+	["wall_corner_inner", Vector2(-8, 360), "MedCornerSW"],
+	["wall_corner_outer", Vector2(632, 360), "MedCornerSE"],
+	["fusebox_closed", Vector2(632, 60), "MedFusebox"],
+	["indicator_emergency", Vector2(632, 200), "MedIndicator"],
+	["light_ceiling", Vector2(160, 40), "MedLightCeilingA"],
+	["light_ceiling", Vector2(460, 320), "MedLightCeilingB"],
+	["light_green", Vector2(120, 64), "MedLightGreen"],
+	["light_blue", Vector2(220, 40), "MedLightBlue"],
+	["light_red", Vector2(600, 340), "MedLightRed"],
+	["light_flicker", Vector2(460, 200), "MedLightFlicker"],
+	["light_damaged", Vector2(560, 280), "MedLightDamaged"],
+	["documents", Vector2(160, 150), "MedDocuments"],
+	["bottles_medicine", Vector2(376, 328), "MedBottles"],
+	["packages_medicine", Vector2(440, 328), "MedPackages"],
+	["gloves", Vector2(180, 300), "MedGloves"],
+	["bandages", Vector2(220, 300), "MedBandages"],
+	["syringes", Vector2(260, 300), "MedSyringes"],
+	["tray_instruments", Vector2(376, 72), "MedTray"],
+	["paper_scattered", Vector2(360, 136), "MedPapers"],
+	["chair_fallen", Vector2(456, 184), "MedChairFallen"],
+	["dust", Vector2(60, 300), "MedDust"],
+	["steam", Vector2(540, 200), "MedSteam"],
+	["spark", Vector2(600, 100), "MedSpark"],
+	["flashlight", Vector2(504, 292), "MedFlashlight"],
+	["documents", Vector2(516, 292), "MedDocumentsDesk"],
+	["note_doctor", Vector2(520, 300), "MedNoteDoctor"],
+]
+
 ## Last Signal — Medical Wing room (medical_wing), split from
 ## level_01.gd / level_01.tscn, 2026-11-15.
 ##
@@ -121,6 +206,7 @@ func _ready() -> void:
 	_add_decor(preload("res://assets/sprites/props/control_panel.png"), Vector2(60, 340))
 	_add_decor(preload("res://assets/sprites/props/riveted_panel.png"), Vector2(600, 80))
 	_build_medical_props()
+	_build_enhancements()
 
 
 func wall_rects() -> Array[Rect2]:
@@ -141,54 +227,16 @@ func blocked_rects() -> Array[Rect2]:
 
 
 ## Every solid prop rect inside this wing, in LOCAL coordinates (the
-## medical furniture plus the crate, whose centre is (480, 300)).
+## medical furniture plus the crate, whose centre is (40, 296)).
 func prop_solid_rects() -> Array[Rect2]:
-	return [
-		# Ward — four beds along the north wall, bedside tables in the 1-tile gaps, monitors above
-		Rect2(32, 48, 32, 16),
-		Rect2(80, 48, 32, 16),
-		Rect2(128, 48, 32, 16),
-		Rect2(176, 48, 32, 16),
-		Rect2(64, 48, 16, 16),
-		Rect2(112, 48, 16, 16),
-		Rect2(160, 48, 16, 16),
-		Rect2(208, 48, 16, 16),
-		Rect2(32, 32, 16, 16),
-		Rect2(128, 32, 16, 16),
-		# Exam — exam bed, lamp, monitor, sink and infusion pump
-		Rect2(336, 48, 32, 16),
-		Rect2(384, 48, 16, 16),
-		Rect2(320, 32, 16, 16),
-		Rect2(400, 32, 16, 16),
-		Rect2(416, 48, 16, 16),
-		# Emergency — stretcher, defibrillator and cart by the west entry; wheelchair parked by the door
-		Rect2(32, 208, 32, 16),
-		Rect2(64, 208, 16, 16),
-		Rect2(80, 208, 16, 16),
-		Rect2(16, 272, 16, 16),
-		Rect2(16, 192, 16, 16),
-		# Pharmacy — medicine cabinets, shelf and medical fridge along the south wall
-		Rect2(352, 336, 16, 16),
-		Rect2(384, 336, 16, 16),
-		Rect2(416, 336, 16, 16),
-		Rect2(448, 336, 16, 16),
-		Rect2(480, 336, 16, 16),
-		Rect2(512, 336, 16, 16),
-		# Doctor's office — desk, chair and side table (south-east)
-		Rect2(496, 288, 32, 16),
-		Rect2(528, 288, 16, 16),
-		Rect2(560, 272, 16, 16),
-		# Storage — supply boxes, oxygen, waste bin, worn cabinet (south-west)
-		Rect2(32, 320, 16, 16),
-		Rect2(48, 320, 16, 16),
-		Rect2(80, 320, 16, 16),
-		Rect2(64, 336, 16, 16),
-		# Center — waiting side table and chairs, trolley
-		Rect2(384, 144, 16, 16),
-		Rect2(400, 144, 16, 16),
-		Rect2(320, 160, 16, 16),
-		Rect2(32, 288, 16, 16),  # crate (props/crate.png)
-	]
+	var rects: Array[Rect2] = []
+	for entry in MED_SOLID_LAYOUT:
+		var center: Vector2 = entry[1]
+		var size: Vector2 = entry[2]
+		rects.append(Rect2(center - size * 0.5, size))
+	# The original crate is a shared prop, not part of the medical atlas.
+	rects.append(Rect2(32, 288, 16, 16))
+	return rects
 
 
 ## The pack's wall tile for a code-built wall rect, in LOCAL
@@ -223,100 +271,11 @@ func exits() -> Array[Dictionary]:
 ## (x=260, y 120-200). Beds are 2x1 tiles with 1-tile gaps; main
 ## circulation stays 2 tiles wide.
 func _build_medical_props() -> void:
-	# Ward — four beds along the north wall, bedside tables in the 1-tile gaps, monitors above
-	_add_prop(_med_texture("bed_standard"), Vector2(48, 56), Vector2(32, 16), "MedBedStandard")
-	_add_prop(_med_texture("bed_empty"), Vector2(96, 56), Vector2(32, 16), "MedBedEmpty")
-	_add_prop(_med_texture("bed_standard"), Vector2(144, 56), Vector2(32, 16), "MedBed3")
-	_add_prop(_med_texture("bed_disorganized"), Vector2(192, 56), Vector2(32, 16), "MedBedDisorganized")
-	_add_prop(_med_texture("bedside_table"), Vector2(72, 56), Vector2(16, 16), "MedBedside1")
-	_add_prop(_med_texture("bedside_table"), Vector2(120, 56), Vector2(16, 16), "MedBedside2")
-	_add_prop(_med_texture("bedside_table"), Vector2(168, 56), Vector2(16, 16), "MedBedside3")
-	_add_prop(_med_texture("bedside_table"), Vector2(216, 56), Vector2(16, 16), "MedBedside4")
-	_add_prop(_med_texture("monitor_vitals"), Vector2(40, 40), Vector2(16, 16), "MedMonitorWard1")
-	_add_prop(_med_texture("monitor_heart"), Vector2(136, 40), Vector2(16, 16), "MedMonitorWard2")
+	for entry in MED_SOLID_LAYOUT:
+		_add_prop(_med_texture(entry[0]), entry[1], entry[2], entry[3])
+	for entry in MED_DECOR_LAYOUT:
+		_add_med_decor(entry[0], entry[1], entry[2])
 
-	# Exam — exam bed, lamp, monitor, sink and infusion pump
-	_add_prop(_med_texture("exam_bed"), Vector2(352, 56), Vector2(32, 16), "MedExamBed")
-	_add_prop(_med_texture("exam_lamp"), Vector2(392, 56), Vector2(16, 16), "MedExamLamp")
-	_add_prop(_med_texture("monitor_heart"), Vector2(328, 40), Vector2(16, 16), "MedMonitorExam")
-	_add_prop(_med_texture("sink_ceramic"), Vector2(408, 40), Vector2(16, 16), "MedSink")
-	_add_prop(_med_texture("infusion_pump"), Vector2(424, 56), Vector2(16, 16), "MedInfusionPump")
-
-	# Emergency — stretcher, defibrillator and cart by the west entry; wheelchair parked by the door
-	_add_prop(_med_texture("stretcher"), Vector2(48, 216), Vector2(32, 16), "MedStretcher")
-	_add_prop(_med_texture("defibrillator"), Vector2(72, 216), Vector2(16, 16), "MedDefibrillator")
-	_add_prop(_med_texture("cart_emergency"), Vector2(88, 216), Vector2(16, 16), "MedCartEmergency")
-	_add_prop(_med_texture("wheelchair"), Vector2(24, 280), Vector2(16, 16), "MedWheelchair")
-	_add_prop(_med_texture("oxygen_cylinder"), Vector2(24, 200), Vector2(16, 16), "MedOxygenCyl")
-
-	# Pharmacy — medicine cabinets, shelf and medical fridge along the south wall
-	_add_prop(_med_texture("cabinet_medicine"), Vector2(360, 344), Vector2(16, 16), "MedCabinetMedicine")
-	_add_prop(_med_texture("shelf_medicine"), Vector2(392, 344), Vector2(16, 16), "MedShelfMedicine")
-	_add_prop(_med_texture("cabinet_storage"), Vector2(424, 344), Vector2(16, 16), "MedCabinetStorage")
-	_add_prop(_med_texture("fridge_medical"), Vector2(456, 344), Vector2(16, 16), "MedFridge")
-	_add_prop(_med_texture("cabinet_closed"), Vector2(488, 344), Vector2(16, 16), "MedCabinetClosed")
-	_add_prop(_med_texture("cabinet_open"), Vector2(520, 344), Vector2(16, 16), "MedCabinetOpen")
-
-	# Doctor's office — desk, chair and side table (south-east)
-	_add_prop(_med_texture("desk_doctor"), Vector2(512, 296), Vector2(32, 16), "MedDeskDoctor")
-	_add_prop(_med_texture("chair_office"), Vector2(536, 296), Vector2(16, 16), "MedChairOffice")
-	_add_prop(_med_texture("side_table"), Vector2(568, 280), Vector2(16, 16), "MedSideTableOffice")
-
-	# Storage — supply boxes, oxygen, waste bin, worn cabinet (south-west)
-	_add_prop(_med_texture("supply_boxes"), Vector2(40, 328), Vector2(16, 16), "MedSupplyBoxes")
-	_add_prop(_med_texture("oxygen_unit"), Vector2(56, 328), Vector2(16, 16), "MedOxygenUnit")
-	_add_prop(_med_texture("waste_bin"), Vector2(88, 328), Vector2(16, 16), "MedWasteBin")
-	_add_prop(_med_texture("cabinet_worn"), Vector2(72, 344), Vector2(16, 16), "MedCabinetWorn")
-
-	# Center — waiting side table and chairs, trolley
-	_add_prop(_med_texture("side_table"), Vector2(392, 152), Vector2(16, 16), "MedSideTable")
-	_add_prop(_med_texture("chair_rolling"), Vector2(408, 152), Vector2(16, 16), "MedChairRolling")
-	_add_prop(_med_texture("trolley"), Vector2(328, 168), Vector2(16, 16), "MedTrolley")
-
-	# Doors — open double doors on both exits (non-solid decor).
-	_add_med_decor("door_open", Vector2(-8, 248), "MedDoorWestA")
-	_add_med_decor("door_open", Vector2(-8, 264), "MedDoorWestB")
-	_add_med_decor("door_open", Vector2(296, 360), "MedDoorSouthA")
-	_add_med_decor("door_open", Vector2(312, 360), "MedDoorSouthB")
-
-	# Wall decor: west divider, south divider, junctions, east wall.
-	_add_med_decor("clock_wall", Vector2(-8, 40), "MedClock")
-	_add_med_decor("wall_access_panel", Vector2(-8, 100), "MedAccessPanel")
-	_add_med_decor("window_small", Vector2(-8, 160), "MedWindowSmall")
-	_add_med_decor("grille_vent", Vector2(-8, 200), "MedGrilleVent")
-	_add_med_decor("panel_wall_small", Vector2(-8, 300), "MedWallPanel")
-	_add_med_decor("sign_warning", Vector2(-8, 320), "MedWarningSign")
-	_add_med_decor("window_observation", Vector2(360, 360), "MedWindowObservation")
-	_add_med_decor("wall_cabinet_section", Vector2(460, 360), "MedWallCabinet")
-	_add_med_decor("wall_corner_inner", Vector2(-8, 360), "MedCornerSW")
-	_add_med_decor("wall_corner_outer", Vector2(632, 360), "MedCornerSE")
-	_add_med_decor("fusebox_closed", Vector2(632, 60), "MedFusebox")
-	_add_med_decor("indicator_emergency", Vector2(632, 200), "MedIndicator")
-	# Lights: ceiling fixtures + small indicators.
-	_add_med_decor("light_ceiling", Vector2(160, 40), "MedLightCeilingA")
-	_add_med_decor("light_ceiling", Vector2(460, 320), "MedLightCeilingB")
-	_add_med_decor("light_green", Vector2(120, 64), "MedLightGreen")
-	_add_med_decor("light_blue", Vector2(220, 40), "MedLightBlue")
-	_add_med_decor("light_red", Vector2(600, 340), "MedLightRed")
-	_add_med_decor("light_flicker", Vector2(460, 200), "MedLightFlicker")
-	_add_med_decor("light_damaged", Vector2(560, 280), "MedLightDamaged")
-	# Small floor clutter: supplies, papers, storytelling details.
-	_add_med_decor("documents", Vector2(160, 150), "MedDocuments")
-	_add_med_decor("bottles_medicine", Vector2(376, 328), "MedBottles")
-	_add_med_decor("packages_medicine", Vector2(440, 328), "MedPackages")
-	_add_med_decor("gloves", Vector2(180, 300), "MedGloves")
-	_add_med_decor("bandages", Vector2(220, 300), "MedBandages")
-	_add_med_decor("syringes", Vector2(260, 300), "MedSyringes")
-	_add_med_decor("tray_instruments", Vector2(376, 72), "MedTray")
-	_add_med_decor("paper_scattered", Vector2(360, 136), "MedPapers")
-	_add_med_decor("chair_fallen", Vector2(456, 184), "MedChairFallen")
-	_add_med_decor("dust", Vector2(60, 300), "MedDust")
-	_add_med_decor("steam", Vector2(540, 200), "MedSteam")
-	_add_med_decor("spark", Vector2(600, 100), "MedSpark")
-	# The doctor's desk: flashlight, documents and handwritten note on its surface.
-	_add_med_decor("flashlight", Vector2(504, 292), "MedFlashlight")
-	_add_med_decor("documents", Vector2(516, 292), "MedDocumentsDesk")
-	_add_med_decor("note_doctor", Vector2(520, 300), "MedNoteDoctor")
 
 ## Room key, e.g. "command_center". Also the wall-body suffix.
 var room_key: String = ""
@@ -546,8 +505,9 @@ static func build_nav_grid(tile_rect: Rect2i, blocked: Array[Rect2], inflatable:
 					grid.set_point_solid(Vector2i(x, y), true)
 					break
 	for r in inflatable:
-		var min_cell := Vector2i(int(r.position.x / TILE_SIZE) - 1, int(r.position.y / TILE_SIZE) - 1)
-		var max_cell := Vector2i(int(r.end.x / TILE_SIZE) + 1, int(r.end.y / TILE_SIZE) + 1)
+		# floor/ceil also behave correctly for negative or non-aligned rects.
+		var min_cell := Vector2i(floori(r.position.x / TILE_SIZE) - 1, floori(r.position.y / TILE_SIZE) - 1)
+		var max_cell := Vector2i(ceili(r.end.x / TILE_SIZE) + 1, ceili(r.end.y / TILE_SIZE) + 1)
 		for cx in range(min_cell.x, max_cell.x):
 			for cy in range(min_cell.y, max_cell.y):
 				if tile_rect.has_point(Vector2i(cx, cy)):
@@ -561,8 +521,18 @@ func patrol_points_local() -> Array[Vector2]:
 
 ## Cached loader for the medical prop textures (MedicalData).
 func _med_texture(key: String) -> Texture2D:
+	if not MED_PROP_PATHS.has(key):
+		push_warning("Medical wing: unknown texture key '%s'." % key)
+		return null
 	if not _med_tex.has(key):
-		_med_tex[key] = load(MED_PROP_PATHS[key])
+		var path: String = MED_PROP_PATHS[key]
+		if ResourceLoader.exists(path):
+			_med_tex[key] = load(path)
+		else:
+			push_warning("Medical wing: missing texture '%s'; using a visible placeholder." % path)
+			var image := Image.create(16, 16, false, Image.FORMAT_RGBA8)
+			image.fill(Color(0.75, 0.22, 0.48, 1.0))
+			_med_tex[key] = ImageTexture.create_from_image(image)
 	return _med_tex[key]
 
 ## A named, non-solid medical decor sprite (pack texture by key).
@@ -591,6 +561,9 @@ static func _ensure_rolls() -> void:
 ## Roll for one cell, in the original generation order.
 static func roll_at(cell: Vector2i) -> float:
 	_ensure_rolls()
+	if cell.x < 0 or cell.x >= ROOM_COLS or cell.y < 0 or cell.y >= ROOM_ROWS:
+		# Deterministic fallback instead of reading outside the roll buffer.
+		return float(posmod(hash(cell), 1000000)) / 1000000.0
 	return _rolls[cell.x * ROOM_ROWS + cell.y]
 
 
@@ -635,3 +608,340 @@ static func build_floor(layer: TileMapLayer, tile_rect: Rect2i, tile_offset: Vec
 			else:
 				var coord := Vector2i(1, 0) if roll < FLOOR_VARIANT_CHANCE else Vector2i.ZERO
 				layer.set_cell(Vector2i(x, y), 0, coord)
+
+
+# Optional enhancements are self-contained children. This also keeps their
+# behaviour alive if the level assembler reparents room children into a level.
+class MedicalAtmosphere extends Node2D:
+	var lighting_enabled: bool = true
+	var audio_enabled: bool = true
+	var audio_volume_db: float = -34.0
+	var hum: AudioStreamWAV
+	var _lamps: Array[PointLight2D] = []
+	var _elapsed: float = 0.0
+
+	func _ready() -> void:
+		name = "MedicalAtmosphere"
+		if lighting_enabled:
+			var texture := _make_light_texture()
+			_add_light(texture, Vector2(160, 88), Color(0.66, 1.0, 0.84), 0.22, 1.8)
+			_add_light(texture, Vector2(460, 200), Color(0.52, 0.82, 1.0), 0.15, 1.5)
+			_add_light(texture, Vector2(594, 320), Color(1.0, 0.30, 0.28), 0.12, 1.2)
+		if audio_enabled and hum != null:
+			var player := AudioStreamPlayer2D.new()
+			player.name = "MedicalVentilationHum"
+			player.position = Vector2(320, 184)
+			player.max_distance = 800.0
+			player.volume_db = audio_volume_db
+			player.stream = hum
+			add_child(player)
+			player.play()
+
+	func _make_light_texture() -> GradientTexture2D:
+		var gradient := Gradient.new()
+		gradient.set_color(0, Color(1, 1, 1, 0.68))
+		gradient.set_color(1, Color(1, 1, 1, 0))
+		var texture := GradientTexture2D.new()
+		texture.width = 128
+		texture.height = 128
+		texture.fill = GradientTexture2D.FILL_RADIAL
+		texture.fill_from = Vector2(0.5, 0.5)
+		texture.fill_to = Vector2(1.0, 0.5)
+		texture.gradient = gradient
+		return texture
+
+	func _add_light(texture: Texture2D, pos: Vector2, color: Color, energy: float, scale_factor: float) -> void:
+		var light := PointLight2D.new()
+		light.texture = texture
+		light.position = pos
+		light.color = color
+		light.energy = energy
+		light.texture_scale = scale_factor
+		add_child(light)
+		_lamps.append(light)
+
+	func _process(delta: float) -> void:
+		if not lighting_enabled:
+			return
+		_elapsed += delta
+		# A slow pulse and a brief, deterministic flicker; no gameplay state
+		# or global random number generator is changed by these effects.
+		_lamps[0].energy = 0.21 + 0.015 * sin(_elapsed * 1.4)
+		var flicker := 0.35 if fposmod(_elapsed, 7.3) < 0.09 else 1.0
+		_lamps[1].energy = (0.14 + 0.015 * sin(_elapsed * 2.2)) * flicker
+		_lamps[2].energy = 0.09 + 0.035 * (0.5 + 0.5 * sin(_elapsed * 2.5))
+
+
+class MedicalMarker extends Node2D:
+	var caption: String = ""
+	var marker_color: Color = Color(0.47, 1.0, 0.77)
+	var _elapsed: float = 0.0
+
+	func _ready() -> void:
+		z_index = 4
+		var label := Label.new()
+		label.text = caption
+		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		label.position = Vector2(-65, -37)
+		label.size = Vector2(130, 22)
+		label.add_theme_font_size_override("font_size", 11)
+		label.add_theme_color_override("font_color", Color(0.9, 1.0, 0.94, 0.95))
+		label.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.9))
+		label.add_theme_constant_override("shadow_offset_x", 1)
+		label.add_theme_constant_override("shadow_offset_y", 1)
+		add_child(label)
+
+	func _process(delta: float) -> void:
+		_elapsed += delta
+		queue_redraw()
+
+	func _draw() -> void:
+		var radius := 10.0 + 1.2 * sin(_elapsed * 3.0)
+		var halo := marker_color
+		halo.a = 0.16
+		draw_circle(Vector2.ZERO, radius + 4.0, halo)
+		draw_arc(Vector2.ZERO, radius, 0.0, TAU, 24, marker_color, 1.25, true)
+		draw_line(Vector2(-4, 0), Vector2(4, 0), marker_color, 1.5, true)
+		draw_line(Vector2(0, -4), Vector2(0, 4), marker_color, 1.5, true)
+
+
+class MedicalInvestigation extends Node2D:
+	signal progress_changed(found: int, total: int)
+	signal objective_completed
+
+	var player_group: StringName = &"player"
+	var detection_mask: int = 1
+	var feedback_sound: AudioStreamWAV
+	var feedback_volume_db: float = -28.0
+	var _found: Dictionary = {"record": false, "supplies": false}
+	var _complete: bool = false
+	var _return_marker: MedicalMarker
+	var _hud: CanvasLayer
+	var _label: Label
+	var _hide_timer: Timer
+	var _feedback: AudioStreamPlayer
+
+	func _ready() -> void:
+		name = "MedicalWingInvestigation"
+		add_to_group("medical_wing_gameplay")
+		_build_hud()
+		if feedback_sound != null:
+			_feedback = AudioStreamPlayer.new()
+			_feedback.name = "MedicalFeedback"
+			_feedback.stream = feedback_sound
+			_feedback.volume_db = feedback_volume_db
+			add_child(_feedback)
+		_add_pickup("record", Vector2(520, 320), "یادداشت پزشک")
+		_add_pickup("supplies", Vector2(392, 304), "بستهٔ پزشکی")
+		_add_return_point(Vector2(120, 96))
+		_add_room_trigger()
+
+	func _is_player(body: Node2D) -> bool:
+		# No dependency on a particular player script or an input action.
+		# Rename the group in the Inspector if the project uses another one.
+		if not body is CharacterBody2D:
+			return false
+		return body.is_in_group(player_group) or body.name.to_lower().begins_with("player")
+
+	func _make_trigger(pos: Vector2, radius: float, trigger_name: String) -> Area2D:
+		var area := Area2D.new()
+		area.name = trigger_name
+		area.position = pos
+		area.collision_layer = 0
+		area.collision_mask = detection_mask
+		var shape := CollisionShape2D.new()
+		var circle := CircleShape2D.new()
+		circle.radius = radius
+		shape.shape = circle
+		area.add_child(shape)
+		add_child(area)
+		return area
+
+	func _add_pickup(id: String, pos: Vector2, caption: String) -> void:
+		var area := _make_trigger(pos, 19.0, "Investigation_" + id)
+		var marker := MedicalMarker.new()
+		marker.caption = caption
+		area.add_child(marker)
+		area.body_entered.connect(_on_pickup_entered.bind(id, area))
+
+	func _add_return_point(pos: Vector2) -> void:
+		var area := _make_trigger(pos, 22.0, "Investigation_Return")
+		_return_marker = MedicalMarker.new()
+		_return_marker.caption = "بازگشت به کنسول"
+		_return_marker.marker_color = Color(0.55, 0.83, 1.0)
+		_return_marker.visible = false
+		area.add_child(_return_marker)
+		area.body_entered.connect(_on_return_entered)
+
+	func _add_room_trigger() -> void:
+		var area := Area2D.new()
+		area.name = "Investigation_RoomTrigger"
+		area.collision_layer = 0
+		area.collision_mask = detection_mask
+		var shape := CollisionShape2D.new()
+		var rectangle := RectangleShape2D.new()
+		rectangle.size = Vector2(640, 368)
+		shape.shape = rectangle
+		shape.position = Vector2(320, 184)
+		area.add_child(shape)
+		add_child(area)
+		area.body_entered.connect(_on_room_entered)
+
+	func _build_hud() -> void:
+		_hud = CanvasLayer.new()
+		_hud.name = "MedicalInvestigationHUD"
+		_hud.layer = 30
+		_hud.visible = false
+		add_child(_hud)
+		var panel := PanelContainer.new()
+		panel.anchor_left = 0.1
+		panel.anchor_right = 0.9
+		panel.offset_left = 0
+		panel.offset_right = 0
+		panel.offset_top = 12
+		panel.offset_bottom = 54
+		panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var style := StyleBoxFlat.new()
+		style.bg_color = Color(0.035, 0.085, 0.085, 0.9)
+		style.border_color = Color(0.38, 0.8, 0.66, 0.8)
+		style.set_border_width_all(1)
+		style.set_corner_radius_all(5)
+		style.content_margin_left = 10
+		style.content_margin_right = 10
+		style.content_margin_top = 6
+		style.content_margin_bottom = 6
+		panel.add_theme_stylebox_override("panel", style)
+		_hud.add_child(panel)
+		_label = Label.new()
+		_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		_label.add_theme_font_size_override("font_size", 13)
+		_label.add_theme_color_override("font_color", Color(0.9, 1, 0.96))
+		panel.add_child(_label)
+		_hide_timer = Timer.new()
+		_hide_timer.one_shot = true
+		_hide_timer.wait_time = 5.0
+		_hide_timer.timeout.connect(func() -> void: _hud.visible = false)
+		add_child(_hide_timer)
+
+	func _notify(message: String) -> void:
+		_label.text = message
+		_hud.visible = true
+		_hide_timer.start()
+
+	func _play_feedback() -> void:
+		if _feedback != null:
+			_feedback.play()
+
+	func _on_room_entered(body: Node2D) -> void:
+		if not _is_player(body) or _complete:
+			return
+		var count := _count_found()
+		if count == 2:
+			_notify("هر دو مورد پیدا شد؛ به کنسول پزشکی برگرد.")
+		else:
+			_notify("هدف اختیاری: یادداشت و بستهٔ پزشکی را پیدا کن. (%d/2)" % count)
+
+	func _count_found() -> int:
+		return int(_found["record"]) + int(_found["supplies"])
+
+	func _on_pickup_entered(body: Node2D, id: String, area: Area2D) -> void:
+		if not _is_player(body) or _complete or _found[id]:
+			return
+		_found[id] = true
+		area.queue_free()
+		_play_feedback()
+		var count := _count_found()
+		progress_changed.emit(count, 2)
+		if count == 2:
+			_return_marker.visible = true
+			_notify("هر دو مورد پیدا شد؛ به کنسول پزشکی برگرد.")
+		else:
+			_notify("مورد پیدا شد. برای تکمیل جست‌وجو، مورد دیگر را بیاب. (1/2)")
+
+	func _on_return_entered(body: Node2D) -> void:
+		if not _is_player(body) or _complete or _count_found() != 2:
+			return
+		_complete = true
+		_return_marker.visible = false
+		_play_feedback()
+		_notify("جست‌وجوی بخش پزشکی کامل شد.")
+		objective_completed.emit()
+
+
+static func _make_synth_sound(duration: float, frequencies: Array[float], looped: bool) -> AudioStreamWAV:
+	# Tiny generated PCM sounds; no extra audio files or licenses required.
+	const SAMPLE_RATE := 22050
+	var sample_count := int(duration * SAMPLE_RATE)
+	var bytes := PackedByteArray()
+	bytes.resize(sample_count * 2)
+	for i in range(sample_count):
+		var t := float(i) / SAMPLE_RATE
+		var sample := 0.0
+		for n in range(frequencies.size()):
+			sample += sin(TAU * frequencies[n] * t) / float(n + 1)
+		var envelope := 1.0
+		if not looped:
+			envelope = minf(1.0, t / 0.015) * minf(1.0, (duration - t) / 0.08)
+		var value := int(clampf(sample * envelope * 0.16, -1.0, 1.0) * 32767.0)
+		bytes.encode_s16(i * 2, value)
+	var sound := AudioStreamWAV.new()
+	sound.format = AudioStreamWAV.FORMAT_16_BITS
+	sound.mix_rate = SAMPLE_RATE
+	sound.stereo = false
+	sound.data = bytes
+	if looped:
+		sound.loop_mode = AudioStreamWAV.LOOP_FORWARD
+		sound.loop_begin = 0
+		sound.loop_end = sample_count
+	return sound
+
+
+signal investigation_progress(found: int, total: int)
+signal investigation_completed
+
+@export_group("Medical wing enhancements")
+## Adds subtle local light pulses. Disable when the project supplies its own lighting.
+@export var medical_lighting_enabled: bool = true
+## Adds a quiet spatial ventilation hum and feedback beeps, without external assets.
+@export var medical_audio_enabled: bool = true
+@export_range(-60.0, 0.0, 1.0, "suffix:dB") var medical_hum_volume_db: float = -34.0
+## A self-contained optional objective; it does not change health or inventory.
+@export var medical_investigation_enabled: bool = true
+## Player must be a CharacterBody2D and belong to this group, or have a name starting with 'Player'.
+@export var medical_player_group: StringName = &"player"
+@export_flags_2d_physics var medical_player_collision_mask: int = 1
+
+
+func _build_enhancements() -> void:
+	var hum: AudioStreamWAV = null
+	var feedback: AudioStreamWAV = null
+	if medical_audio_enabled:
+		hum = _make_synth_sound(2.0, [55.0, 110.0, 165.0], true)
+	if medical_audio_enabled and medical_investigation_enabled:
+		feedback = _make_synth_sound(0.16, [660.0, 990.0], false)
+	if medical_lighting_enabled or medical_audio_enabled:
+		var atmosphere := MedicalAtmosphere.new()
+		atmosphere.lighting_enabled = medical_lighting_enabled
+		atmosphere.audio_enabled = medical_audio_enabled
+		atmosphere.audio_volume_db = medical_hum_volume_db
+		atmosphere.hum = hum
+		add_child(atmosphere)
+	if medical_investigation_enabled:
+		var investigation := MedicalInvestigation.new()
+		investigation.player_group = medical_player_group
+		investigation.detection_mask = medical_player_collision_mask
+		investigation.feedback_sound = feedback
+		investigation.progress_changed.connect(_on_investigation_progress)
+		investigation.objective_completed.connect(_on_investigation_completed)
+		add_child(investigation)
+
+
+func _on_investigation_progress(found: int, total: int) -> void:
+	investigation_progress.emit(found, total)
+
+
+func _on_investigation_completed() -> void:
+	investigation_completed.emit()
+
