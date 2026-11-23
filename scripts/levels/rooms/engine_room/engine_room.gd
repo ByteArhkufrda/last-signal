@@ -17,8 +17,8 @@ const FLOOR_TEXTURE_PATH := "res://assets/sprites/environment/floor_atlas.png"
 const FLOOR_VARIANT_CHANCE := 0.15
 const FLOOR_RNG_SEED := 17
 const MED_FLOOR_TEXTURE_PATH := "res://assets/sprites/environment/floor_medical_atlas.png"
-const MED_FLOOR_WEIGHTS := [0.70, 0.78, 0.84, 0.85, 0.87, 0.89, 0.92, 0.94, 0.97, 0.98, 0.99, 1.0]
 const MED_RECT_TILES := Rect2i(40, 0, 40, 23)
+const MED_FLOOR_TILE := Vector2i(0, 0)
 const WALL_TEXTURE: Texture2D = preload("res://assets/sprites/environment/wall_metal.png")
 const CONSOLE_SCENE: PackedScene = preload("res://scenes/levels/rooms/engine_room/console_engine_room.tscn")
 
@@ -361,13 +361,6 @@ static func build_tileset() -> TileSet:
 	return tileset
 
 
-## First weight threshold above the roll: the medical floor tile index.
-static func medical_floor_index(roll: float) -> int:
-	for i in MED_FLOOR_WEIGHTS.size():
-		if roll < MED_FLOOR_WEIGHTS[i]:
-			return i
-	return 0
-
 
 ## Fill `layer` (which must already have the tileset from
 ## build_tileset()) for the given tile rect. Source 0 is the standard
@@ -384,7 +377,7 @@ static func build_floor(layer: TileMapLayer, tile_rect: Rect2i, tile_offset: Vec
 			var global_cell := Vector2i(x, y) + tile_offset
 			var roll: float = roll_at(global_cell)
 			if MED_RECT_TILES.has_point(global_cell):
-				layer.set_cell(Vector2i(x, y), 1, Vector2i(medical_floor_index(roll), 0))
+				layer.set_cell(Vector2i(x, y), 1, MED_FLOOR_TILE)
 			else:
 				var coord := Vector2i(1, 0) if roll < FLOOR_VARIANT_CHANCE else Vector2i.ZERO
 				layer.set_cell(Vector2i(x, y), 0, coord)
