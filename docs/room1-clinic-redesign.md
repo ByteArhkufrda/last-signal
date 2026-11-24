@@ -241,9 +241,9 @@ keeps its file; only its in-fiction label changes, except the rope
 | `operation_console_full.png` | (4,9,28,32) of 32×32 | solid 32×16 | (496,136) c30–31,r8 | `MedOpConsoleFull` — complete console north of the table |
 | `operation_console_table.png` | (4,0,28,16) of 32×16 | solid 32×16 | (560,136) c34–35,r8 | `MedOpConsoleTable` — console desk east of the above |
 | `operation_console_computer.png` | (2,4,20,16) of 32×16 | decor on table | (560,136) | `MedOpConsolePC` — computer sitting on `MedOpConsoleTable` |
-| `operation_accessories_table.png` | (2,0,15,16) of 16×16 | solid 16×16 | (464,192) c28,r11–12 | `MedOpTrayEmpty` — instrument table, empty |
+| `operation_accessories_table.png` | (2,0,15,16) of 16×16 | solid 16×16 | (472,184) c29,r11 | `MedOpTrayEmpty` — instrument table, empty. **Review pass 1:** moved from (464,192) — the tile-centre nudge had put it at (456,184), exactly onto the pre-existing `MedChairFallen` decor (see §11). |
 | `operation_accessories_table_full.png` | (2,0,15,16) of 16×16 | solid 16×16 | (528,208) c32,r12–13 | `MedOpTrayFull` — instrument table, stocked |
-| `operation_scalpel_01.png` | (5,7,11,8) of 16×16 | decor on tray | (464,192) | `MedOpScalpel1` — on `MedOpTrayEmpty` |
+| `operation_scalpel_01.png` | (5,7,11,8) of 16×16 | decor on tray | (472,184) | `MedOpScalpel1` — on `MedOpTrayEmpty` |
 | `operation_scalpel_02.png` | (5,7,11,8) of 16×16 | decor on tray | (528,208) | `MedOpScalpel2` — on `MedOpTrayFull` |
 | `operation_radiation_sign.png` | (0,1,15,15) of 16×16 | decor, wall | (632,176) | `MedRadiationSign` — radiation warning on the east wall beside the CT (existing `x=632` wall-decor convention) |
 
@@ -260,7 +260,7 @@ New ward row B nodes: `MedBed4` (48,104), `MedBed5` (96,104);
 
 | File | Art (canvas) | Solid / decor | Centre (tile) | Node / purpose |
 |---|---|---|---|---|
-| `room_bed_h.png` | (0,8,28,32) of 32×32 | solid 32×16 | (224,56) c13–14,r3 | `MedObsBedH` — observation bed 1 (art overhangs 8 px south; faces free floor) |
+| `room_bed_h.png` | (0,8,28,32) of 32×32 | solid 32×16 | (240,56) c14–15,r3 | `MedObsBedH` — observation bed 1 (art overhangs 8 px south; faces free floor). **Review pass 1:** moved +16x from (224,56) — that centre sat exactly on the pre-existing `MedBedside4` (216,56) and hid it completely (see §11). |
 | `room_bed_v.png` | (0,0,15,28) of 16×32 | solid 16×32 | (296,48) c18,r2–3 | `MedObsBedV` — observation bed 2, vertical |
 | `room_bed_meal.png` | (12,0,31,28) of 32×32 | solid 16×32 | (440,48) c27,r2–3 | `MedExamCouch2` — second exam/recovery couch (bed with meal tray; art is vertical) |
 | `room_bedside_table.png` | (3,0,13,12) of 16×16 | solid 16×16 | (264,56) c16,r3 | `MedObsTable` — shared bedside table between the two observation beds |
@@ -335,7 +335,7 @@ tiny icons read as separate bottles on a shelf, not one blob.
 
 | Photo | Identified sprite | Solid / decor | Centre (tile) | Node / purpose |
 |---|---|---|---|---|
-| 287167635 | First-aid kit, white, green cross | decor, wall | (-8,200) | `MedKitWall1` — wall-mounted kit, west wall row 12 |
+| 287167635 | First-aid kit, white, green cross | decor, wall | (-8,184) | `MedKitWall1` — wall-mounted kit, west wall row 11. **Review pass 1:** moved one tile north from (-8,200) — that centre sat exactly on the pre-existing `MedGrilleVent` and hid it completely (see §11). |
 | 287167641 | First-aid kit, white, red cross | decor, wall | (-8,216) | `MedKitWall2` — west wall row 13 |
 | 287167662 | First-aid kit, red, white cross | decor, wall | (-8,232) | `MedKitWall3` — west wall row 14 |
 | 287167636 | First-aid kit, white, blue cross | decor on cart | (88,216) | `MedKitCart` — on `MedCartEmergency` |
@@ -776,3 +776,27 @@ to exit` — معادل فارسی قطعی:
   محدوده‌ی `command_center` است، نه اتاق یک (§6).
 - متن‌های اتاق‌های ۲ تا ۵ و راهروها.
 - کامنت‌های کد، نام گره‌ها، لاگ‌ها و متن‌های تست — متن نمایشی نیستند.
+
+## §11. Review pass 1 corrections (2026-11-24, commit "Review pass 1 fixes")
+
+Three real placement bugs found by comparing the built code against
+§3–§4 and the renders (all three are exact-centre collisions the
+design tables did not notice, because the pre-existing props they land
+on are not in the §3/§4 tables). All three fixed in code +
+`level_data.gd` mirror where solid; tables above updated.
+
+| # | Bug | Fix |
+|---|---|---|
+| 1 | `MedObsBedH` at (224,56) sat exactly on the pre-existing `MedBedside4` (216,56) — identical 16×16 table rect inside the bed's 32×16 rect; the table was fully hidden under the bed sprite (verified in the ward close-up render: no table visible at the bed's west end). | Bed moved +16x to (240,56); table visible again; bed still in the observation bay, abutting `MedObsTable` (264,56). `level_data.gd`: `Rect2(848,48,32,16)` → `Rect2(864,48,32,16)`. |
+| 2 | `MedKitWall1` at (-8,200) sat exactly on the pre-existing `MedGrilleVent` — kit art fills 14×14 of the 16×16, so the vent was fully hidden (verified in the west-wall close-up: no grille visible). | Kit moved one tile north to (-8,184), still the west-wall kit column. Decor only; no nav or `level_data.gd` impact. |
+| 3 | `MedOpTrayEmpty` (+ `MedOpScalpel1`) after the tile-centre nudge sat at (456,184), exactly onto the pre-existing `MedChairFallen` decor — tray + fallen chair + scalpel stacked on one point. (The design's own (464,192) already overlapped the chair by 8 px.) | Tray + scalpel moved to (472,184): tile-centre aligned, clear of the chair (edge touch at x=464 only), still beside `MedOpTable`. `level_data.gd`: `Rect2(1088,176,16,16)` → `Rect2(1104,176,16,16)`. Note: the first attempt, (472,192), put the 16×16 centre on a tile edge in y, so the room builder (`ceili`) and the level builder (`int`) inflated it differently — 3 grid cells disagreed and `test_rooms` failed; (472,184) restores agreement. |
+
+Non-issues reviewed and left as-is: the 11 tile-centre nudges (all
+exactly 8 px per axis, moving rect edges onto the 16-px grid so the
+standalone and assembled nav grids agree); the wheelchair-bay and
+waiting-wheelchair deviations (documented in the build commit, forced
+by `test_enemy_path_through_doorway`); the 2 row-B bedside tables
+(implied by §1/§6, omitted as solids from §3.4); the op-table light
+staying at (496,176) while the table nudged to (496,168) — 8 px inside
+a 48-px radius, invisible; the dark `bed_disorganized` texture (reads
+as a dark bed at 2×, not a hole).

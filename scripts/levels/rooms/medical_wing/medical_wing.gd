@@ -276,9 +276,22 @@ const MED_SOLID_LAYOUT := [
 	["tg_operation_ecg_full", Vector2(456, 144), Vector2(16, 32), "MedOpECG"],
 	["tg_operation_console_full", Vector2(496, 136), Vector2(32, 16), "MedOpConsoleFull"],
 	["tg_operation_console_table", Vector2(560, 136), Vector2(32, 16), "MedOpConsoleTable"],
-	["tg_operation_accessories_table", Vector2(456, 184), Vector2(16, 16), "MedOpTrayEmpty"],
+	# Review pass 1 (2026-11-24): design §3.3 put this tray at (464,192);
+	# the tile-centre nudge moved it to (456,184), exactly onto the
+	# pre-existing MedChairFallen decor — tray + fallen chair + scalpel
+	# stacked on one point. Moved to (472,184): tile-centre aligned
+	# (the first try, (472,192), put the centre on a tile edge in y and
+	# broke test_rooms' standalone/assembled grid agreement by 3 cells),
+	# clear of the chair (edge touch at x=464 only), still beside
+	# MedOpTable.
+	["tg_operation_accessories_table", Vector2(472, 184), Vector2(16, 16), "MedOpTrayEmpty"],
 	["tg_operation_accessories_table_full", Vector2(520, 200), Vector2(16, 16), "MedOpTrayFull"],
-	["tg_room_bed_h", Vector2(224, 56), Vector2(32, 16), "MedObsBedH"],
+	# Review pass 1 (2026-11-24): design §3.4 put this bed at (224,56),
+	# exactly on top of the pre-existing MedBedside4 (216,56) — the table
+	# was fully hidden under the bed sprite (identical 32x16/16x16 rects).
+	# Moved +16x to (240,56): bedside table visible again, bed still in
+	# the observation bay (cols 14-15), abutting MedObsTable (264,56).
+	["tg_room_bed_h", Vector2(240, 56), Vector2(32, 16), "MedObsBedH"],
 	["tg_room_bed_v", Vector2(296, 48), Vector2(16, 32), "MedObsBedV"],
 	["tg_room_bed_meal", Vector2(440, 48), Vector2(16, 32), "MedExamCouch2"],
 	["tg_room_bedside_table", Vector2(264, 56), Vector2(16, 16), "MedObsTable"],
@@ -377,7 +390,7 @@ const MED_DECOR_LAYOUT := [
 	["tg_operation_light", Vector2(496, 152), "MedOpLight"],
 	["tg_operation_ecg_screen", Vector2(496, 124), "MedOpECGScreen"],
 	["tg_operation_console_computer", Vector2(560, 136), "MedOpConsolePC"],
-	["tg_operation_scalpel_01", Vector2(456, 184), "MedOpScalpel1"],
+	["tg_operation_scalpel_01", Vector2(472, 184), "MedOpScalpel1"],
 	["tg_operation_scalpel_02", Vector2(520, 200), "MedOpScalpel2"],
 	["tg_operation_radiation_sign", Vector2(632, 176), "MedRadiationSign"],
 	["tg_room_ecg_screen", Vector2(184, 40), "MedECGScreenWard"],
@@ -407,7 +420,11 @@ const MED_DECOR_LAYOUT := [
 	["ph_287167671_firstaid_white_circle", Vector2(400, 336), "MedKitPharm"],
 	["ph_287167637_firstaid_box_cardboard", Vector2(360, 336), "MedKitBox637"],
 	["ph_287167657_syringe_redwhite", Vector2(394, 340), "MedSyringe657"],
-	["ph_287167635_firstaid_white_green", Vector2(-8, 200), "MedKitWall1"],
+	# Review pass 1 (2026-11-24): design §4.2 put this kit at (-8,200),
+	# exactly on top of the pre-existing MedGrilleVent — the vent was
+	# fully hidden behind the kit (kit art fills 14x14 of the 16x16).
+	# Moved one tile north to (-8,184), still the west-wall kit column.
+	["ph_287167635_firstaid_white_green", Vector2(-8, 184), "MedKitWall1"],
 	["ph_287167641_firstaid_white_red", Vector2(-8, 216), "MedKitWall2"],
 	["ph_287167662_firstaid_red", Vector2(-8, 232), "MedKitWall3"],
 	["ph_287167636_firstaid_white_blue", Vector2(88, 216), "MedKitCart"],
