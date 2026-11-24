@@ -158,7 +158,7 @@ func test_interactables_present() -> bool:
 		# Switches/terminals are grandchildren (children of their panels).
 		if level.is_ancestor_of(node):
 			count += 1
-	assert_eq(count, 22, "level has 22 interactables (9 consoles + 1 door + 1 visible pickup + 3 switches + 3 terminals + 1 fuse box + 3 towers + 1 transmit console)")
+	assert_eq(count, 23, "level has 23 interactables (10 consoles + 1 door + 1 visible pickup + 3 switches + 3 terminals + 1 fuse box + 3 towers + 1 transmit console)")
 	level.queue_free()
 	return true
 
@@ -1626,6 +1626,9 @@ func test_scanner_stays_at_post_and_scans() -> bool:
 	var level: Node2D = scene.instantiate()
 	root.add_child(level)
 	await process_frame
+	# The game starts with the power out, which leaves this scanner dormant
+	# (P3): restore it so the test sees the awake scanner it is about.
+	level.get_node("MedicalDarkness").restore_power()
 	var scanner: CharacterBody2D = level.get_node("ScannerRobot")
 	scanner.scan_interval = 0.5
 	var post: Vector2 = scanner.global_position
@@ -1642,6 +1645,8 @@ func test_scanner_chases_visible_player() -> bool:
 	var level: Node2D = scene.instantiate()
 	root.add_child(level)
 	await process_frame
+	# Power is out at the start, which leaves this scanner dormant (P3).
+	level.get_node("MedicalDarkness").restore_power()
 	var scanner: CharacterBody2D = level.get_node("ScannerRobot")
 	var player: CharacterBody2D = level.get_node("Player")
 	scanner._facing = Vector2.DOWN
@@ -1662,6 +1667,8 @@ func test_scanner_returns_to_post() -> bool:
 	var level: Node2D = scene.instantiate()
 	root.add_child(level)
 	await process_frame
+	# Power is out at the start, which leaves this scanner dormant (P3).
+	level.get_node("MedicalDarkness").restore_power()
 	var scanner: CharacterBody2D = level.get_node("ScannerRobot")
 	var player: CharacterBody2D = level.get_node("Player")
 	scanner._facing = Vector2.DOWN

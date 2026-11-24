@@ -69,6 +69,8 @@ const ROOM_CHECKS := {
 			"NoteConsole1": Vector2(140, 320),
 			"MedDeskDoctor/NoteConsole2": Vector2(450, 260),
 			"NoteConsole3": Vector2(560, 160),
+			# Placeholder power switch (P3, 2026-11-24).
+			"PowerSwitch": Vector2(590, 44),
 		},
 		"towers": 0, "puzzles": 0, "enemies": 1, "wall_children": 18,
 	},
@@ -94,6 +96,10 @@ const ROOM_CHECKS := {
 		"towers": 0, "puzzles": 0, "enemies": 1, "wall_children": 15,
 	},
 }
+
+## Robot states (security_robot_medical_wing.gd State enum), as in test_runner.gd.
+const E_PATROL := 0
+const E_CHASE := 2
 
 var passed := 0
 var failed := 0
@@ -129,7 +135,9 @@ func run_tests() -> void:
 			"test_rooms_are_local", "test_exits_pair_up",
 			"test_station_layout_agrees_with_rooms",
 			"test_medical_note_consoles", "test_medical_scanner_tuning",
-			"test_medical_darkness_standalone", "test_medical_darkness_assembled"]:
+			"test_medical_darkness_standalone", "test_medical_darkness_assembled",
+			"test_medical_robots_dormant", "test_medical_power_switch",
+			"test_medical_power_full_game", "test_medical_cone_readability"]:
 		paused = false
 		var v = await call(t)
 		if v == true:
@@ -799,6 +807,306 @@ func test_medical_darkness_assembled() -> bool:
 	assert_eq(fired[0], 1, "a second restore_power() does nothing in the full game")
 	_level.queue_free()
 	_level = null
+	await process_frame
+	await process_frame
+	return true
+
+
+## Hold E for three physics frames (one just-pressed edge), then release.
+func _press_interact() -> void:
+	Input.action_press("interact")
+	for i in 3:
+		await physics_frame
+	Input.action_release("interact")
+
+
+## True when an AudioManager player is playing the "chime" stream now.
+func _chime_playing(audio: Node) -> bool:
+	for p in audio._players:
+		if p.playing and p.stream == audio.streams["chime"]:
+			return true
+	return false
+
+
+## Put a fresh medical-copy scanner at WORLD position `pos` in `level`, step
+## the darkness once and report whether the robot went dormant. The robot is
+## freed before any frame passes, so it never acts.
+func _walker_dormant_at(level: Node2D, dark: Node2D, pos: Vector2) -> bool:
+	var scene: PackedScene = load("res://scenes/levels/rooms/medical_wing/scanner_robot_medical_wing.tscn")
+	var walker: CharacterBody2D = scene.instantiate()
+	level.add_child(walker)
+	walker.global_position = pos
+	dark.step(0.0)
+	var asleep: bool = walker.dormant
+	walker.free()
+	return asleep
+
+
+## Dormant robots (P3, 2026-11-24, port of old step 5), standalone room,
+## LOCAL coordinates: with the power out the Medical Wing scanner does not
+## move, rotate its scan, detect, answer a radar pulse or catch the player
+## — and it is not hidden — and it wakes the moment the power is restored.
+## (Robots elsewhere staying untouched is checked in
+## test_medical_power_full_game.)
+func test_medical_robots_dormant() -> bool:
+	if not ResourceLoader.exists(ROOM_SCENES["medical_wing"]):
+		skipped += 1
+		print("SKIP medical robots dormant: scene not split yet")
+		return true
+	# A cached assembled level holds another medical scanner.
+	if _level != null:
+		_level.queue_free()
+		_level = null
+		await process_frame
+		await process_frame
+	var play: Node2D = load(PLAY_SCENES["medical_wing"]).instantiate()
+	root.add_child(play)
+	var room: Node2D = play.room
+	var player: CharacterBody2D = play.player
+	var scanner: CharacterBody2D = room.get_node("ScannerRobot")
+	var post: Vector2 = scanner.global_position
+	var facing0: Vector2 = scanner._facing
+	assert_true(scanner.dormant, "the scanner starts dormant (the power is out)")
+	assert_true(is_equal_approx(scanner.self_modulate.a, 0.0), "the dormant scanner's vision cone is hidden")
+	assert_true(scanner.is_visible_in_tree() and scanner.get_node("Sprite2D").is_visible_in_tree(), "the dormant scanner itself is not hidden")
+	# In its cone, 30 px below it: nothing happens for ten physics frames,
+	# not even for a radar pulse that reaches it.
+	player.global_position = Vector2(260, 150)
+	player.velocity = Vector2.ZERO
+	scanner.investigate(Vector2(260, 150), 300.0)
+	for i in 10:
+		await physics_frame
+	assert_eq(scanner.global_position, post, "the dormant scanner does not move")
+	assert_eq(scanner._facing, facing0, "the dormant scanner does not rotate its scan")
+	assert_true(not scanner._sees_player, "the dormant scanner does not detect a player in its cone")
+	assert_eq(scanner.state, E_PATROL, "the dormant scanner ignores a radar pulse and does not chase")
+	# Standing on it (inside the catch distance): no catch either.
+	var caught := [0]
+	scanner.player_caught.connect(func() -> void: caught[0] += 1)
+	player.global_position = Vector2(260, 130)
+	for i in 5:
+		await physics_frame
+	assert_true(player.global_position.distance_to(scanner.global_position) <= scanner.catch_distance, "the player stands inside the scanner's catch distance")
+	assert_eq(caught[0], 0, "the dormant scanner does not catch a player standing on it")
+	# Power back: it wakes at once and chases the player in its cone.
+	player.global_position = Vector2(260, 150)
+	player.velocity = Vector2.ZERO
+	room.restore_power()
+	assert_true(not scanner.dormant, "the scanner wakes the moment the power is restored")
+	assert_true(is_equal_approx(scanner.self_modulate.a, 1.0), "the awake scanner's vision cone is back")
+	for i in 4:
+		await physics_frame
+	assert_eq(scanner.state, E_CHASE, "the awake scanner sees and chases the player")
+	play.queue_free()
+	await process_frame
+	await process_frame
+	return true
+
+
+## The placeholder power switch (P3, 2026-11-24), standalone room: a copy of
+## the room's console on free floor far from the scanner and the doorways,
+## not a puzzle or hidden object, that restores the power on the first E
+## and does nothing afterwards. Its position is pinned in ROOM_CHECKS.
+func test_medical_power_switch() -> bool:
+	if not ResourceLoader.exists(ROOM_SCENES["medical_wing"]):
+		skipped += 1
+		print("SKIP medical power switch: scene not split yet")
+		return true
+	# Same reason as test_medical_note_consoles: free the cached level.
+	if _level != null:
+		_level.queue_free()
+		_level = null
+		await process_frame
+		await process_frame
+	var play: Node2D = load(PLAY_SCENES["medical_wing"]).instantiate()
+	root.add_child(play)
+	var room: Node2D = play.room
+	var player: CharacterBody2D = play.player
+	var scanner: CharacterBody2D = room.get_node("ScannerRobot")
+	var switch: Node2D = room.get_node_or_null("PowerSwitch")
+	assert_true(switch != null, "the medical wing has a PowerSwitch")
+	if switch == null:
+		play.queue_free()
+		await process_frame
+		await process_frame
+		return true
+	assert_eq(switch.get_script().resource_path, "res://scripts/levels/rooms/medical_wing/console_medical_wing.gd", "the PowerSwitch is the room's own console copy")
+	assert_true(switch.is_in_group("interactable"), "the PowerSwitch is an interactable")
+	assert_true(not switch.is_in_group("puzzles") and not switch.is_in_group("hidden"), "the PowerSwitch is neither a puzzle nor a hidden object")
+	assert_eq(switch.interact_label, "وصل کردن برق", "the PowerSwitch prompt text")
+	assert_eq(switch.message, "برق اضطراری وصل شد.", "the PowerSwitch message text")
+	assert_eq((switch.get_node("Sprite2D") as Sprite2D).texture, load("res://assets/sprites/medical-wing/indicator_emergency.png"), "the PowerSwitch uses the emergency indicator sprite")
+	# Placement: free floor, clear of both doorways, the scanner's line of
+	# sight and the scanner itself, and well apart from the other consoles.
+	var rect := Rect2(switch.global_position - Vector2(8, 8), Vector2(16, 16))
+	var in_solid := false
+	for r in room.blocked_rects():
+		if rect.intersects(r):
+			in_solid = true
+	assert_true(not in_solid, "the PowerSwitch is not inside a wall or a solid prop")
+	var in_keep_out := false
+	for r in [Rect2(0, 224, 160, 64), Rect2(272, 288, 64, 64), Rect2(232, 100, 56, 120)]:
+		if rect.intersects(r):
+			in_keep_out = true
+	assert_true(not in_keep_out, "the PowerSwitch is clear of the doorways and the scanner's line of sight")
+	assert_true(switch.global_position.distance_to(scanner.global_position) >= 230.0, "the PowerSwitch is at least 230 px from the scanner")
+	var nearest_console := INF
+	for c in [Vector2(120, 80), room.get_node("NoteConsole1").global_position,
+			room.get_node("MedDeskDoctor/NoteConsole2").global_position,
+			room.get_node("NoteConsole3").global_position]:
+		nearest_console = minf(nearest_console, switch.global_position.distance_to(c))
+	assert_true(nearest_console >= 100.0, "the PowerSwitch is at least 100 px from every other console")
+	# First E restores the power (once); the scanner was dormant until then.
+	var fired := [0]
+	room.power_restored.connect(func() -> void: fired[0] += 1)
+	assert_true(scanner.dormant, "the scanner is dormant before the switch is used")
+	player.global_position = Vector2(590, 70)
+	player.velocity = Vector2.ZERO
+	for i in 5:
+		await physics_frame
+	assert_true(player._current_interactable == switch, "beside it, the PowerSwitch is the nearest interactable")
+	await _press_interact()
+	assert_eq(switch.use_count, 1, "the PowerSwitch is used once after E")
+	assert_true(room.power_on, "E on the PowerSwitch restores the power")
+	assert_eq(fired[0], 1, "power_restored is emitted once")
+	assert_true(not scanner.dormant, "the scanner wakes when the switch restores the power")
+	assert_true(not switch.is_in_group("interactable"), "the used PowerSwitch leaves the interactable group")
+	# After the first use it does nothing: no target, no second use.
+	for i in 5:
+		await physics_frame
+	assert_true(player._current_interactable != switch, "the used PowerSwitch is not targeted again")
+	await _press_interact()
+	assert_eq(switch.use_count, 1, "a second E does not use the PowerSwitch again")
+	assert_eq(fired[0], 1, "still one power_restored after a second E")
+	play.queue_free()
+	await process_frame
+	await process_frame
+	return true
+
+
+## Full game (main.tscn, so the HUD and AudioManager exist), P3
+## (2026-11-24): only the medical wing's scanner is dormant at the start; a
+## robot with the medical copy is dormant inside the medical rect (WORLD
+## (640, 0, 640, 368)) only while the power is out; a robot of another room
+## is left alone; the switch shows its HUD prompt and message, plays the
+## chime, wakes the scanner, works once and leaves every mission counter
+## alone.
+func test_medical_power_full_game() -> bool:
+	if not ResourceLoader.exists(ROOM_SCENES["medical_wing"]):
+		skipped += 1
+		print("SKIP medical power (full game): scene not split yet")
+		return true
+	if _level != null:
+		_level.queue_free()
+		_level = null
+		await process_frame
+		await process_frame
+	var main: Node = (load("res://scenes/main.tscn") as PackedScene).instantiate()
+	root.add_child(main)
+	await process_frame
+	await process_frame
+	var level: Node2D = main.get_node("Level01")
+	var hud: CanvasLayer = main.get_node("HUD")
+	var audio: Node = main.get_node("AudioManager")
+	var player: CharacterBody2D = level.get_node("Player")
+	var mission: Node = level.get_node("Mission")
+	var dark: Node2D = level.get_node_or_null("MedicalDarkness")
+	var switch: Node2D = level.get_node_or_null("PowerSwitch")
+	assert_true(switch != null and dark != null, "the assembled level keeps PowerSwitch and MedicalDarkness at level.get_node(...)")
+	if switch == null or dark == null:
+		main.queue_free()
+		await process_frame
+		await process_frame
+		return true
+	assert_eq(switch.global_position, Vector2(1230, 44), "the PowerSwitch sits at its local spot plus the wing's offset")
+	var scanner: CharacterBody2D = level.get_node("ScannerRobot")
+	var asleep: Array = []
+	for enemy in get_nodes_in_group("enemies"):
+		if level.is_ancestor_of(enemy) and "dormant" in enemy and enemy.dormant:
+			asleep.append(str(enemy.name))
+	assert_eq(asleep, ["ScannerRobot"], "at the start only the medical wing's scanner is dormant; the other robots are untouched")
+	var counts_before := [_count_in_subtree("puzzles", level), _count_in_subtree("hidden", level)]
+	assert_eq(counts_before, [3, 3], "the level has 3 puzzles and 3 hidden objects")
+	# A robot of another room (its own copy, no dormant switch) that walks
+	# into the wing is left alone.
+	var other: CharacterBody2D = level.get_node("SecurityRobot")
+	var home: Vector2 = other.global_position
+	other.global_position = Vector2(700, 300)
+	dark.step(0.0)
+	assert_true(other.is_physics_processing(), "a robot of another room that walks into the wing is left alone")
+	other.global_position = home
+	# A robot with the medical copy: awake outside the wing's world rect,
+	# dormant inside it while the power is out.
+	assert_true(not _walker_dormant_at(level, dark, Vector2(320, 300)), "a robot outside the medical rect is awake")
+	assert_true(_walker_dormant_at(level, dark, Vector2(700, 300)), "a robot that walks into the medical rect while the power is out is dormant")
+	# Use the switch through the real player, HUD and wiring.
+	var chimed := [false]
+	dark.power_restored.connect(func() -> void: chimed[0] = chimed[0] or _chime_playing(audio))
+	player.global_position = Vector2(1230, 70)
+	player.velocity = Vector2.ZERO
+	for i in 5:
+		await physics_frame
+	assert_eq(hud.prompt_label.text, "E — وصل کردن برق", "the HUD prompt beside the switch")
+	await _press_interact()
+	assert_true(dark.power_on, "E on the switch restores the power in the full game")
+	assert_eq(hud.message_label.text, "برق اضطراری وصل شد.", "the HUD shows the power-restored message")
+	assert_true(chimed[0], "the chime plays when the power returns")
+	assert_true(not scanner.dormant, "the scanner wakes in the full game")
+	assert_eq([mission.puzzles_solved, mission.towers_active, mission.current_stage(), level._puzzles_solved], [0, 0, 0, 0], "using the switch leaves the mission counters alone")
+	assert_eq([_count_in_subtree("puzzles", level), _count_in_subtree("hidden", level)], counts_before, "the puzzle and hidden-object counts are unchanged")
+	assert_true(not _walker_dormant_at(level, dark, Vector2(700, 300)), "with the power back a robot inside the medical rect is awake")
+	# Second E: no message, no prompt, no second use.
+	hud.message_label.text = ""
+	hud.message_label.visible = false
+	for i in 5:
+		await physics_frame
+	await _press_interact()
+	assert_eq(hud.message_label.text, "", "a second E on the used switch shows nothing")
+	assert_true(not hud.prompt_label.visible, "the prompt is gone once the switch is used")
+	assert_eq(switch.use_count, 1, "the used switch is not used again")
+	main.queue_free()
+	await process_frame
+	await process_frame
+	return true
+
+
+## Cone readability (P3, 2026-11-24): the medical scanner's vision cone is
+## stronger (idle alpha 0.22, chase 0.40 — up from 0.07 / 0.15) and has a
+## thin outline (alpha 0.6) so it reads on the bright medical floor; all
+## three are @export vars of the room's own robot copy.
+func test_medical_cone_readability() -> bool:
+	if not ResourceLoader.exists(ROOM_SCENES["medical_wing"]):
+		skipped += 1
+		print("SKIP medical cone readability: scene not split yet")
+		return true
+	var play: Node2D = load(PLAY_SCENES["medical_wing"]).instantiate()
+	root.add_child(play)
+	var scanner: CharacterBody2D = play.room.get_node_or_null("ScannerRobot")
+	assert_true(scanner != null, "medical wing scanner exists")
+	if scanner == null:
+		play.queue_free()
+		await process_frame
+		await process_frame
+		return true
+	assert_eq(scanner.cone_alpha_idle, 0.22, "idle cone alpha is 0.22")
+	assert_eq(scanner.cone_alpha_chase, 0.40, "chase cone alpha is 0.40")
+	assert_eq(scanner.cone_outline_alpha, 0.6, "cone outline alpha is 0.6")
+	var exported: Array = []
+	for prop in scanner.get_property_list():
+		if (int(prop["usage"]) & PROPERTY_USAGE_EDITOR) != 0 and str(prop["name"]).begins_with("cone_"):
+			exported.append(str(prop["name"]))
+	exported.sort()
+	assert_eq(exported, ["cone_alpha_chase", "cone_alpha_idle", "cone_outline_alpha"], "the three cone values are @export vars")
+	assert_eq(scanner.cone_fill_color(), Color(1.0, 0.2, 0.2, 0.22), "the idle cone fill uses the idle alpha")
+	scanner.state = E_CHASE
+	assert_eq(scanner.cone_fill_color(), Color(1.0, 0.2, 0.2, 0.40), "the chase cone fill uses the chase alpha")
+	scanner.state = E_PATROL
+	assert_eq(scanner.cone_outline_color(), Color(1.0, 0.2, 0.2, 0.6), "the cone outline colour uses the outline alpha")
+	var points: PackedVector2Array = scanner.cone_points()
+	assert_eq(points.size(), 10, "the cone polygon is the robot plus nine arc points")
+	assert_eq(points[0], Vector2.ZERO, "the cone starts at the robot")
+	assert_true(is_equal_approx(points[9].length(), scanner.detection_radius), "the cone's arc ends at the detection radius")
+	play.queue_free()
 	await process_frame
 	await process_frame
 	return true

@@ -1,5 +1,6 @@
 extends Node2D
-## Last Signal — Medical Wing darkness (P2, 2026-11-24; port of step 4).
+## Last Signal — Medical Wing darkness (P2, 2026-11-24; port of step 4)
+## and power state (P3, 2026-11-24; port of step 5).
 ##
 ## The game starts with the power OUT: while power is off AND the player
 ## is inside the medical room's rect, the room is dark except a soft
@@ -27,6 +28,18 @@ extends Node2D
 ## MedicalWing.power_on / power_restored / restore_power() are a facade
 ## over it (they work in the standalone room); the puzzle that restores
 ## power in the full game has to call restore_power() on this node.
+##
+## Dormant robots (P3): while the power is off, every enemy under this
+## node's parent whose position is inside the room's rect gets
+## `dormant = true` (see security_robot_medical_wing.gd) and does
+## nothing; restore_power() wakes them at once. Only enemies of the same
+## branch are touched (two levels alive at once never fight over each
+## other's robots), and only enemies that HAVE a `dormant` flag: the
+## other rooms' robots are their own per-room copies and stay as they are.
+##
+## The placeholder power switch (P3): a console that the room hands to
+## bind_switch(); its first use calls restore_power(). The HUD text comes
+## from the console's own message, shown by the level's wiring.
 
 ## Emitted once, by the first restore_power().
 signal power_restored
@@ -42,6 +55,11 @@ const ROOM_FADE_SECONDS := 0.25
 ## Fade seconds of the darkness after restore_power().
 const POWER_FADE_SECONDS := 1.0
 const OVERLAY_Z_INDEX := 100
+## AudioManager sound played when the power returns (the same chime as a
+## solved puzzle); looked up through the "audio" group, so it is silent
+## wherever there is no AudioManager (level-only tests, the standalone
+## room). Read-only use of the group: nothing shared is touched.
+const POWER_SOUND := "chime"
 
 ## The room's rect in THIS node's local space; set by MedicalWing before
 ## add_child (its own room_rect, which is local too).
@@ -53,6 +71,7 @@ var _fade_seconds: float = ROOM_FADE_SECONDS
 var _player: Node2D = null
 var _overlay: ColorRect = null
 var _material: ShaderMaterial = null
+var _switch: Node2D = null
 
 
 func _ready() -> void:
@@ -71,6 +90,8 @@ func _ready() -> void:
 	_overlay.material = _material
 	add_child(_overlay)
 	_apply()
+	# Robots in the dark room are off from the very first physics tick.
+	_update_dormancy()
 
 
 func _process(delta: float) -> void:
@@ -92,13 +113,24 @@ func darkness() -> float:
 
 
 ## Power is back: the darkness fades out over POWER_FADE_SECONDS and
-## never returns. Calling it again does nothing.
+## never returns, the robots in the room wake up, the power switch is
+## used up and the chime plays. Calling it again does nothing.
 func restore_power() -> void:
 	if power_on:
 		return
 	power_on = true
 	_fade_seconds = POWER_FADE_SECONDS
+	_update_dormancy()
+	_retire_switch()
+	_play_chime()
 	power_restored.emit()
+
+
+## Hand over the placeholder power switch (a console): using it restores
+## the power. Called by MedicalWing right after it builds the console.
+func bind_switch(switch_console: Node2D) -> void:
+	_switch = switch_console
+	switch_console.interacted.connect(_on_switch_interacted)
 
 
 ## Advance the fade by delta seconds and refresh the overlay. _process
@@ -107,6 +139,40 @@ func step(delta: float) -> void:
 	var target := 1.0 if is_dark() else 0.0
 	_amount = move_toward(_amount, target, delta / _fade_seconds)
 	_apply()
+	_update_dormancy()
+
+
+func _on_switch_interacted(_console: Node2D) -> void:
+	restore_power()
+
+
+## The switch works once: after the power is back (by the switch or by
+## anything else) it leaves the "interactable" group, so the player never
+## targets it again and nothing happens on E. The player un-highlights it
+## and hides the prompt on its own next frame.
+func _retire_switch() -> void:
+	if _switch != null and is_instance_valid(_switch):
+		_switch.remove_from_group("interactable")
+
+
+func _play_chime() -> void:
+	var audio: Node = get_tree().get_first_node_in_group("audio")
+	if audio != null and audio.has_method("play"):
+		audio.play(POWER_SOUND)
+
+
+## Robots inside the room's rect are dormant while the power is off. A
+## robot that walks in (a chaser from the next room, say) freezes where it
+## crosses the line; one that is awake outside is untouched. The rect is
+## local, so the position goes through to_local like the player's.
+func _update_dormancy() -> void:
+	var scope := get_parent()
+	if scope == null or not is_inside_tree():
+		return
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		if not scope.is_ancestor_of(enemy) or not ("dormant" in enemy):
+			continue
+		enemy.dormant = not power_on and room_rect.has_point(to_local((enemy as Node2D).global_position))
 
 
 func _apply() -> void:

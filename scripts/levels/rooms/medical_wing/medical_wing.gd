@@ -107,6 +107,11 @@ const MED_PROP_PATHS := {
 ## children, so power_on / power_restored / restore_power() below work only
 ## standalone. In the full game, call restore_power() on the surviving
 ## level.get_node("MedicalDarkness") instead.
+##
+## Dormant robots + power switch (P3, 2026-11-24): the robots in this room
+## are dormant until the power is back (MedicalDarkness sets their
+## `dormant` flag), and a placeholder "PowerSwitch" console restores it
+## (see POWER_SWITCH).
 
 ## Sprite and prompt of the note consoles. "note_doctor" is the pack's
 ## handwritten-note sprite (it used to lie on the doctor's desk as an
@@ -136,6 +141,20 @@ const NOTE_CONSOLES := [
 		"text": "یادداشت پزشک ایستگاه: هر سیگنالی که بفرستیم، فقط ما رو نجات نمی‌ده.",
 	},
 ]
+
+## The placeholder power switch (P3): a console in the north-east corner,
+## near the fuse-box decor on the east wall. Free floor, 100+ px from the
+## other consoles and 330+ px from the scanner (260, 120), clear of both
+## doorways, so standing at it never puts the player in the scanner's
+## reach when the robot wakes up. It is NOT in the "puzzles" or "hidden"
+## groups: the mission counts do not know it. Its first use restores the
+## power; the HUD message is the console's own `message`. LOCAL position,
+## pinned in test_rooms.gd.
+const POWER_SWITCH := {
+	"name": "PowerSwitch", "pos": Vector2(590, 44),
+	"texture": "indicator_emergency",
+	"label": "وصل کردن برق", "text": "برق اضطراری وصل شد.",
+}
 
 ## Emitted once, when the power comes back (the darkness node's signal).
 signal power_restored
@@ -167,6 +186,7 @@ func _ready() -> void:
 	_build_medical_props()
 	_build_note_consoles()
 	_build_darkness()
+	_build_power_switch()
 
 
 func wall_rects() -> Array[Rect2]:
@@ -319,9 +339,11 @@ func _build_darkness() -> void:
 	add_child(_darkness)
 
 
-## Bring the power back: the darkness fades out and never returns. Works
-## while this node is alive (standalone); in the full game use
-## level.get_node("MedicalDarkness").restore_power().
+## Bring the power back: the darkness fades out, the robots in the room
+## wake up and the chime plays. Works while this node is alive
+## (standalone); in the full game use
+## level.get_node("MedicalDarkness").restore_power() (the PowerSwitch
+## does, through bind_switch).
 func restore_power() -> void:
 	if _darkness != null:
 		_darkness.restore_power()
@@ -330,6 +352,22 @@ func restore_power() -> void:
 func _on_power_restored() -> void:
 	power_on = true
 	power_restored.emit()
+
+
+## The placeholder power switch: an instance of this room's console copy
+## (same pattern as _add_note_console), whose `interacted` signal is
+## bound to MedicalDarkness. That node survives the full-game flatten, so
+## the switch keeps working there; a connection to this room would not.
+## The level's wiring listens to the same signal and shows `message`.
+func _build_power_switch() -> void:
+	var console: Node2D = CONSOLE_SCENE.instantiate()
+	console.name = POWER_SWITCH["name"]
+	console.position = POWER_SWITCH["pos"]
+	console.message = POWER_SWITCH["text"]
+	console.interact_label = POWER_SWITCH["label"]
+	console.sprite_texture = _med_texture(POWER_SWITCH["texture"])
+	add_child(console)
+	_darkness.bind_switch(console)
 
 
 ## One note console. Same pattern as _add_area_console (console scene +

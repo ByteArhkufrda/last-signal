@@ -24,6 +24,15 @@ extends CharacterBody2D
 ##   around obstacles instead of steering straight into them. Without a
 ##   grid the old direct steering is kept as a fallback (level-only
 ##   tests that instantiate the robot without a level still work).
+##
+## P3 (2026-11-24, medical wing only — this per-room copy):
+## - `dormant`: a switched-off robot does nothing (no movement, detection,
+##   chase, catch or pulse reaction), keeps its sprite and hides only its
+##   vision cone. The wing's MedicalDarkness (darkness_medical_wing.gd)
+##   sets it for every robot inside the room until the power returns.
+## - Cone readability: idle / chase fill alpha 0.07 / 0.15 -> 0.22 / 0.40
+##   (exports) plus a thin outline along the cone edge, so the cone reads
+##   on the bright medical floor.
 
 enum State { PATROL, INVESTIGATE, CHASE }
 
@@ -40,6 +49,11 @@ signal player_caught
 @export var waypoint_wait: float = 1.0
 @export var catch_distance: float = 18.0
 @export var detection_interval: float = 0.1
+## Vision-cone look (P3): fill alpha while idle / chasing, and the alpha of
+## the thin outline along the cone's edge.
+@export var cone_alpha_idle: float = 0.22
+@export var cone_alpha_chase: float = 0.40
+@export var cone_outline_alpha: float = 0.6
 
 var state: State = State.PATROL
 var patrol_points: Array[Vector2] = []
@@ -47,6 +61,10 @@ var player: Node2D = null
 ## AStarGrid2D built by the level from the real collision geometry
 ## (walls, crate, alcove). Null = direct steering fallback.
 var nav_grid: AStarGrid2D = null
+## Dormant (P3): no movement, detection, chase, catch or radar reaction;
+## the robot is not freed or hidden, only its vision cone is. Default
+## false; MedicalDarkness drives it (see set_dormant).
+var dormant: bool = false: set = set_dormant
 
 var _waypoint_index: int = 0
 var _investigate_target: Vector2 = Vector2.ZERO
@@ -71,7 +89,29 @@ func _ready() -> void:
 		patrol_points = [global_position]
 
 
+## Switch the robot off / on (see `dormant`). Going dormant stops it where
+## it stands and forgets the stale sighting and path; waking makes it look
+## around on the very next tick.
+func set_dormant(value: bool) -> void:
+	if value == dormant:
+		return
+	dormant = value
+	if dormant:
+		velocity = Vector2.ZERO
+		_sees_player = false
+		_path.clear()
+		# self_modulate only touches this node's own drawing (the cone),
+		# not the Sprite2D child: the robot stays visible.
+		self_modulate = Color(1.0, 1.0, 1.0, 0.0)
+	else:
+		_detection_timer = 0.0
+		self_modulate = Color.WHITE
+		queue_redraw()
+
+
 func _physics_process(delta: float) -> void:
+	if dormant:
+		return
 	if _catch_grace > 0.0:
 		_catch_grace -= delta
 	if _repath_timer > 0.0:
@@ -222,7 +262,7 @@ func _return_to_patrol() -> void:
 ## never interrupted by a pulse, and a pulse beyond the radar radius
 ## (the radius the player actually emitted) is ignored.
 func investigate(origin: Vector2, radius: float) -> void:
-	if state == State.CHASE:
+	if dormant or state == State.CHASE:
 		return
 	if radius <= 0.0 or global_position.distance_to(origin) > radius:
 		return
@@ -254,12 +294,33 @@ func _check_catch() -> void:
 		player_caught.emit()
 
 
-func _draw() -> void:
-	var half_angle := vision_half_angle
+## The cone's polygon in local space: the robot at the origin, then 9
+## points along the arc at detection_radius.
+func cone_points() -> PackedVector2Array:
 	var points := PackedVector2Array([Vector2.ZERO])
 	var base_angle := _facing.angle()
 	for i in 9:
-		var a := base_angle - half_angle + (2.0 * half_angle * i / 8.0)
+		var a := base_angle - vision_half_angle + (2.0 * vision_half_angle * i / 8.0)
 		points.append(Vector2(cos(a), sin(a)) * detection_radius)
-	var alpha := 0.15 if state == State.CHASE else 0.07
-	draw_colored_polygon(points, Color(1.0, 0.2, 0.2, alpha))
+	return points
+
+
+## Fill colour of the cone for the current state (idle vs chase alpha).
+func cone_fill_color() -> Color:
+	var alpha := cone_alpha_chase if state == State.CHASE else cone_alpha_idle
+	return Color(1.0, 0.2, 0.2, alpha)
+
+
+## Colour of the thin outline along the cone's edge.
+func cone_outline_color() -> Color:
+	return Color(1.0, 0.2, 0.2, cone_outline_alpha)
+
+
+func _draw() -> void:
+	var points := cone_points()
+	draw_colored_polygon(points, cone_fill_color())
+	# Outline: out along one edge, around the arc, back along the other
+	# edge (the closing point is the origin again).
+	var outline := points.duplicate()
+	outline.append(Vector2.ZERO)
+	draw_polyline(outline, cone_outline_color(), 1.0)
