@@ -6,9 +6,9 @@ config_version=5
 
 [application]
 
-config/name="Last Signal"
+config/name="Last Signal — Room 1 (Medical Wing)"
 config/description="Top-down 2D pixel art adventure/survival/stealth/puzzle. Trapped in abandoned research station K-17: activate three communication towers and send an emergency transmission."
-run/main_scene="res://scenes/ui/main_menu.tscn"
+run/main_scene="res://scenes/levels/rooms/medical_wing/play_medical_wing.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 config/icon="res://assets/sprites/characters/player.png"
 
