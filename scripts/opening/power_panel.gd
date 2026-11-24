@@ -6,8 +6,8 @@ extends Node2D
 ## Visuals: fuse-box body (existing medical-wing art), a blinking red
 ## warning light, a damaged cable hanging from the panel with a visible
 ## gap and intermittent sparks, and a status label that reads
-## "POWER FAILURE" until the circuit is repaired. `set_restored()`
-## switches the label to "EMERGENCY POWER RESTORED", steadies the light
+## "قطع برق" until the circuit is repaired. `set_restored()`
+## switches the label to "برق اضطراری وصل شد", steadies the light
 ## green, closes the cable gap and stops the sparks. The orchestrator
 ## asks `is_player_near()` for the "Press E" prompt and calls
 ## `set_restored()` after the puzzle is solved.

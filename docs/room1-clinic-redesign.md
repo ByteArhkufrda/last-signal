@@ -32,9 +32,12 @@ Sources read for this design (all on disk, no browser):
   gating, no soft-locks) and `.../skills/godot/godot-tilemap`
   (TileMapLayer/TileSet practice; collision data lives on the tile/prop,
   never hand-edited scene bytes). Applied here: the critical path
-  (spawn → flashlight → console → pickups → exits) is laid out first and
+  (spawn → console → pickups → exits) is laid out first and
   every new prop is checked against it (§6); art is dressing on top of
-  the validated blockout, not a reshuffle of it.
+  the validated blockout, not a reshuffle of it. (An earlier draft of
+  this paragraph listed "flashlight" in the critical path — corrected
+  2026-11-24, review pass 3: no flashlight pickup exists in the
+  top-down room, see §6/§12.)
 - Sample maps viewed: `~/workspace/telegram-bot/media/287167607.jpg`,
   `608`, `609`, `618`, `621`, `623`, `624`, `625` (all 8, individually).
 - Small photos viewed: 626 (astronaut), 627 (wheelchair), 635 (first-aid
@@ -531,9 +534,14 @@ The surgical-light decor (`MedOpLight`) is visual only; the table's
 light above is the real one. Monitor screens (vitals, ECG, console)
 keep their existing emissive treatment (depth 2050 per doc 17). The
 red emergency light stays the room's only red light source. No light
-is added to the pharmacy, storage, or physio corner — they stay dark
-until the flashlight finds them (tutorial: the flashlight is the
-discovery tool).
+is added to the pharmacy, storage, or physio corner. **Correction
+(2026-11-24, review pass 3): the sentence that used to follow here —
+"they stay dark until the flashlight finds them (tutorial: the
+flashlight is the discovery tool)" — is false and has been removed.
+There is no darkness in the top-down room (no `CanvasModulate` in
+`level_01`/`medical_wing`, §12) and no flashlight mechanic (§6), so
+nothing "stays dark" and no discovery-by-flashlight happens. The five
+`PointLight2D`s above are inert without a modulate; see §12.**
 
 ## §6. Gameplay preservation checklist
 
@@ -555,7 +563,7 @@ target cell local (10,10), `ScannerRobot` (260,120),
 | Nav doorway cells (39,15),(39,16),(58,22),(59,22) (station-global; = local south-gap cells (18,22),(19,22) + the cells just west of the west gap) | **Open.** No prop at local col 0; no prop within 1 cell of local (18,22)/(19,22) — nearest are the physio cabinet (col 19, rows 12–13) and the pharmacy row (row 21, cols ≥22). Props are inflated by 1 cell in the nav grid; the 1-cell buffer is respected everywhere (§6, approach rows). |
 | Main circulation 2 tiles wide | E–W corridor rows 15–16 fully clear; ward aisle rows 4–5 fully clear except `MedTrashWard` (col 13, row 5 — row 4 stays free beside it); south area rows 17–19 clear except the waiting wheelchair (col 7, row 17). |
 | Nav target cell local (10,10) reachable from spawn | **Yes.** Spawn (4,16) → east on rows 15–16 → north through cols 10–13 (rows 7–14 free there) → (10,10). No new prop touches cols 10–13, rows 7–14. |
-| Flashlight pickup `MedFlashlight` (504,292) on the doctor's desk | **Unmoved, reachable.** Approach from the south (row 19, free) or west (col 30, row 18, free). Desk, chair, side table unchanged. |
+| Flashlight `MedFlashlight` (504,292) on the doctor's desk | **Decor only — there is no flashlight pickup mechanic in the top-down room.** `MedFlashlight` is a plain decor sprite in `MED_DECOR_LAYOUT` (texture `flashlight.png`); no script references it as a pickup and no toggle/light exists for it. The only real flashlight is `scripts/opening/flashlight.gd` (`Flashlight`, opening-only). The sprite is unmoved and reachable, but it grants nothing. See §12 for the two options. |
 | Notes: N1-01 (doctor's desk), N1-02 (metal cabinet), N1-03 (patient folder); voice A1-01 (monitor by the bed) | Assigned, no code change: N1-01 `MedNoteDoctor` (520,300) on the desk (unchanged); N1-02 on `MedCabinetWorn` (72,344), the metal storage cabinet; N1-03 on `MedBedside1` (72,56), the patient folder by `MedBedStandard`; A1-01 on `MedMonitorWard1` (40,40), the vitals monitor by the bed (after the circuit is powered, per doc 01). |
 | Investigation pickups: "record" (520,320), "supplies" (392,304); return point (120,96) | **Unmoved.** Record: row 20 south of the desk, approached from row 19 (free). Supplies: row 19, approached from row 18/20 (free). Return: aisle col 7 at the top of row 6 — the player stands at (120,88) in the aisle, inside the 22-px trigger radius; the row-B bedside table at (120,104) is inside the radius but is not the standing spot. Doctor's desk and pharmacy are **not moved**, so no pickup coordinate changes. |
 | Fuse puzzle (FuseBox, breaker/wire panels, HiddenFuse) | **Untouched — lives in command_center scope.** The room's `MedFusebox` decor (632,60) stays decor. No design change to it. |
@@ -800,3 +808,88 @@ by `test_enemy_path_through_doorway`); the 2 row-B bedside tables
 staying at (496,176) while the table nudged to (496,168) — 8 px inside
 a 48-px radius, invisible; the dark `bed_disorganized` texture (reads
 as a dark bed at 2×, not a hole).
+
+## §12. Review pass 3 — open decisions for the user (2026-11-24)
+
+Two findings from review passes 2–3 are **not fixed in this pass**
+because each needs a user decision. Both are recorded here so the
+design doc no longer states anything false about them.
+
+### 12.1 Darkness 0.92 is NOT in effect in the top-down room
+
+Verified 2026-11-24 (review pass 3, `grep -rn CanvasModulate` over
+`scripts/` + `scenes/`): the only `CanvasModulate` in the project is
+in `scripts/opening/opening_sequence.gd:245-247` (opening only,
+`DIM_COLOR = Color(0.45, 0.47, 0.55)` — itself much brighter than
+0.92 darkness). There is **no** `CanvasModulate` in
+`scripts/levels/rooms/medical_wing/medical_wing.gd`,
+`scripts/levels/level_01.gd`, or `scripts/levels/level_data.gd`.
+Consequence: the top-down clinic renders fully lit, and the five
+`PointLight2D`s in `MedicalAtmosphere` (green 160,88; blue 460,200;
+red 594,320; cyan lab-bench 528,112; warm-white op-table 496,176 —
+§5.4) are **inert**: in Godot 4 a `PointLight2D` has no visible effect
+without a `CanvasModulate` darkening the canvas. So doc 17's
+"medical darkness 0.92" (§5.4) and every sentence in this document
+that assumes a dark room ("at 0.92 darkness the furniture greens go
+near-black", §5.3; "they stay dark until the flashlight finds them",
+§5.4 — now struck, see above) describe a room that does not exist.
+
+**Sketched fix (LEVEL-WIDE — do not implement without a user
+decision):** add a `CanvasModulate` ≈ `Color(0.08, 0.08, 0.08)` at
+the `level_01` level (so it covers the whole assembled level, not
+just the medical wing), give the top-down player a flashlight
+reusing the opening `Flashlight` class
+(`scripts/opening/flashlight.gd`, ~50° cone, warm-white, 180 px
+range), and apply doc-17's eye-glow / radar rules so the player
+stays readable in the dark. This changes the look and the
+readability of **every** room in level 1, not just room 1 — that is
+why it is a user decision, not a review-pass fix.
+
+**Decision needed:** (a) implement the level-wide darkness +
+flashlight as sketched, or (b) drop "darkness 0.92" from the room-1
+design (keep the room fully lit, keep the five lights as inert
+decoration or remove them). Until decided, §5.3/§5.4 darkness claims
+should be read as aspirational, not as-built.
+
+### 12.2 Flashlight pickup — the §6 claim was fiction, now corrected
+
+Verified 2026-11-24 (review pass 3): `MedFlashlight` at (504,292)
+on the doctor's desk is a plain decor entry in `MED_DECOR_LAYOUT`
+(`medical_wing.gd:371`, texture `flashlight.png`); no script in the
+room (or anywhere outside `scripts/opening/`) references it as a
+pickup, and there is no pickup/toggle/light mechanic attached to it.
+The only real flashlight is `scripts/opening/flashlight.gd`
+(`class_name Flashlight`, opening-only). The pre-redesign §6 row
+("Flashlight pickup … Unmoved, reachable") and the critical-path
+line ("spawn → flashlight → console …") therefore described
+gameplay that does not exist; both are corrected in this pass (§6
+row rewritten, §5.4 sentence struck, intro line fixed). The
+`MedFlashlight` sprite itself stays where it is, as decor.
+
+**Options for the user:** (a) **implement a pickup + toggle** in
+the top-down room reusing the opening `Flashlight` class — the
+desk sprite becomes a real pickup (walk over it / press E), after
+which the player carries the cone light; pairs naturally with the
+darkness decision in §12.1; or (b) **keep the flashlight
+opening-only** — the desk sprite stays decor and the top-down room
+has no flashlight mechanic; in that case the doc is now accurate
+as written and nothing further is needed. No new gameplay was
+implemented in this pass.
+
+### 12.3 Review pass 3 fixes (commit "Review pass 3 fixes")
+
+- Stale English in code comments fixed: `scripts/opening/power_panel.gd:9-10`
+  quoted `"POWER FAILURE"` / `"EMERGENCY POWER RESTORED"` while the
+  live labels are already Persian (`قطع برق` / `برق اضطراری وصل شد`,
+  §10.2 rows 15–16) — comments now quote the Persian strings.
+  Comments only, no behaviour change.
+- Design doc corrected as above (§6, §5.4, intro) + this §12.
+- Sprite provenance recorded in `docs/ATLAS_SOURCES.md` (Telegram
+  pack section: licence "free for personal/commercial use incl.
+  modification; no redistribution as-is"; source: user-sent zip
+  `topdown_hospital_Assets.zip` + 65 photos).
+- NAV-SEALED pockets + `int()`/`ceili()` footgun: by-design / out of
+  scope, untouched (pass 2) — no real gameplay failure found in
+  this pass either.
+- EVA suit (`MedPhotoSuit626`) + maternity rope (`MedMatRope`):
+  KEEP, as decided in pass 2.

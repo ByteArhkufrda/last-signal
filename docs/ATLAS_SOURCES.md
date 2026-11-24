@@ -76,3 +76,26 @@ over. The TransmitConsole reuses the console_a sprite.
 including robot companion, security camera, battery, energy cell, satellite
 dish, radar dish, signal beacon, computer tower, door. Extraction script:
 `tools/extract.py` (search scripts: `tools/search_all.py`).
+
+## Telegram hospital pack (room 1 clinic redesign, 2026-11-24)
+
+- **Source:** user-sent zip `topdown_hospital_Assets.zip` (73 PNGs in
+  `Pngs/` + 4 spritesheets + 1 `.aseprite` + README) plus 65 small
+  photos (`~/workspace/telegram-bot/media/2871676xx.jpg`, 101x101 each).
+  Not downloaded from anywhere — sent by the user over Telegram.
+- **Licence (as stated in the pack):** free for personal **and**
+  commercial use, including modification; **no redistribution as-is**
+  (do not re-share the pack itself, only the game that uses it).
+- **Placed in-game (115/115):** 69 zip PNGs under
+  `assets/sprites/medical-wing/telegram/` (lab 18, maternity 11,
+  operation 14, room 26) and 46 converted photos under
+  `assets/sprites/medical-wing/telegram-photos/` (black background
+  keyed out per `docs/room1-clinic-redesign.md` §5.2; conversion
+  script `scripts/levels/rooms/medical_wing/tools/`).
+- **Not placed:** the 4 spritesheets (backup sources only — they
+  duplicate the `Pngs/` files) and `operation_ecg_table.aseprite`
+  (source file only, not a PNG). The 11 tileset/labelled/prop sheets
+  and 8 sample maps among the 65 photos are layout references only,
+  never imported.
+- **Full inventory:** `docs/room1-telegram-assets-inventory.md`;
+  placement tables: `docs/room1-clinic-redesign.md` §3–§4, §8.
