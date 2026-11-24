@@ -5,12 +5,14 @@ extends Node2D
 ## Side-view opening aboard the damaged station. The player wakes up in
 ## the medical section with no memory, explores a dim room with a
 ## flashlight, reads the emergency manual (Q), finds the damaged power
-## panel, solves a circuit puzzle (E) and restores power — then the game
-## continues into the main scene. No identity is ever revealed.
+## panel, solves a circuit puzzle (E) and restores power. In the full
+## game the scene then continues into the main scene; in this standalone
+## build it ends on an end card instead (see _run_restoration).
 ##
 ## Flow (state machine): WAKE (fade-in + caption, controls locked) ->
 ## EXPLORE (manual hint, panel prompt) -> RESTORING (gradual lighting
-## return, monitors on, door unlock) -> main.tscn. The manual and the
+## return, monitors on, door unlock) -> main.tscn (full game) or end card
+## (standalone build). The manual and the
 ## puzzle are overlays that lock movement while open; the orchestrator
 ## alone routes Q / E / Escape so the overlays never fight each other.
 ##
@@ -60,6 +62,8 @@ var _manual_hint: PanelContainer
 var _prompt: Label
 var _notification: Label
 var _fade_rect: ColorRect
+var _end_label: Label
+var _can_exit := false
 var _lights: Array[PointLight2D] = []
 var _monitors: Array[Sprite2D] = []
 var _monitor_screens: Array[Sprite2D] = []
@@ -106,6 +110,13 @@ func _process(delta: float) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if _can_exit:
+		# End card is showing: any key or click quits the game.
+		if event is InputEventKey and event.pressed and not event.echo:
+			get_tree().quit()
+		elif event is InputEventMouseButton and event.pressed:
+			get_tree().quit()
+		return
 	if _state != State.EXPLORE:
 		return
 	if event.is_action_pressed("manual"):
@@ -213,7 +224,11 @@ func _run_restoration() -> void:
 	await fade_tw.finished
 	if not is_inside_tree():
 		return
-	get_tree().change_scene_to_file("res://scenes/main.tscn")
+	# Standalone build: the full game would continue into main.tscn
+	# here, but main.tscn is excluded from this export — show the end
+	# card and wait for any key to quit (see _unhandled_input).
+	_end_label.visible = true
+	_can_exit = true
 
 
 func _fade_label(label: Label, show: bool) -> void:
@@ -504,3 +519,16 @@ func _build_hud() -> void:
 	_notification.visible = false
 	_notification.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	hud.add_child(_notification)
+	# Standalone end card: shown over the fade-out at the end of the
+	# sequence (the full game continues into main.tscn instead).
+	_end_label = Label.new()
+	_end_label.name = "EndLabel"
+	_end_label.text = "END OF OPENING SEQUENCE\n\nPress any key to exit."
+	_end_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_end_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_end_label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_end_label.add_theme_font_size_override("font_size", 20)
+	_end_label.add_theme_color_override("font_color", Color(0.92, 0.94, 0.96))
+	_end_label.visible = false
+	_end_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hud.add_child(_end_label)
