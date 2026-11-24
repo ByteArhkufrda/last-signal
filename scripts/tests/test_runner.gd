@@ -158,7 +158,7 @@ func test_interactables_present() -> bool:
 		# Switches/terminals are grandchildren (children of their panels).
 		if level.is_ancestor_of(node):
 			count += 1
-	assert_eq(count, 19, "level has 19 interactables (6 consoles + 1 door + 1 visible pickup + 3 switches + 3 terminals + 1 fuse box + 3 towers + 1 transmit console)")
+	assert_eq(count, 22, "level has 22 interactables (9 consoles + 1 door + 1 visible pickup + 3 switches + 3 terminals + 1 fuse box + 3 towers + 1 transmit console)")
 	level.queue_free()
 	return true
 
@@ -1811,7 +1811,7 @@ func test_medical_props_exist() -> bool:
 	var level: Node2D = scene.instantiate()
 	root.add_child(level)
 	await process_frame
-	for node_name in ["MedBedStandard", "MedBedEmpty", "MedExamBed", "MedBedDisorganized", "MedStretcher", "MedDeskDoctor", "MedCabinetOpen", "MedShelfMedicine", "MedFlashlight", "MedNoteDoctor", "MedWindowObservation", "MedCornerSW", "MedCornerSE"]:
+	for node_name in ["MedBedStandard", "MedBedEmpty", "MedExamBed", "MedBedDisorganized", "MedStretcher", "MedDeskDoctor", "MedCabinetOpen", "MedShelfMedicine", "MedFlashlight", "MedWindowObservation", "MedCornerSW", "MedCornerSE"]:
 		assert_true(level.get_node_or_null(node_name) != null, "medical prop placed: " + node_name)
 	var monitor_tex: Texture2D = load("res://assets/sprites/medical-wing/monitor_vitals.png")
 	var found := false

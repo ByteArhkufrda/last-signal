@@ -96,6 +96,38 @@ const MED_PROP_PATHS := {
 ## station coordinates). Station offset is (40, 0) tiles; positions below
 ## are all local. The
 ## furnishing moved verbatim from _build_medical_props().
+##
+## Story notes (P1, 2026-11-23): three note consoles that reveal the
+## "outbreak" was a cover story — see NOTE_CONSOLES / _build_note_consoles().
+
+## Sprite and prompt of the note consoles. "note_doctor" is the pack's
+## handwritten-note sprite (it used to lie on the doctor's desk as an
+## inert decor; NoteConsole2 now sits there as a real, readable note).
+const NOTE_TEXTURE_KEY := "note_doctor"
+const NOTE_LABEL := "خواندن یادداشت"
+## Name, LOCAL position and HUD text of each note console; an "on" key
+## parents the console to that prop's body (see _add_note_console).
+## Placement rules: off both doorways (the entry corridor y 240-272
+## x 0-160, the south gap x 288-320), off the scanner's line of sight
+## (x=260, y 120-200), 230+ px from the scanner itself, and 100+ px from
+## each other and from the area console, so the player's
+## nearest-interactable pick (range 40) is never ambiguous. Except for
+## the one on the desk, each also sits on free floor (no sprite or solid
+## within 24 px). Positions are pinned in test_rooms.gd.
+const NOTE_CONSOLES := [
+	{
+		"name": "NoteConsole1", "pos": Vector2(140, 320),
+		"text": "یادداشت پزشک ایستگاه: هیچ بیماری‌ای در کار نیست. دستور اومد این بخش رو ببندیم.",
+	},
+	{
+		"name": "NoteConsole2", "pos": Vector2(450, 260), "on": "MedDeskDoctor",
+		"text": "یادداشت پزشک ایستگاه: هر بار پیام می‌فرستادیم، یه چیزی جوابمون رو می‌داد.",
+	},
+	{
+		"name": "NoteConsole3", "pos": Vector2(560, 160),
+		"text": "یادداشت پزشک ایستگاه: هر سیگنالی که بفرستیم، فقط ما رو نجات نمی‌ده.",
+	},
+]
 
 func _ready() -> void:
 	room_key = "medical_wing"
@@ -114,6 +146,7 @@ func _ready() -> void:
 	_add_decor(preload("res://assets/sprites/props/control_panel.png"), Vector2(60, 340))
 	_add_decor(preload("res://assets/sprites/props/riveted_panel.png"), Vector2(600, 80))
 	_build_medical_props()
+	_build_note_consoles()
 
 
 func wall_rects() -> Array[Rect2]:
@@ -243,9 +276,39 @@ func _build_medical_props() -> void:
 	_add_med_decor("dust", Vector2(60, 300), "MedDust")
 	_add_med_decor("steam", Vector2(540, 200), "MedSteam")
 	_add_med_decor("spark", Vector2(600, 100), "MedSpark")
-	# The doctor's desk: flashlight + handwritten note on its surface.
+	# The doctor's desk: a flashlight on its surface; the handwritten note
+	# there is NoteConsole2 (_build_note_consoles), no longer a decor.
 	_add_med_decor("flashlight", Vector2(432, 252), "MedFlashlight")
-	_add_med_decor("note_doctor", Vector2(450, 260), "MedNoteDoctor")
+
+
+## The three story-note consoles (non-solid: nothing is added to the nav
+## grid or to prop_solid_rects()). Added after the props so they draw
+## above any floor clutter.
+func _build_note_consoles() -> void:
+	for note in NOTE_CONSOLES:
+		_add_note_console(note["name"], note["pos"], note["text"], note.get("on", ""))
+
+
+## One note console. Same pattern as _add_area_console (console scene +
+## message + a medical sprite), plus a node name (so tests and later steps
+## can find it; the flatten into Level01 keeps it) and a "read note"
+## prompt instead of "use console". With on_prop, the console becomes a
+## child of that prop's body: the player's line-of-sight ray excludes the
+## target's parent bodies, so a note lying ON a solid prop stays readable,
+## like the panel switches on their panel. pos is LOCAL either way.
+func _add_note_console(node_name: String, pos: Vector2, message: String, on_prop: String = "") -> void:
+	var console: Node2D = CONSOLE_SCENE.instantiate()
+	console.name = node_name
+	console.message = message
+	console.interact_label = NOTE_LABEL
+	console.sprite_texture = _med_texture(NOTE_TEXTURE_KEY)
+	if on_prop == "":
+		console.position = pos
+		add_child(console)
+	else:
+		var prop: Node2D = get_node(on_prop)
+		console.position = pos - prop.position
+		prop.add_child(console)
 
 
 ## Room key, e.g. "command_center". Also the wall-body suffix.

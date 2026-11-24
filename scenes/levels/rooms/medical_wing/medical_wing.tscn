@@ -8,3 +8,5 @@ script = ExtResource("1_room")
 
 [node name="ScannerRobot" parent="." instance=ExtResource("2_scanner")]
 position = Vector2(260, 120)
+detection_radius = 120.0
+vision_half_angle = 0.8

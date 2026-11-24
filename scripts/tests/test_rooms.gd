@@ -64,6 +64,11 @@ const ROOM_CHECKS := {
 		"spawn": Vector2(64, 256), "target_cell": Vector2i(10, 10),
 		"nodes": {
 			"ScannerRobot": Vector2(260, 120), "MedBedStandard": Vector2(60, 64),
+			# Story notes (P1, 2026-11-23); NoteConsole2 lies on the doctor's
+			# desk, as a child of its body (the path is relative to the room).
+			"NoteConsole1": Vector2(140, 320),
+			"MedDeskDoctor/NoteConsole2": Vector2(450, 260),
+			"NoteConsole3": Vector2(560, 160),
 		},
 		"towers": 0, "puzzles": 0, "enemies": 1, "wall_children": 18,
 	},
@@ -122,7 +127,8 @@ func run_tests() -> void:
 			"test_communications_standalone", "test_assembled_level_keeps_positions",
 			"test_room_play_scene_loads", "test_standalone_room_fixes",
 			"test_rooms_are_local", "test_exits_pair_up",
-			"test_station_layout_agrees_with_rooms"]:
+			"test_station_layout_agrees_with_rooms",
+			"test_medical_note_consoles", "test_medical_scanner_tuning"]:
 		paused = false
 		var v = await call(t)
 		if v == true:
@@ -501,4 +507,134 @@ func test_standalone_room_fixes() -> bool:
 		await physics_frame
 	assert_true(lplayer.global_position.distance_to(fuse.global_position) < 40.0, "player is within interact range of the fuse box")
 	assert_true(lplayer.get("_current_interactable") == null, "fuse box is not interactable through the wall")
+	return true
+
+
+## Medical Wing story notes (P1, 2026-11-23, port of old steps 1-2),
+## standalone via play_medical_wing.tscn, LOCAL coordinates. ROOM_CHECKS
+## already pins the three positions (standalone and assembled); this pins
+## what it cannot: the HUD texts, the doctor's-note sprite and the "read
+## note" prompt, the placement rules (not inside a wall or a solid prop,
+## clear of both doorway approaches and of the scanner's line of sight,
+## far enough apart that the nearest-interactable pick is never
+## ambiguous) and reachability: standing beside a note makes it the
+## player's current interactable, and E uses it once.
+func test_medical_note_consoles() -> bool:
+	if not ResourceLoader.exists(ROOM_SCENES["medical_wing"]):
+		skipped += 1
+		print("SKIP medical note consoles: scene not split yet")
+		return true
+	# A cached assembled level holds the same consoles (offset by the
+	# room's station position) and the player's nearest-interactable pick
+	# could land on them instead (same reason as
+	# test_standalone_room_fixes): free it.
+	if _level != null:
+		_level.queue_free()
+		_level = null
+		await process_frame
+		await process_frame
+	# NoteConsole2 lies ON the doctor's desk: it is a child of the desk's
+	# body (so the player's line-of-sight ray ignores that body) and the
+	# only one allowed to overlap a solid, and only the desk's own rect.
+	var notes := [
+		{
+			"name": "NoteConsole1", "path": "NoteConsole1", "stand": Vector2(140, 296),
+			"text": "یادداشت پزشک ایستگاه: هیچ بیماری‌ای در کار نیست. دستور اومد این بخش رو ببندیم.",
+		},
+		{
+			"name": "NoteConsole2", "path": "MedDeskDoctor/NoteConsole2", "on_desk": true,
+			"stand": Vector2(470, 262),
+			"text": "یادداشت پزشک ایستگاه: هر بار پیام می‌فرستادیم، یه چیزی جوابمون رو می‌داد.",
+		},
+		{
+			"name": "NoteConsole3", "path": "NoteConsole3", "stand": Vector2(536, 160),
+			"text": "یادداشت پزشک ایستگاه: هر سیگنالی که بفرستیم، فقط ما رو نجات نمی‌ده.",
+		},
+	]
+	var play: Node2D = load(PLAY_SCENES["medical_wing"]).instantiate()
+	root.add_child(play)
+	var room: Node2D = play.room
+	var player: CharacterBody2D = play.player
+	var note_tex: Texture2D = load("res://assets/sprites/medical-wing/note_doctor.png")
+	var solids: Array[Rect2] = room.blocked_rects()
+	var desk_rect := Rect2(424, 248, 32, 16)
+	assert_true(solids.has(desk_rect), "the doctor's desk is one of the solid rects")
+	assert_true(room.get_node_or_null("MedNoteDoctor") == null, "the inert desk note decor is gone")
+	# Keep-out zones: the west doorway's entry corridor (y 240-272,
+	# x 0-160) and the south gap's approach (x 288-320), each with a
+	# margin, and the scanner's line of sight (x=260, y 120-200).
+	var keep_out: Array[Rect2] = [
+		Rect2(0, 224, 160, 64), Rect2(272, 288, 64, 64), Rect2(232, 100, 56, 120),
+	]
+	# Console centres for the spacing check; the area console is first.
+	var centers: Array[Vector2] = [Vector2(120, 80)]
+	for note in notes:
+		var label: String = note["name"]
+		var console: Node2D = room.get_node_or_null(str(note["path"]))
+		assert_true(console != null, "%s exists" % label)
+		if console == null:
+			continue
+		assert_true(console.is_in_group("interactable"), "%s is an interactable" % label)
+		assert_eq(console.message, note["text"], "%s message text" % label)
+		assert_eq((console.get_node("Sprite2D") as Sprite2D).texture, note_tex, "%s uses the doctor's note sprite" % label)
+		assert_eq(console.interact_label, "خواندن یادداشت", "%s prompt says read note" % label)
+		var rect := Rect2(console.global_position - Vector2(8, 8), Vector2(16, 16))
+		var in_solid := false
+		for r in solids:
+			if note.get("on_desk", false) and r == desk_rect:
+				continue
+			if rect.intersects(r):
+				in_solid = true
+		assert_true(not in_solid, "%s is not inside a wall or a solid prop (bar the desk it lies on)" % label)
+		var in_keep_out := false
+		for r in keep_out:
+			if rect.intersects(r):
+				in_keep_out = true
+		assert_true(not in_keep_out, "%s is clear of the doorways and the scanner's line of sight" % label)
+		centers.append(console.global_position)
+		# Reachable: beside it, it is the nearest interactable; E uses it
+		# once. (For the desk note this is what pins the parenting: a
+		# console left at room level inside the desk's solid rect would be
+		# blocked by the desk body in the line-of-sight ray.)
+		player.global_position = note["stand"]
+		player.velocity = Vector2.ZERO
+		for i in 5:
+			await physics_frame
+		assert_true(player._current_interactable == console, "%s is the nearest interactable when standing beside it" % label)
+		Input.action_press("interact")
+		for i in 3:
+			await physics_frame
+		Input.action_release("interact")
+		assert_eq(console.use_count, 1, "%s used once after E" % label)
+	var spaced := true
+	for i in centers.size():
+		for j in range(i + 1, centers.size()):
+			if centers[i].distance_to(centers[j]) < 48.0:
+				spaced = false
+	assert_true(spaced, "note consoles and the area console are 48+ px apart")
+	play.queue_free()
+	await process_frame
+	await process_frame
+	return true
+
+
+## Medical Wing scanner (P1, 2026-11-23, port of old step 2): easier to
+## evade than the default scanner scene (detection_radius 180,
+## vision_half_angle 1.2), through instance overrides in
+## medical_wing.tscn only.
+func test_medical_scanner_tuning() -> bool:
+	if not ResourceLoader.exists(ROOM_SCENES["medical_wing"]):
+		skipped += 1
+		print("SKIP medical scanner tuning: scene not split yet")
+		return true
+	var play: Node2D = load(PLAY_SCENES["medical_wing"]).instantiate()
+	root.add_child(play)
+	var scanner: CharacterBody2D = play.room.get_node_or_null("ScannerRobot")
+	assert_true(scanner != null, "medical wing scanner exists")
+	if scanner != null:
+		assert_eq(scanner.detection_radius, 120.0, "medical wing scanner detection radius is 120")
+		assert_eq(scanner.vision_half_angle, 0.8, "medical wing scanner vision half-angle is 0.8")
+	play.queue_free()
+	await process_frame
+	await process_frame
 	return true
