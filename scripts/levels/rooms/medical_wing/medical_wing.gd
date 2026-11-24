@@ -99,6 +99,14 @@ const MED_PROP_PATHS := {
 ##
 ## Story notes (P1, 2026-11-23): three note consoles that reveal the
 ## "outbreak" was a cover story — see NOTE_CONSOLES / _build_note_consoles().
+##
+## Power-out darkness (P2, 2026-11-24): the wing starts without power; the
+## child node "MedicalDarkness" (darkness_medical_wing.gd) darkens the room,
+## except a flashlight circle, while the player is inside it. CAUTION: the
+## assembler (level_01.gd _flatten_rooms) frees THIS node and keeps its
+## children, so power_on / power_restored / restore_power() below work only
+## standalone. In the full game, call restore_power() on the surviving
+## level.get_node("MedicalDarkness") instead.
 
 ## Sprite and prompt of the note consoles. "note_doctor" is the pack's
 ## handwritten-note sprite (it used to lie on the doctor's desk as an
@@ -129,6 +137,17 @@ const NOTE_CONSOLES := [
 	},
 ]
 
+## Emitted once, when the power comes back (the darkness node's signal).
+signal power_restored
+
+const MEDICAL_DARKNESS: GDScript = preload("res://scripts/levels/rooms/medical_wing/darkness_medical_wing.gd")
+
+## False until restore_power(): the wing starts in the dark.
+var power_on: bool = false
+
+var _darkness: Node2D = null
+
+
 func _ready() -> void:
 	room_key = "medical_wing"
 	area_name = "بخش پزشکی"
@@ -147,6 +166,7 @@ func _ready() -> void:
 	_add_decor(preload("res://assets/sprites/props/riveted_panel.png"), Vector2(600, 80))
 	_build_medical_props()
 	_build_note_consoles()
+	_build_darkness()
 
 
 func wall_rects() -> Array[Rect2]:
@@ -287,6 +307,29 @@ func _build_medical_props() -> void:
 func _build_note_consoles() -> void:
 	for note in NOTE_CONSOLES:
 		_add_note_console(note["name"], note["pos"], note["text"], note.get("on", ""))
+
+
+## The power-out darkness (a child node, so the flatten keeps it alive —
+## see the header note). room_rect is local, and so is the node.
+func _build_darkness() -> void:
+	_darkness = MEDICAL_DARKNESS.new()
+	_darkness.name = "MedicalDarkness"
+	_darkness.room_rect = room_rect
+	_darkness.power_restored.connect(_on_power_restored)
+	add_child(_darkness)
+
+
+## Bring the power back: the darkness fades out and never returns. Works
+## while this node is alive (standalone); in the full game use
+## level.get_node("MedicalDarkness").restore_power().
+func restore_power() -> void:
+	if _darkness != null:
+		_darkness.restore_power()
+
+
+func _on_power_restored() -> void:
+	power_on = true
+	power_restored.emit()
 
 
 ## One note console. Same pattern as _add_area_console (console scene +

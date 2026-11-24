@@ -128,7 +128,8 @@ func run_tests() -> void:
 			"test_room_play_scene_loads", "test_standalone_room_fixes",
 			"test_rooms_are_local", "test_exits_pair_up",
 			"test_station_layout_agrees_with_rooms",
-			"test_medical_note_consoles", "test_medical_scanner_tuning"]:
+			"test_medical_note_consoles", "test_medical_scanner_tuning",
+			"test_medical_darkness_standalone", "test_medical_darkness_assembled"]:
 		paused = false
 		var v = await call(t)
 		if v == true:
@@ -635,6 +636,169 @@ func test_medical_scanner_tuning() -> bool:
 		assert_eq(scanner.detection_radius, 120.0, "medical wing scanner detection radius is 120")
 		assert_eq(scanner.vision_half_angle, 0.8, "medical wing scanner vision half-angle is 0.8")
 	play.queue_free()
+	await process_frame
+	await process_frame
+	return true
+
+
+## Medical Wing power-out darkness (P2, 2026-11-24, port of old step 4),
+## standalone room: LOCAL coordinates, the darkness node sits at (0, 0).
+## Fades are driven through MedicalDarkness.step(delta), so the test is
+## deterministic: no frame passes between a position change and its check
+## (the node's own _process only runs during awaits, and it only moves the
+## fade toward the same target).
+func test_medical_darkness_standalone() -> bool:
+	if not ResourceLoader.exists(ROOM_SCENES["medical_wing"]):
+		skipped += 1
+		print("SKIP medical darkness: scene not split yet")
+		return true
+	var play: Node2D = load(PLAY_SCENES["medical_wing"]).instantiate()
+	root.add_child(play)
+	var room: Node2D = play.room
+	var player: CharacterBody2D = play.player
+	var dark: Node2D = room.get_node_or_null("MedicalDarkness")
+	assert_true(dark != null, "medical wing has a MedicalDarkness node")
+	if dark == null:
+		play.queue_free()
+		await process_frame
+		await process_frame
+		return true
+	var overlay: ColorRect = dark.get_node("Overlay")
+	var material: ShaderMaterial = overlay.material
+	var rect: Rect2 = room.room_rect
+	# The overlay covers exactly the medical room (local rect): no other
+	# room is ever darkened. Shader and script live in the room's folders.
+	assert_eq(Rect2(overlay.position, overlay.size), rect, "darkness overlay covers exactly the medical room")
+	assert_eq(material.shader.resource_path, "res://scenes/levels/rooms/medical_wing/darkness_medical_wing.gdshader", "the darkness uses the room's own shader")
+	assert_eq(dark.z_index, 100, "the darkness draws above the world (z_index 100)")
+	assert_true(play.find_children("*", "CanvasModulate", true, false).is_empty(), "the standalone room has no CanvasModulate")
+	# Power starts out and the player spawns inside: dark, light on the player.
+	assert_true(not room.power_on, "power starts off")
+	dark.step(5.0)
+	assert_true(dark.is_dark(), "dark while power is off and the player is inside")
+	assert_true(is_equal_approx(dark.darkness(), 1.0), "fully dark after the fade-in")
+	assert_true(overlay.visible, "the overlay is shown while dark")
+	assert_eq(material.get_shader_parameter("light_center"), player.global_position, "the flashlight is centred on the player")
+	player.global_position = Vector2(500, 200)
+	dark.step(0.0)
+	assert_eq(material.get_shader_parameter("light_center"), Vector2(500, 200), "the flashlight follows the player")
+	# The radius is 70 SCREEN px: it reads the real zoom of the viewport's
+	# canvas transform (the player camera zooms 2x, so 35 world px).
+	var saved_canvas: Transform2D = root.canvas_transform
+	root.canvas_transform = Transform2D.IDENTITY.scaled(Vector2(2, 2))
+	dark.step(0.0)
+	var radius: float = material.get_shader_parameter("light_radius")
+	assert_true(is_equal_approx(radius, 35.0), "flashlight radius is 35 world px at zoom 2 (70 screen px)")
+	root.canvas_transform = Transform2D.IDENTITY
+	dark.step(0.0)
+	radius = material.get_shader_parameter("light_radius")
+	assert_true(is_equal_approx(radius, 70.0), "flashlight radius is 70 world px at zoom 1 (70 screen px)")
+	root.canvas_transform = saved_canvas
+	# Outside the room (west of the doorway): never active.
+	player.global_position = Vector2(-40, 256)
+	dark.step(5.0)
+	assert_true(not dark.is_dark(), "not dark while the player is outside the medical room")
+	assert_true(is_equal_approx(dark.darkness(), 0.0), "no darkness while the player is outside")
+	assert_true(not overlay.visible, "the overlay is hidden while the player is outside")
+	# The other three sides: dark inside first, then outside means no darkness.
+	for outside in [Vector2(700, 200), Vector2(300, -40), Vector2(300, 420)]:
+		player.global_position = room.spawn_point
+		dark.step(5.0)
+		player.global_position = outside
+		dark.step(5.0)
+		assert_true(not dark.is_dark() and not overlay.visible and is_equal_approx(dark.darkness(), 0.0), "no darkness with the player outside the room at %s" % outside)
+	# Back inside, power still off: dark again; fades in over 0.25 s.
+	player.global_position = room.spawn_point
+	assert_true(dark.is_dark(), "dark again when the player comes back in")
+	dark.step(0.125)
+	assert_true(is_equal_approx(dark.darkness(), 0.5), "half dark 0.125 s after entering")
+	dark.step(0.125)
+	assert_true(is_equal_approx(dark.darkness(), 1.0), "fully dark 0.25 s after entering")
+	# restore_power(): signal once, the darkness fades out over about 1 s.
+	var fired := [0]
+	room.power_restored.connect(func() -> void: fired[0] += 1)
+	room.restore_power()
+	assert_true(room.power_on, "power_on is true after restore_power()")
+	assert_true(dark.power_on, "the darkness node holds the power state")
+	assert_eq(fired[0], 1, "power_restored is emitted once")
+	dark.step(0.5)
+	assert_true(is_equal_approx(dark.darkness(), 0.5), "the darkness is half gone 0.5 s after restore_power()")
+	dark.step(1.0)
+	assert_true(is_equal_approx(dark.darkness(), 0.0), "the darkness is gone after restore_power()")
+	assert_true(not overlay.visible, "the overlay is hidden after the fade-out")
+	assert_true(not dark.is_dark(), "never dark again with the power on, even inside")
+	room.restore_power()
+	assert_eq(fired[0], 1, "a second restore_power() does nothing")
+	play.queue_free()
+	await process_frame
+	await process_frame
+	return true
+
+
+## Medical Wing power-out darkness (P2, 2026-11-24), full game: the level
+## starts in command_center without darkness, walking east into the
+## medical wing turns it on, going back turns it off. The assembler frees
+## the MedicalWing node and moves its children into the level translated
+## by (640, 0), so the live API is level.get_node("MedicalDarkness"), and
+## it must keep working in WORLD coordinates (rect, light, inside test).
+func test_medical_darkness_assembled() -> bool:
+	if not ResourceLoader.exists(ROOM_SCENES["medical_wing"]):
+		skipped += 1
+		print("SKIP medical darkness (assembled): scene not split yet")
+		return true
+	# A fresh level, so "starts in command_center" is the real start state.
+	if _level != null:
+		_level.queue_free()
+		_level = null
+		await process_frame
+		await process_frame
+	var level := _get_level()
+	var dark: Node2D = level.get_node_or_null("MedicalDarkness")
+	assert_true(dark != null, "the assembled level keeps MedicalDarkness at level.get_node(...)")
+	if dark == null:
+		return true
+	var overlay: ColorRect = dark.get_node("Overlay")
+	var material: ShaderMaterial = overlay.material
+	# After the flatten the node sits in the level at the wing's offset and
+	# its overlay covers the wing's WORLD rect.
+	assert_eq(dark.get_parent(), level, "MedicalDarkness is a direct child of the level after the flatten")
+	assert_eq(dark.global_position, Vector2(640, 0), "the flatten moved it by the medical wing's station offset")
+	assert_eq(Rect2(overlay.global_position, overlay.size), Rect2(640, 0, 640, 368), "the overlay covers exactly the medical wing in world coordinates")
+	assert_true(level.find_children("*", "CanvasModulate", true, false).is_empty(), "the level has no global CanvasModulate")
+	assert_true(not dark.is_dark(), "the full game starts without darkness (command_center)")
+	dark.step(5.0)
+	assert_true(is_equal_approx(dark.darkness(), 0.0), "no darkness at the start of the full game")
+	assert_true(not overlay.visible, "the overlay is hidden at the start of the full game")
+	level.player.global_position = Vector2(900, 200)
+	dark.step(5.0)
+	assert_true(dark.is_dark(), "walking east into the medical wing turns the darkness on")
+	assert_true(is_equal_approx(dark.darkness(), 1.0), "fully dark inside the medical wing")
+	assert_true(overlay.visible, "the overlay is shown inside the medical wing")
+	assert_eq(material.get_shader_parameter("light_center"), Vector2(260, 200), "the flashlight is at the player's spot in wing px (world 900 - 640, 200)")
+	# The wing's world rect (640, 0, 640, 368): corners just inside are dark,
+	# points just outside each side are not.
+	for inside in [Vector2(641, 2), Vector2(1279, 2), Vector2(641, 366), Vector2(1279, 366)]:
+		level.player.global_position = inside
+		assert_true(dark.is_dark(), "dark just inside the wing's corner at %s" % inside)
+	for outside in [Vector2(639, 200), Vector2(1281, 200), Vector2(900, -2), Vector2(900, 370)]:
+		level.player.global_position = outside
+		assert_true(not dark.is_dark(), "never dark just outside the wing at %s" % outside)
+	level.player.global_position = Vector2(320, 184)
+	dark.step(5.0)
+	assert_true(not dark.is_dark(), "back in command_center there is no darkness")
+	assert_true(not overlay.visible, "the overlay is hidden again in command_center")
+	var fired := [0]
+	dark.power_restored.connect(func() -> void: fired[0] += 1)
+	dark.restore_power()
+	level.player.global_position = Vector2(900, 200)
+	dark.step(5.0)
+	assert_true(dark.power_on and not dark.is_dark(), "restore_power() on the node lights the wing")
+	assert_true(is_equal_approx(dark.darkness(), 0.0), "no darkness after restore_power() in the full game")
+	assert_eq(fired[0], 1, "power_restored is emitted once in the full game")
+	dark.restore_power()
+	assert_eq(fired[0], 1, "a second restore_power() does nothing in the full game")
+	_level.queue_free()
+	_level = null
 	await process_frame
 	await process_frame
 	return true
