@@ -51,7 +51,7 @@ func _ready() -> void:
 	add_child(_warning_light)
 	_status_label = Label.new()
 	_status_label.name = "StatusLabel"
-	_status_label.text = "POWER FAILURE"
+	_status_label.text = "قطع برق"
 	_status_label.position = Vector2(-52, -76)
 	_status_label.size = Vector2(104, 14)
 	_status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -117,7 +117,7 @@ func _make_glow_texture() -> GradientTexture2D:
 
 func set_restored() -> void:
 	restored = true
-	_status_label.text = "EMERGENCY POWER RESTORED"
+	_status_label.text = "برق اضطراری وصل شد"
 	_status_label.add_theme_color_override("font_color", Color(0.45, 1.0, 0.6))
 	_warning_light.color = Color(0.4, 1.0, 0.55)
 	_warning_light.energy = 0.5

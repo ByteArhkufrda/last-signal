@@ -147,13 +147,13 @@ func _ready() -> void:
 	vbox.add_theme_constant_override("separation", 6)
 	_panel.add_child(vbox)
 	var title := Label.new()
-	title.text = "EMERGENCY POWER PANEL  //  CIRCUIT REPAIR"
+	title.text = "پنل برق اضطراری  //  تعمیر مدار"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_font_size_override("font_size", 15)
 	title.add_theme_color_override("font_color", Color(0.95, 0.75, 0.35))
 	vbox.add_child(title)
 	var hint := Label.new()
-	hint.text = "Click a wire to rotate it. Connect the source to the output through the fuse."
+	hint.text = "روی یک سیم کلیک کن تا بچرخد. منبع را از راه فیوز به خروجی وصل کن."
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	hint.add_theme_font_size_override("font_size", 12)
@@ -174,13 +174,13 @@ func _ready() -> void:
 			grid.add_child(tile)
 			_tiles[cell] = tile
 	_status_label = Label.new()
-	_status_label.text = "CIRCUIT INCOMPLETE"
+	_status_label.text = "مدار ناقص است"
 	_status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_status_label.add_theme_font_size_override("font_size", 13)
 	_status_label.add_theme_color_override("font_color", Color(1.0, 0.45, 0.35))
 	vbox.add_child(_status_label)
 	var close_button := Button.new()
-	close_button.text = "Close  [Esc]"
+	close_button.text = "بستن  [Esc]"
 	close_button.focus_mode = Control.FOCUS_NONE
 	close_button.pressed.connect(close)
 	vbox.add_child(close_button)
@@ -275,7 +275,7 @@ func close() -> void:
 
 func _on_solved() -> void:
 	_is_solved = true
-	_status_label.text = "CIRCUIT COMPLETE  —  POWER FLOWING"
+	_status_label.text = "مدار کامل شد — برق جاری است"
 	_status_label.add_theme_color_override("font_color", Color(0.45, 1.0, 0.6))
 	if audio != null:
 		audio.play("connect")

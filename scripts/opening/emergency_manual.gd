@@ -10,17 +10,17 @@ extends Control
 
 signal closed
 
-const MANUAL_TEXT := """EMERGENCY POWER RESTORATION PROTOCOL
+const MANUAL_TEXT := """پروتکل بازیابی برق اضطراری
 
-In the event of a critical power failure, the spacecraft's emergency backup power system is automatically activated.
+در صورت قطع بحرانی برق، سیستم برق پشتیبان اضطراری سفینه به‌صورت خودکار فعال می‌شود.
 
-However, the sudden power load and electrical pressure may cause cables to rupture or disconnect.
+اما بار ناگهانی و فشار الکتریکی ممکن است باعث پاره‌شدن یا جدا شدن کابل‌ها شود.
 
-The emergency power supply may be operational, but damaged electrical connections can prevent power from reaching individual sections of the spacecraft.
+ممکن است منبع برق اضطراری سالم باشد، اما اتصالات آسیب‌دیده مانع رسیدن برق به بخش‌های مختلف سفینه شوند.
 
-Inspect the emergency electrical distribution panel, identify the damaged connections, and restore the circuit to bring power back to this section.
+پنل توزیع برق اضطراری را بررسی کن، اتصالات آسیب‌دیده را پیدا کن و مدار را وصل کن تا برق به این بخش برگردد.
 
-WARNING: Do not activate the system until all required electrical connections have been restored."""
+هشدار: تا وقتی همه‌ی اتصالات لازم وصل نشده‌اند، سیستم را فعال نکن."""
 
 var _is_open := false
 var _book: PanelContainer
@@ -32,7 +32,7 @@ class CircuitDiagram extends Control:
 	func _init() -> void:
 		custom_minimum_size = Vector2(420, 64)
 		var label := Label.new()
-		label.text = "DAMAGED CABLE"
+		label.text = "کابل آسیب‌دیده"
 		label.position = Vector2(120, 44)
 		label.add_theme_font_size_override("font_size", 10)
 		label.add_theme_color_override("font_color", Color(0.85, 0.6, 0.3))
@@ -95,7 +95,7 @@ func _ready() -> void:
 	vbox.add_theme_constant_override("separation", 8)
 	_book.add_child(vbox)
 	var title := Label.new()
-	title.text = "EMERGENCY MANUAL  //  K-17"
+	title.text = "دفترچه‌ی اضطراری  //  K-17"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_font_size_override("font_size", 18)
 	title.add_theme_color_override("font_color", Color(0.95, 0.75, 0.35))
@@ -110,7 +110,7 @@ func _ready() -> void:
 	vbox.add_child(body)
 	vbox.add_child(CircuitDiagram.new())
 	var footer := Label.new()
-	footer.text = "Press Q or Escape to close"
+	footer.text = "برای بستن Q یا Escape را بزن"
 	footer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	footer.add_theme_font_size_override("font_size", 12)
 	footer.add_theme_color_override("font_color", Color(0.6, 0.68, 0.72))

@@ -162,7 +162,7 @@ func _run_wake() -> void:
 	await get_tree().create_timer(1.4).timeout
 	if not is_inside_tree():
 		return
-	_caption.text = "You wake up in a hospital bed.\nYou don't remember who you are — or how you got here."
+	_caption.text = "در یک تخت بیمارستان بیدار می‌شوی.\nیادت نمی‌آید کی هستی — یا چطور به اینجا آمده‌ای."
 	_fade_label(_caption, true)
 	await get_tree().create_timer(3.0).timeout
 	if not is_inside_tree():
@@ -198,7 +198,7 @@ func _run_restoration() -> void:
 		screen.visible = true
 	_diag_label.visible = true
 	# Step 4: narrative feedback.
-	_notification.text = "Medical Section Power Restored."
+	_notification.text = "برق بخش پزشکی وصل شد."
 	_fade_label(_notification, true)
 	# The east door receives power and unlocks.
 	_door_sprite.texture = DOOR_OPEN_TEXTURE
@@ -310,7 +310,7 @@ func _build_room() -> void:
 	_add_monitor(MONITOR_VITALS_TEXTURE, Vector2(404, 170))
 	_diag_label = Label.new()
 	_diag_label.name = "DiagnosticsLabel"
-	_diag_label.text = "SYS DIAG // O2 98% // PWR NOMINAL"
+	_diag_label.text = "عیب‌یابی سیستم // O2 98% // برق عادی"
 	_diag_label.position = Vector2(360, 148)
 	_diag_label.add_theme_font_size_override("font_size", 8)
 	_diag_label.add_theme_color_override("font_color", Color(0.45, 1.0, 0.6))
@@ -470,7 +470,7 @@ func _build_hud() -> void:
 	hint_style.content_margin_bottom = 4
 	_manual_hint.add_theme_stylebox_override("panel", hint_style)
 	var hint_label := Label.new()
-	hint_label.text = "[Q]  Press Q to view the emergency manual."
+	hint_label.text = "[Q] برای دیدن دفترچه‌ی اضطراری Q را بزن."
 	hint_label.add_theme_font_size_override("font_size", 12)
 	hint_label.add_theme_color_override("font_color", Color(0.9, 0.92, 0.94))
 	_manual_hint.add_child(hint_label)
@@ -479,7 +479,7 @@ func _build_hud() -> void:
 	hud.add_child(_manual_hint)
 	_prompt = Label.new()
 	_prompt.name = "PromptLabel"
-	_prompt.text = "Press E to inspect the emergency power panel."
+	_prompt.text = "برای بررسی پنل برق اضطراری E را بزن."
 	_prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_prompt.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
 	_prompt.position = Vector2(-320, -48)

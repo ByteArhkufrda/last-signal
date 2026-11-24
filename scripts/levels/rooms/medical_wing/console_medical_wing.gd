@@ -12,7 +12,7 @@ extends Node2D
 signal interacted(console: Node2D)
 
 @export var interact_label: String = "استفاده از کنسول"
-@export var message: String = "Console online. Station K-17 systems: offline."
+@export var message: String = "گزارش پزشکی: بعد از تمرین شیوع بیماری، این بخش بسته شد. آذوقه کم است."
 @export var sprite_texture: Texture2D
 ## Phase 8: when true, the level handles this console as the emergency
 ## transmitter instead of showing its message.
