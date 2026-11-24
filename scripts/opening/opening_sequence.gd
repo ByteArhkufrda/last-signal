@@ -213,7 +213,7 @@ func _run_restoration() -> void:
 	await fade_tw.finished
 	if not is_inside_tree():
 		return
-	get_tree().change_scene_to_file("res://scenes/main.tscn")
+	get_tree().change_scene_to_file("res://scenes/levels/rooms/medical_wing/play_medical_wing.tscn")
 
 
 func _fade_label(label: Label, show: bool) -> void:
