@@ -69,8 +69,10 @@ const ROOM_CHECKS := {
 			"NoteConsole1": Vector2(140, 320),
 			"MedDeskDoctor/NoteConsole2": Vector2(450, 260),
 			"NoteConsole3": Vector2(560, 160),
-			# Placeholder power switch (P3, 2026-11-24).
-			"PowerSwitch": Vector2(590, 44),
+			# Power puzzle (P4, 2026-11-25): the fuse box (where the P3
+			# placeholder switch stood) and the visible fuse pickup.
+			"MedFuseBox": Vector2(590, 44),
+			"MedFusePickup": Vector2(356, 244),
 		},
 		"towers": 0, "puzzles": 0, "enemies": 1, "wall_children": 18,
 	},
@@ -136,8 +138,8 @@ func run_tests() -> void:
 			"test_station_layout_agrees_with_rooms",
 			"test_medical_note_consoles", "test_medical_scanner_tuning",
 			"test_medical_darkness_standalone", "test_medical_darkness_assembled",
-			"test_medical_robots_dormant", "test_medical_power_switch",
-			"test_medical_power_full_game", "test_medical_cone_readability"]:
+			"test_medical_robots_dormant", "test_medical_fuse_puzzle",
+			"test_medical_fuse_full_game", "test_medical_cone_readability"]:
 		paused = false
 		var v = await call(t)
 		if v == true:
@@ -847,7 +849,7 @@ func _walker_dormant_at(level: Node2D, dark: Node2D, pos: Vector2) -> bool:
 ## move, rotate its scan, detect, answer a radar pulse or catch the player
 ## — and it is not hidden — and it wakes the moment the power is restored.
 ## (Robots elsewhere staying untouched is checked in
-## test_medical_power_full_game.)
+## test_medical_fuse_full_game.)
 func test_medical_robots_dormant() -> bool:
 	if not ResourceLoader.exists(ROOM_SCENES["medical_wing"]):
 		skipped += 1
@@ -903,14 +905,17 @@ func test_medical_robots_dormant() -> bool:
 	return true
 
 
-## The placeholder power switch (P3, 2026-11-24), standalone room: a copy of
-## the room's console on free floor far from the scanner and the doorways,
-## not a puzzle or hidden object, that restores the power on the first E
-## and does nothing afterwards. Its position is pinned in ROOM_CHECKS.
-func test_medical_power_switch() -> bool:
+## The power puzzle (P4, 2026-11-25; replaces the P3 placeholder switch),
+## standalone room, LOCAL coordinates: a visible FUSE pickup on free floor
+## and a FUSE BOX that refuses without a fuse and, with one, consumes it
+## and restores the power once. Neither is a puzzle or a hidden object.
+## The positions are pinned in ROOM_CHECKS. A HUD is added before the room
+## (the standalone launcher has none), so the HUD texts and the inventory
+## line can be read.
+func test_medical_fuse_puzzle() -> bool:
 	if not ResourceLoader.exists(ROOM_SCENES["medical_wing"]):
 		skipped += 1
-		print("SKIP medical power switch: scene not split yet")
+		print("SKIP medical fuse puzzle: scene not split yet")
 		return true
 	# Same reason as test_medical_note_consoles: free the cached level.
 	if _level != null:
@@ -918,83 +923,147 @@ func test_medical_power_switch() -> bool:
 		_level = null
 		await process_frame
 		await process_frame
+	var hud: CanvasLayer = (load("res://scenes/ui/hud.tscn") as PackedScene).instantiate()
+	root.add_child(hud)
 	var play: Node2D = load(PLAY_SCENES["medical_wing"]).instantiate()
 	root.add_child(play)
 	var room: Node2D = play.room
 	var player: CharacterBody2D = play.player
 	var scanner: CharacterBody2D = room.get_node("ScannerRobot")
-	var switch: Node2D = room.get_node_or_null("PowerSwitch")
-	assert_true(switch != null, "the medical wing has a PowerSwitch")
-	if switch == null:
+	var box: Node2D = room.get_node_or_null("MedFuseBox")
+	var fuse: Node2D = room.get_node_or_null("MedFusePickup")
+	assert_true(box != null and fuse != null, "the medical wing has a MedFuseBox and a MedFusePickup")
+	if box == null or fuse == null:
 		play.queue_free()
+		hud.queue_free()
 		await process_frame
 		await process_frame
 		return true
-	assert_eq(switch.get_script().resource_path, "res://scripts/levels/rooms/medical_wing/console_medical_wing.gd", "the PowerSwitch is the room's own console copy")
-	assert_true(switch.is_in_group("interactable"), "the PowerSwitch is an interactable")
-	assert_true(not switch.is_in_group("puzzles") and not switch.is_in_group("hidden"), "the PowerSwitch is neither a puzzle nor a hidden object")
-	assert_eq(switch.interact_label, "وصل کردن برق", "the PowerSwitch prompt text")
-	assert_eq(switch.message, "برق اضطراری وصل شد.", "the PowerSwitch message text")
-	assert_eq((switch.get_node("Sprite2D") as Sprite2D).texture, load("res://assets/sprites/medical-wing/indicator_emergency.png"), "the PowerSwitch uses the emergency indicator sprite")
-	# Placement: free floor, clear of both doorways, the scanner's line of
-	# sight and the scanner itself, and well apart from the other consoles.
-	var rect := Rect2(switch.global_position - Vector2(8, 8), Vector2(16, 16))
+	assert_true(room.get_node_or_null("PowerSwitch") == null, "the placeholder PowerSwitch is gone")
+	# What they are.
+	assert_eq(fuse.get_script().resource_path, "res://scripts/levels/rooms/medical_wing/pickup_medical_wing.gd", "the fuse is the room's own pickup copy")
+	assert_true(fuse.is_in_group("interactable"), "the fuse is an interactable")
+	assert_true(not fuse.is_in_group("hidden") and not fuse.is_in_group("puzzles"), "the fuse is neither hidden nor a puzzle")
+	assert_eq(fuse.item_id, "fuse", "the fuse's item id")
+	assert_eq(fuse.interact_label, "برداشتن فیوز", "the fuse's prompt text")
+	assert_eq(fuse.amount, 1, "the fuse is one item")
+	assert_eq((fuse.get_node("Sprite2D") as Sprite2D).texture, load("res://assets/sprites/medical-wing/fuse_a.png"), "the fuse uses the medical fuse_a sprite")
+	assert_eq(box.get_script().resource_path, "res://scripts/levels/rooms/medical_wing/fuse_box_medical_wing.gd", "the fuse box is the room's own script")
+	assert_true(box.is_in_group("interactable"), "the fuse box is an interactable")
+	assert_true(not box.is_in_group("puzzles") and not box.is_in_group("hidden"), "the fuse box is neither a puzzle nor a hidden object")
+	assert_eq(box.interact_label, "گذاشتن فیوز", "the fuse box prompt text")
+	var closed_tex: Texture2D = load("res://assets/sprites/medical-wing/fusebox_closed.png")
+	var open_tex: Texture2D = load("res://assets/sprites/medical-wing/fusebox_open.png")
+	assert_eq((box.get_node("Sprite2D") as Sprite2D).texture, closed_tex, "the fuse box starts closed")
+	# Fuse placement: free floor, clear of both doorways and the scanner's
+	# line of sight, 24+ px from every sprite, 200+ px from the box, and
+	# apart from the consoles so the nearest-interactable pick is clear.
+	var fuse_rect := Rect2(fuse.global_position - Vector2(8, 8), Vector2(16, 16))
 	var in_solid := false
 	for r in room.blocked_rects():
-		if rect.intersects(r):
+		if fuse_rect.intersects(r):
 			in_solid = true
-	assert_true(not in_solid, "the PowerSwitch is not inside a wall or a solid prop")
+	assert_true(not in_solid, "the fuse is not inside a wall or a solid prop")
 	var in_keep_out := false
 	for r in [Rect2(0, 224, 160, 64), Rect2(272, 288, 64, 64), Rect2(232, 100, 56, 120)]:
-		if rect.intersects(r):
+		if fuse_rect.intersects(r):
 			in_keep_out = true
-	assert_true(not in_keep_out, "the PowerSwitch is clear of the doorways and the scanner's line of sight")
-	assert_true(switch.global_position.distance_to(scanner.global_position) >= 230.0, "the PowerSwitch is at least 230 px from the scanner")
+	assert_true(not in_keep_out, "the fuse is clear of the doorways and the scanner's line of sight")
+	assert_true(fuse.global_position.distance_to(box.global_position) >= 200.0, "the fuse is at least 200 px from the fuse box")
 	var nearest_console := INF
 	for c in [Vector2(120, 80), room.get_node("NoteConsole1").global_position,
 			room.get_node("MedDeskDoctor/NoteConsole2").global_position,
 			room.get_node("NoteConsole3").global_position]:
-		nearest_console = minf(nearest_console, switch.global_position.distance_to(c))
-	assert_true(nearest_console >= 100.0, "the PowerSwitch is at least 100 px from every other console")
-	# First E restores the power (once); the scanner was dormant until then.
+		nearest_console = minf(nearest_console, fuse.global_position.distance_to(c))
+	assert_true(nearest_console >= 90.0, "the fuse is at least 90 px from every console")
+	var too_close := ""
+	for node in room.find_children("*", "Sprite2D", true, false):
+		var sprite := node as Sprite2D
+		if sprite.texture == null or fuse.is_ancestor_of(sprite) or box.is_ancestor_of(sprite):
+			continue
+		var sprite_size: Vector2 = sprite.texture.get_size() * sprite.global_scale
+		var sprite_rect := Rect2(sprite.global_position - sprite_size / 2.0, sprite_size)
+		if fuse_rect.grow(24.0).intersects(sprite_rect):
+			too_close = str(sprite.name)
+	assert_eq(too_close, "", "the fuse is at least 24 px from every sprite in the room")
+	# The room starts dark; the scanner is dormant until the power is back.
 	var fired := [0]
 	room.power_restored.connect(func() -> void: fired[0] += 1)
-	assert_true(scanner.dormant, "the scanner is dormant before the switch is used")
+	assert_true(not room.power_on and scanner.dormant, "the wing starts without power and the scanner is dormant")
+	# E on the box WITHOUT a fuse: a message, nothing else.
 	player.global_position = Vector2(590, 70)
 	player.velocity = Vector2.ZERO
 	for i in 5:
 		await physics_frame
-	assert_true(player._current_interactable == switch, "beside it, the PowerSwitch is the nearest interactable")
+	assert_true(player._current_interactable == box, "beside it, the fuse box is the nearest interactable")
+	assert_eq(hud.prompt_label.text, "E — گذاشتن فیوز", "the HUD prompt beside the fuse box")
 	await _press_interact()
-	assert_eq(switch.use_count, 1, "the PowerSwitch is used once after E")
-	assert_true(room.power_on, "E on the PowerSwitch restores the power")
-	assert_eq(fired[0], 1, "power_restored is emitted once")
-	assert_true(not scanner.dormant, "the scanner wakes when the switch restores the power")
-	assert_true(not switch.is_in_group("interactable"), "the used PowerSwitch leaves the interactable group")
-	# After the first use it does nothing: no target, no second use.
+	assert_eq(hud.message_label.text, "جعبه‌ی فیوز خالیه. یه فیوز لازمه.", "the empty-box message")
+	assert_true(not room.power_on and fired[0] == 0, "an empty-handed E does not restore the power")
+	assert_true(scanner.dormant, "the scanner stays dormant after an empty-handed E")
+	assert_true(box.is_in_group("interactable") and not box.is_solved, "the box is not used up by an empty-handed E")
+	assert_eq((box.get_node("Sprite2D") as Sprite2D).texture, closed_tex, "the box stays closed after an empty-handed E")
+	assert_eq(int(player.inventory.get("fuse", 0)), 0, "the player holds no fuse yet")
+	# E on the fuse: exactly one fuse in the inventory, the pickup is gone.
+	player.global_position = Vector2(356, 262)
+	player.velocity = Vector2.ZERO
 	for i in 5:
 		await physics_frame
-	assert_true(player._current_interactable != switch, "the used PowerSwitch is not targeted again")
+	assert_true(player._current_interactable == fuse, "beside it, the fuse is the nearest interactable")
+	assert_eq(hud.prompt_label.text, "E — برداشتن فیوز", "the HUD prompt beside the fuse")
 	await _press_interact()
-	assert_eq(switch.use_count, 1, "a second E does not use the PowerSwitch again")
+	assert_eq(int(player.inventory.get("fuse", 0)), 1, "E on the fuse puts one fuse in the inventory")
+	assert_eq(hud.inventory_label.text, "وسایل: فیوز ×1", "the HUD inventory shows the fuse")
+	assert_eq(hud.message_label.text, "فیوز برداشته شد.", "the fuse-collected message")
+	assert_true(not is_instance_valid(fuse), "the fuse pickup is gone once collected")
+	await _press_interact()
+	assert_eq(int(player.inventory.get("fuse", 0)), 1, "a second E does not give a second fuse")
+	# E on the box WITH the fuse: consumed, open, power back, once.
+	player.global_position = Vector2(590, 70)
+	player.velocity = Vector2.ZERO
+	for i in 5:
+		await physics_frame
+	assert_true(player._current_interactable == box, "with the fuse, the fuse box is the nearest interactable")
+	await _press_interact()
+	assert_true(room.power_on, "E on the box with a fuse restores the power")
+	assert_eq(fired[0], 1, "power_restored is emitted once")
+	assert_true(not scanner.dormant, "the scanner wakes when the box restores the power")
+	assert_eq(int(player.inventory.get("fuse", 0)), 0, "the box consumes the fuse")
+	assert_eq(hud.inventory_label.text, "وسایل: —", "the HUD inventory is empty again")
+	assert_eq((box.get_node("Sprite2D") as Sprite2D).texture, open_tex, "the box shows fusebox_open")
+	assert_eq(hud.message_label.text, "فیوز جا خورد. برق اضطراری وصل شد.", "the power-restored message")
+	assert_true(not box.is_in_group("interactable"), "the used box leaves the interactable group")
+	# After that it is inert: no target, no message, no second restore.
+	hud.message_label.text = ""
+	hud.message_label.visible = false
+	for i in 5:
+		await physics_frame
+	assert_true(player._current_interactable != box, "the used box is not targeted again")
+	await _press_interact()
+	assert_eq(hud.message_label.text, "", "a second E on the used box shows nothing")
 	assert_eq(fired[0], 1, "still one power_restored after a second E")
+	# The mission does not know the puzzle.
+	assert_eq([play.mission.puzzles_solved, play.mission.towers_active, play.mission.current_stage(), play._puzzles_solved], [0, 0, 0, 0], "the fuse puzzle leaves the mission counters alone")
+	assert_eq([_count_in_subtree("puzzles", room), _count_in_subtree("hidden", room)], [0, 0], "the medical wing still has no puzzle and no hidden object")
 	play.queue_free()
+	hud.queue_free()
 	await process_frame
 	await process_frame
 	return true
 
 
-## Full game (main.tscn, so the HUD and AudioManager exist), P3
-## (2026-11-24): only the medical wing's scanner is dormant at the start; a
-## robot with the medical copy is dormant inside the medical rect (WORLD
-## (640, 0, 640, 368)) only while the power is out; a robot of another room
-## is left alone; the switch shows its HUD prompt and message, plays the
-## chime, wakes the scanner, works once and leaves every mission counter
-## alone.
-func test_medical_power_full_game() -> bool:
+## Full game (main.tscn, so the HUD and AudioManager exist), P4
+## (2026-11-25; replaces the P3 switch test): only the medical wing's
+## scanner is dormant at the start; a robot with the medical copy is dormant
+## inside the medical rect (WORLD (640, 0, 640, 368)) only while the power
+## is out; a robot of another room is left alone; the fuse puzzle works
+## through the real player, HUD and wiring (empty box, pickup, box, chime),
+## wakes the scanner, works once and leaves every mission counter, the 3
+## puzzles and the 3 hidden objects alone.
+func test_medical_fuse_full_game() -> bool:
 	if not ResourceLoader.exists(ROOM_SCENES["medical_wing"]):
 		skipped += 1
-		print("SKIP medical power (full game): scene not split yet")
+		print("SKIP medical fuse puzzle (full game): scene not split yet")
 		return true
 	if _level != null:
 		_level.queue_free()
@@ -1011,14 +1080,17 @@ func test_medical_power_full_game() -> bool:
 	var player: CharacterBody2D = level.get_node("Player")
 	var mission: Node = level.get_node("Mission")
 	var dark: Node2D = level.get_node_or_null("MedicalDarkness")
-	var switch: Node2D = level.get_node_or_null("PowerSwitch")
-	assert_true(switch != null and dark != null, "the assembled level keeps PowerSwitch and MedicalDarkness at level.get_node(...)")
-	if switch == null or dark == null:
+	var box: Node2D = level.get_node_or_null("MedFuseBox")
+	var fuse: Node2D = level.get_node_or_null("MedFusePickup")
+	assert_true(box != null and fuse != null and dark != null, "the assembled level keeps MedFuseBox, MedFusePickup and MedicalDarkness at level.get_node(...)")
+	if box == null or fuse == null or dark == null:
 		main.queue_free()
 		await process_frame
 		await process_frame
 		return true
-	assert_eq(switch.global_position, Vector2(1230, 44), "the PowerSwitch sits at its local spot plus the wing's offset")
+	assert_true(level.get_node_or_null("PowerSwitch") == null, "the placeholder PowerSwitch is gone from the assembled level")
+	assert_eq(box.global_position, Vector2(1230, 44), "the fuse box sits at its local spot plus the wing's offset")
+	assert_eq(fuse.global_position, Vector2(996, 244), "the fuse sits at its local spot plus the wing's offset")
 	var scanner: CharacterBody2D = level.get_node("ScannerRobot")
 	var asleep: Array = []
 	for enemy in get_nodes_in_group("enemies"):
@@ -1039,20 +1111,43 @@ func test_medical_power_full_game() -> bool:
 	# dormant inside it while the power is out.
 	assert_true(not _walker_dormant_at(level, dark, Vector2(320, 300)), "a robot outside the medical rect is awake")
 	assert_true(_walker_dormant_at(level, dark, Vector2(700, 300)), "a robot that walks into the medical rect while the power is out is dormant")
-	# Use the switch through the real player, HUD and wiring.
 	var chimed := [false]
 	dark.power_restored.connect(func() -> void: chimed[0] = chimed[0] or _chime_playing(audio))
+	# Empty-handed E on the box: a message, nothing else.
 	player.global_position = Vector2(1230, 70)
 	player.velocity = Vector2.ZERO
 	for i in 5:
 		await physics_frame
-	assert_eq(hud.prompt_label.text, "E — وصل کردن برق", "the HUD prompt beside the switch")
+	assert_eq(hud.prompt_label.text, "E — گذاشتن فیوز", "the HUD prompt beside the fuse box")
 	await _press_interact()
-	assert_true(dark.power_on, "E on the switch restores the power in the full game")
-	assert_eq(hud.message_label.text, "برق اضطراری وصل شد.", "the HUD shows the power-restored message")
+	assert_eq(hud.message_label.text, "جعبه‌ی فیوز خالیه. یه فیوز لازمه.", "the HUD shows the empty-box message")
+	assert_true(not dark.power_on and not chimed[0], "an empty-handed E restores no power and plays no chime")
+	assert_true(scanner.dormant, "the scanner stays dormant after an empty-handed E")
+	# Collect the fuse through the level's wiring.
+	player.global_position = Vector2(996, 262)
+	player.velocity = Vector2.ZERO
+	for i in 5:
+		await physics_frame
+	assert_eq(hud.prompt_label.text, "E — برداشتن فیوز", "the HUD prompt beside the fuse")
+	await _press_interact()
+	assert_eq(int(player.inventory.get("fuse", 0)), 1, "E on the fuse puts exactly one fuse in the inventory")
+	assert_eq(hud.inventory_label.text, "وسایل: فیوز ×1", "the HUD inventory shows the fuse")
+	assert_eq(hud.message_label.text, "فیوز برداشته شد.", "the HUD shows the fuse-collected message")
+	assert_true(not is_instance_valid(fuse), "the fuse pickup is gone once collected")
+	# Put it in the box.
+	player.global_position = Vector2(1230, 70)
+	player.velocity = Vector2.ZERO
+	for i in 5:
+		await physics_frame
+	await _press_interact()
+	assert_true(dark.power_on, "E on the box with a fuse restores the power in the full game")
+	assert_eq(hud.message_label.text, "فیوز جا خورد. برق اضطراری وصل شد.", "the HUD shows the power-restored message")
 	assert_true(chimed[0], "the chime plays when the power returns")
 	assert_true(not scanner.dormant, "the scanner wakes in the full game")
-	assert_eq([mission.puzzles_solved, mission.towers_active, mission.current_stage(), level._puzzles_solved], [0, 0, 0, 0], "using the switch leaves the mission counters alone")
+	assert_eq(int(player.inventory.get("fuse", 0)), 0, "the box consumes the fuse")
+	assert_eq(hud.inventory_label.text, "وسایل: —", "the HUD inventory is empty again")
+	assert_eq((box.get_node("Sprite2D") as Sprite2D).texture, load("res://assets/sprites/medical-wing/fusebox_open.png"), "the box shows fusebox_open")
+	assert_eq([mission.puzzles_solved, mission.towers_active, mission.current_stage(), level._puzzles_solved], [0, 0, 0, 0], "the fuse puzzle leaves the mission counters alone")
 	assert_eq([_count_in_subtree("puzzles", level), _count_in_subtree("hidden", level)], counts_before, "the puzzle and hidden-object counts are unchanged")
 	assert_true(not _walker_dormant_at(level, dark, Vector2(700, 300)), "with the power back a robot inside the medical rect is awake")
 	# Second E: no message, no prompt, no second use.
@@ -1061,9 +1156,9 @@ func test_medical_power_full_game() -> bool:
 	for i in 5:
 		await physics_frame
 	await _press_interact()
-	assert_eq(hud.message_label.text, "", "a second E on the used switch shows nothing")
-	assert_true(not hud.prompt_label.visible, "the prompt is gone once the switch is used")
-	assert_eq(switch.use_count, 1, "the used switch is not used again")
+	assert_eq(hud.message_label.text, "", "a second E on the used box shows nothing")
+	assert_true(not hud.prompt_label.visible, "the prompt is gone once the box is used")
+	assert_true(not box.is_in_group("interactable"), "the used box stays out of the interactable group")
 	main.queue_free()
 	await process_frame
 	await process_frame

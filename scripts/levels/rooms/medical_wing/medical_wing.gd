@@ -21,6 +21,8 @@ const MED_FLOOR_WEIGHTS := [0.70, 0.78, 0.84, 0.85, 0.87, 0.89, 0.92, 0.94, 0.97
 const MED_RECT_TILES := Rect2i(40, 0, 40, 23)
 const WALL_TEXTURE: Texture2D = preload("res://assets/sprites/environment/wall_metal.png")
 const CONSOLE_SCENE: PackedScene = preload("res://scenes/levels/rooms/medical_wing/console_medical_wing.tscn")
+const PICKUP_SCENE: PackedScene = preload("res://scenes/levels/rooms/medical_wing/pickup_medical_wing.tscn")
+const FUSE_BOX_SCENE: PackedScene = preload("res://scenes/levels/rooms/medical_wing/fuse_box_medical_wing.tscn")
 const MED_WALL_H_TEXTURE: Texture2D = preload("res://assets/sprites/medical-wing/wall_h.png")
 const MED_WALL_V_TEXTURE: Texture2D = preload("res://assets/sprites/medical-wing/wall_v.png")
 const MED_PROP_PATHS := {
@@ -108,10 +110,14 @@ const MED_PROP_PATHS := {
 ## standalone. In the full game, call restore_power() on the surviving
 ## level.get_node("MedicalDarkness") instead.
 ##
-## Dormant robots + power switch (P3, 2026-11-24): the robots in this room
-## are dormant until the power is back (MedicalDarkness sets their
-## `dormant` flag), and a placeholder "PowerSwitch" console restores it
-## (see POWER_SWITCH).
+## Dormant robots (P3, 2026-11-24): the robots in this room are dormant
+## until the power is back (MedicalDarkness sets their `dormant` flag).
+##
+## Power puzzle (P4, 2026-11-25; replaces the P3 placeholder PowerSwitch):
+## in the dark, find the FUSE (MedFusePickup, see FUSE_PICKUP), put it in
+## the FUSE BOX (MedFuseBox, see FUSE_BOX) and MedicalDarkness restores the
+## power. Neither node is in group "puzzles" or "hidden": the mission
+## counters and the pinned 3 puzzles / 3 hidden objects do not know them.
 
 ## Sprite and prompt of the note consoles. "note_doctor" is the pack's
 ## handwritten-note sprite (it used to lie on the doctor's desk as an
@@ -142,18 +148,30 @@ const NOTE_CONSOLES := [
 	},
 ]
 
-## The placeholder power switch (P3): a console in the north-east corner,
-## near the fuse-box decor on the east wall. Free floor, 100+ px from the
-## other consoles and 330+ px from the scanner (260, 120), clear of both
+## The power puzzle (P4). LOCAL positions, pinned in test_rooms.gd.
+##
+## The fuse box stands where the P3 placeholder switch stood, in the
+## north-east corner next to the fuse-box decor (MedFusebox, east wall):
+## free floor, 330+ px from the scanner (260, 120) and clear of both
 ## doorways, so standing at it never puts the player in the scanner's
-## reach when the robot wakes up. It is NOT in the "puzzles" or "hidden"
-## groups: the mission counts do not know it. Its first use restores the
-## power; the HUD message is the console's own `message`. LOCAL position,
-## pinned in test_rooms.gd.
-const POWER_SWITCH := {
-	"name": "PowerSwitch", "pos": Vector2(590, 44),
-	"texture": "indicator_emergency",
-	"label": "وصل کردن برق", "text": "برق اضطراری وصل شد.",
+## reach when the robots wake up. It is not solid (nothing is added to
+## the nav grid or to prop_solid_rects()).
+##
+## The fuse is a visible pickup the player finds by exploring in the dark
+## (NOT in group "hidden": no radar needed), in the south-middle of the
+## wing: off both doorways (the entry corridor Rect2(0,224,160,64), the
+## south gap Rect2(272,288,64,64)), off the scanner's line of sight
+## (the strip Rect2(232,100,56,120) around x=260), 300+ px from the fuse
+## box (the player carries it across the room), 90+ px from every console
+## (the nearest-interactable range is 40), and 24+ px from every sprite
+## and solid prop. It is ~157 px from the scanner, i.e. inside the
+## scanner's 180 px detection radius, which is safe: the scanner is
+## dormant (still, blind) until the power is back.
+const FUSE_BOX := {
+	"name": "MedFuseBox", "pos": Vector2(590, 44),
+}
+const FUSE_PICKUP := {
+	"name": "MedFusePickup", "pos": Vector2(356, 244),
 }
 
 ## Emitted once, when the power comes back (the darkness node's signal).
@@ -186,7 +204,8 @@ func _ready() -> void:
 	_build_medical_props()
 	_build_note_consoles()
 	_build_darkness()
-	_build_power_switch()
+	_build_fuse_pickup()
+	_build_fuse_box()
 
 
 func wall_rects() -> Array[Rect2]:
@@ -342,8 +361,8 @@ func _build_darkness() -> void:
 ## Bring the power back: the darkness fades out, the robots in the room
 ## wake up and the chime plays. Works while this node is alive
 ## (standalone); in the full game use
-## level.get_node("MedicalDarkness").restore_power() (the PowerSwitch
-## does, through bind_switch).
+## level.get_node("MedicalDarkness").restore_power() (the fuse box does,
+## through its `solved` signal).
 func restore_power() -> void:
 	if _darkness != null:
 		_darkness.restore_power()
@@ -354,20 +373,32 @@ func _on_power_restored() -> void:
 	power_restored.emit()
 
 
-## The placeholder power switch: an instance of this room's console copy
-## (same pattern as _add_note_console), whose `interacted` signal is
-## bound to MedicalDarkness. That node survives the full-game flatten, so
-## the switch keeps working there; a connection to this room would not.
-## The level's wiring listens to the same signal and shows `message`.
-func _build_power_switch() -> void:
-	var console: Node2D = CONSOLE_SCENE.instantiate()
-	console.name = POWER_SWITCH["name"]
-	console.position = POWER_SWITCH["pos"]
-	console.message = POWER_SWITCH["text"]
-	console.interact_label = POWER_SWITCH["label"]
-	console.sprite_texture = _med_texture(POWER_SWITCH["texture"])
-	add_child(console)
-	_darkness.bind_switch(console)
+## The fuse (P4): an instance of this room's pickup copy, whose defaults
+## are item "fuse" x1, no battery. Same interactable interface as every
+## pickup; the level's wiring listens to `collected`, adds the item to the
+## player's inventory and shows the HUD message.
+func _build_fuse_pickup() -> void:
+	var pickup: Node2D = PICKUP_SCENE.instantiate()
+	pickup.name = FUSE_PICKUP["name"]
+	pickup.position = FUSE_PICKUP["pos"]
+	pickup.item_id = "fuse"
+	pickup.display_name = "فیوز"
+	pickup.interact_label = "برداشتن فیوز"
+	pickup.amount = 1
+	pickup.battery_restore = 0.0
+	add_child(pickup)
+
+
+## The fuse box (P4): its `solved` signal is bound to MedicalDarkness.
+## That node survives the full-game flatten, so the box keeps working
+## there; a connection to this room would not (the flatten frees it).
+## The box talks to the player and the HUD itself.
+func _build_fuse_box() -> void:
+	var box: Node2D = FUSE_BOX_SCENE.instantiate()
+	box.name = FUSE_BOX["name"]
+	box.position = FUSE_BOX["pos"]
+	add_child(box)
+	box.solved.connect(_darkness.restore_power)
 
 
 ## One note console. Same pattern as _add_area_console (console scene +

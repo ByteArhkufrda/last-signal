@@ -1,0 +1,10 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/levels/rooms/medical_wing/fuse_box_medical_wing.gd" id="1_fusebox"]
+[ext_resource type="Texture2D" path="res://assets/sprites/medical-wing/fusebox_closed.png" id="2_tex"]
+
+[node name="FuseBox" type="Node2D" groups=["interactable"]]
+script = ExtResource("1_fusebox")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("2_tex")
