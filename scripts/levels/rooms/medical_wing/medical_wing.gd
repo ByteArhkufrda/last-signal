@@ -102,22 +102,27 @@ const MED_PROP_PATHS := {
 ## Story notes (P1, 2026-11-23): three note consoles that reveal the
 ## "outbreak" was a cover story — see NOTE_CONSOLES / _build_note_consoles().
 ##
-## Power-out darkness (P2, 2026-11-24): the wing starts without power; the
-## child node "MedicalDarkness" (darkness_medical_wing.gd) darkens the room,
-## except a flashlight circle, while the player is inside it. CAUTION: the
-## assembler (level_01.gd _flatten_rooms) frees THIS node and keeps its
-## children, so power_on / power_restored / restore_power() below work only
-## standalone. In the full game, call restore_power() on the surviving
-## level.get_node("MedicalDarkness") instead.
+## Darkness (P2, 2026-11-24; reworked in P5, 2026-11-26): the wing runs on
+## EMERGENCY power: it is lit from the start, its lights flicker, and one
+## spot of it, the dark zone (see DARK_ZONE), is always dark. The child
+## node "MedicalDarkness" (darkness_medical_wing.gd) draws both, with a
+## light circle around the player (the flashlight item makes it bigger).
+## CAUTION: the assembler (level_01.gd _flatten_rooms) frees THIS node and
+## keeps its children, so power_on / power_restored / restore_power() below
+## work only standalone. In the full game, call restore_power() on the
+## surviving level.get_node("MedicalDarkness") instead.
 ##
 ## Dormant robots (P3, 2026-11-24): the robots in this room are dormant
-## until the power is back (MedicalDarkness sets their `dormant` flag).
+## until the local power stabilises (MedicalDarkness sets their `dormant`
+## flag).
 ##
-## Power puzzle (P4, 2026-11-25; replaces the P3 placeholder PowerSwitch):
-## in the dark, find the FUSE (MedFusePickup, see FUSE_PICKUP), put it in
-## the FUSE BOX (MedFuseBox, see FUSE_BOX) and MedicalDarkness restores the
-## power. Neither node is in group "puzzles" or "hidden": the mission
-## counters and the pinned 3 puzzles / 3 hidden objects do not know them.
+## Power puzzle (P4, 2026-11-25; P5, 2026-11-26): find the FLASHLIGHT
+## (MedFlashlightPickup), go into the dark zone, find the FUSE there
+## (MedFusePickup, see FUSE_PICKUP), put it in the FUSE BOX (MedFuseBox,
+## see FUSE_BOX) and MedicalDarkness stabilises the local power: the
+## flicker stops, the robots wake, the chime plays. None of these nodes is
+## in group "puzzles" or "hidden": the mission counters and the pinned 3
+## puzzles / 3 hidden objects do not know them.
 
 ## Sprite and prompt of the note consoles. "note_doctor" is the pack's
 ## handwritten-note sprite (it used to lie on the doctor's desk as an
@@ -157,21 +162,45 @@ const NOTE_CONSOLES := [
 ## reach when the robots wake up. It is not solid (nothing is added to
 ## the nav grid or to prop_solid_rects()).
 ##
-## The fuse is a visible pickup the player finds by exploring in the dark
-## (NOT in group "hidden": no radar needed), in the south-middle of the
-## wing: off both doorways (the entry corridor Rect2(0,224,160,64), the
-## south gap Rect2(272,288,64,64)), off the scanner's line of sight
-## (the strip Rect2(232,100,56,120) around x=260), 300+ px from the fuse
-## box (the player carries it across the room), 90+ px from every console
-## (the nearest-interactable range is 40), and 24+ px from every sprite
-## and solid prop. It is ~157 px from the scanner, i.e. inside the
+## The dark zone (P5): a LOCAL rect, 120 x 90 px, dark whenever the player
+## is in the room (flicker or not, even after restore_power()). It is the
+## free alcove along the north wall between MedMonitorHeart and
+## MedExamBed: every real corner of this room holds solid props, and this
+## is the only 120 x 90 area that touches no solid prop (8 px off the
+## monitor and the bed, the north wall on its back), no doorway
+## approach and not the scanner's line of sight (the strip
+## Rect2(232,100,56,120)). It is open to the south, so it is reachable,
+## and holds no sprite or console. Pinned in test_rooms.gd.
+const DARK_ZONE := Rect2(296, 16, 120, 90)
+
+## The fuse (P4, moved into the dark zone in P5): a visible pickup (NOT
+## in group "hidden": no radar needed) in the middle of the zone (52 px
+## from its west and east sides), 40 px from the nearest sprite (24+
+## wanted), off every doorway approach and the scanner's line of sight,
+## 217+ px from every console (the nearest-interactable range is 40) and
+## 235 px (200+ wanted) from the fuse box, so the player carries it
+## across the room. It is only ~111 px from the scanner, inside the
 ## scanner's 180 px detection radius, which is safe: the scanner is
-## dormant (still, blind) until the power is back.
+## dormant until the power is back.
 const FUSE_BOX := {
 	"name": "MedFuseBox", "pos": Vector2(590, 44),
 }
 const FUSE_PICKUP := {
-	"name": "MedFusePickup", "pos": Vector2(356, 244),
+	"name": "MedFusePickup", "pos": Vector2(356, 64),
+}
+
+## The flashlight (P5): a visible pickup on free floor at the exit of the
+## entry corridor, 132 px from the spawn point, 33+ px from every sprite
+## and 68 px from every solid prop, off both doorway approaches and the
+## scanner's line of sight, 90+ px from every console, and well outside
+## the dark zone (the player must be able to take it before going in). It
+## stays here for now; a later step puts it in a locked cabinet. The
+## desk's MedFlashlight decor is only a prop (test_medical_props_exist
+## pins it) and is not collectible.
+const FLASHLIGHT_PICKUP := {
+	"name": "MedFlashlightPickup", "pos": Vector2(196, 248),
+	"item": "flashlight", "display": "چراغ‌قوه", "label": "برداشتن چراغ‌قوه",
+	"texture": "flashlight",
 }
 
 ## Emitted once, when the power comes back (the darkness node's signal).
@@ -179,7 +208,8 @@ signal power_restored
 
 const MEDICAL_DARKNESS: GDScript = preload("res://scripts/levels/rooms/medical_wing/darkness_medical_wing.gd")
 
-## False until restore_power(): the wing starts in the dark.
+## False until restore_power(): until then the wing runs on emergency
+## power (lit, flickering, robots dormant).
 var power_on: bool = false
 
 var _darkness: Node2D = null
@@ -204,6 +234,7 @@ func _ready() -> void:
 	_build_medical_props()
 	_build_note_consoles()
 	_build_darkness()
+	_build_flashlight_pickup()
 	_build_fuse_pickup()
 	_build_fuse_box()
 
@@ -348,18 +379,27 @@ func _build_note_consoles() -> void:
 		_add_note_console(note["name"], note["pos"], note["text"], note.get("on", ""))
 
 
-## The power-out darkness (a child node, so the flatten keeps it alive —
-## see the header note). room_rect is local, and so is the node.
+## The dark zone's LOCAL rect (the room contract is untouched: this is an
+## addition, used by the tests and by whoever places things in the zone).
+func dark_zone_rect() -> Rect2:
+	return DARK_ZONE
+
+
+## The flicker + dark-zone darkness (a child node, so the flatten keeps it
+## alive — see the header note). room_rect and zone_rect are local, and so
+## is the node.
 func _build_darkness() -> void:
 	_darkness = MEDICAL_DARKNESS.new()
 	_darkness.name = "MedicalDarkness"
 	_darkness.room_rect = room_rect
+	_darkness.zone_rect = DARK_ZONE
 	_darkness.power_restored.connect(_on_power_restored)
 	add_child(_darkness)
 
 
-## Bring the power back: the darkness fades out, the robots in the room
-## wake up and the chime plays. Works while this node is alive
+## The local power stabilises: the flicker stops, the robots in the room
+## wake up and the chime plays (the dark zone stays dark). Works while
+## this node is alive
 ## (standalone); in the full game use
 ## level.get_node("MedicalDarkness").restore_power() (the fuse box does,
 ## through its `solved` signal).
@@ -371,6 +411,22 @@ func restore_power() -> void:
 func _on_power_restored() -> void:
 	power_on = true
 	power_restored.emit()
+
+
+## The flashlight (P5): an instance of this room's pickup copy with the
+## item id, texts and sprite of FLASHLIGHT_PICKUP. The player's inventory
+## then holds "flashlight", which MedicalDarkness reads to widen the light.
+func _build_flashlight_pickup() -> void:
+	var pickup: Node2D = PICKUP_SCENE.instantiate()
+	pickup.name = FLASHLIGHT_PICKUP["name"]
+	pickup.position = FLASHLIGHT_PICKUP["pos"]
+	pickup.item_id = FLASHLIGHT_PICKUP["item"]
+	pickup.display_name = FLASHLIGHT_PICKUP["display"]
+	pickup.interact_label = FLASHLIGHT_PICKUP["label"]
+	pickup.sprite_texture = _med_texture(FLASHLIGHT_PICKUP["texture"])
+	pickup.amount = 1
+	pickup.battery_restore = 0.0
+	add_child(pickup)
 
 
 ## The fuse (P4): an instance of this room's pickup copy, whose defaults

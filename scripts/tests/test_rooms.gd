@@ -69,10 +69,13 @@ const ROOM_CHECKS := {
 			"NoteConsole1": Vector2(140, 320),
 			"MedDeskDoctor/NoteConsole2": Vector2(450, 260),
 			"NoteConsole3": Vector2(560, 160),
-			# Power puzzle (P4, 2026-11-25): the fuse box (where the P3
-			# placeholder switch stood) and the visible fuse pickup.
+			# Power puzzle (P4, 2026-11-25; P5, 2026-11-26): the fuse box
+			# (where the P3 placeholder switch stood), the visible fuse
+			# pickup (moved into the dark zone in P5) and the visible
+			# flashlight pickup (P5).
 			"MedFuseBox": Vector2(590, 44),
-			"MedFusePickup": Vector2(356, 244),
+			"MedFusePickup": Vector2(356, 64),
+			"MedFlashlightPickup": Vector2(196, 248),
 		},
 		"towers": 0, "puzzles": 0, "enemies": 1, "wall_children": 18,
 	},
@@ -138,6 +141,7 @@ func run_tests() -> void:
 			"test_station_layout_agrees_with_rooms",
 			"test_medical_note_consoles", "test_medical_scanner_tuning",
 			"test_medical_darkness_standalone", "test_medical_darkness_assembled",
+			"test_medical_flicker", "test_medical_flashlight",
 			"test_medical_robots_dormant", "test_medical_fuse_puzzle",
 			"test_medical_fuse_full_game", "test_medical_cone_readability"]:
 		paused = false
@@ -651,12 +655,15 @@ func test_medical_scanner_tuning() -> bool:
 	return true
 
 
-## Medical Wing power-out darkness (P2, 2026-11-24, port of old step 4),
+## Medical Wing darkness (P2, 2026-11-24; reworked in P5, 2026-11-26),
 ## standalone room: LOCAL coordinates, the darkness node sits at (0, 0).
-## Fades are driven through MedicalDarkness.step(delta), so the test is
-## deterministic: no frame passes between a position change and its check
-## (the node's own _process only runs during awaits, and it only moves the
-## fade toward the same target).
+## The wing runs on emergency power: lit at spawn, one permanently dark
+## zone, a light circle around the player (tiny without the "flashlight"
+## item, 70 screen px with it). Everything goes through
+## MedicalDarkness.step(delta), so the test is deterministic: no frame
+## passes between a position change and its check (the node's own _process
+## only runs during awaits). The flicker is switched off here;
+## test_medical_flicker covers it.
 func test_medical_darkness_standalone() -> bool:
 	if not ResourceLoader.exists(ROOM_SCENES["medical_wing"]):
 		skipped += 1
@@ -676,67 +683,100 @@ func test_medical_darkness_standalone() -> bool:
 	var overlay: ColorRect = dark.get_node("Overlay")
 	var material: ShaderMaterial = overlay.material
 	var rect: Rect2 = room.room_rect
+	var zone: Rect2 = room.dark_zone_rect()
 	# The overlay covers exactly the medical room (local rect): no other
 	# room is ever darkened. Shader and script live in the room's folders.
 	assert_eq(Rect2(overlay.position, overlay.size), rect, "darkness overlay covers exactly the medical room")
 	assert_eq(material.shader.resource_path, "res://scenes/levels/rooms/medical_wing/darkness_medical_wing.gdshader", "the darkness uses the room's own shader")
 	assert_eq(dark.z_index, 100, "the darkness draws above the world (z_index 100)")
 	assert_true(play.find_children("*", "CanvasModulate", true, false).is_empty(), "the standalone room has no CanvasModulate")
-	# Power starts out and the player spawns inside: dark, light on the player.
-	assert_true(not room.power_on, "power starts off")
+	# The dark zone: the north alcove, clear of solids, doorways and the
+	# scanner's line of sight.
+	assert_eq(zone, Rect2(296, 16, 120, 90), "the dark zone is the north alcove (296, 16, 120, 90)")
+	assert_eq(dark.zone_rect, zone, "the darkness node holds the zone")
+	assert_true(rect.encloses(zone), "the dark zone lies inside the room")
+	assert_eq(material.get_shader_parameter("zone_rect"), Vector4(296, 16, 120, 90), "the shader gets the zone in px from the overlay's corner")
+	var zone_hits := false
+	for r in room.blocked_rects():
+		if zone.intersects(r):
+			zone_hits = true
+	assert_true(not zone_hits, "the dark zone overlaps no wall or solid prop")
+	var keep_hits := false
+	for r in [Rect2(0, 224, 160, 64), Rect2(272, 288, 64, 64), Rect2(232, 100, 56, 120)]:
+		if zone.intersects(r):
+			keep_hits = true
+	assert_true(not keep_hits, "the dark zone is clear of both doorway approaches and the scanner's line of sight")
+	# Emergency power: lit at spawn; only the zone is dark.
+	dark.flicker_enabled = false
+	assert_true(not room.power_on, "the wing starts on emergency power: power_on is false")
+	assert_true(not zone.has_point(player.global_position), "the player spawns outside the dark zone")
 	dark.step(5.0)
-	assert_true(dark.is_dark(), "dark while power is off and the player is inside")
-	assert_true(is_equal_approx(dark.darkness(), 1.0), "fully dark after the fade-in")
-	assert_true(overlay.visible, "the overlay is shown while dark")
-	assert_eq(material.get_shader_parameter("light_center"), player.global_position, "the flashlight is centred on the player")
+	assert_true(not dark.is_flicker_dark() and is_equal_approx(dark.room_darkness(), 0.0), "no darkness at spawn: the room starts lit")
+	assert_true(is_equal_approx(material.get_shader_parameter("room_darkness"), 0.0), "no whole-room darkness reaches the shader at spawn")
+	assert_true(dark.player_inside(), "the player starts inside the room")
+	assert_true(is_equal_approx(dark.zone_darkness(), 1.0), "the dark zone is fully dark once the player is in the room")
+	assert_true(is_equal_approx(material.get_shader_parameter("zone_darkness"), 0.95), "the zone's opacity is 0.95 after the fade-in")
+	assert_true(overlay.visible, "the overlay is shown for the dark zone")
+	assert_eq(material.get_shader_parameter("light_center"), player.global_position, "the light is centred on the player")
 	player.global_position = Vector2(500, 200)
 	dark.step(0.0)
-	assert_eq(material.get_shader_parameter("light_center"), Vector2(500, 200), "the flashlight follows the player")
-	# The radius is 70 SCREEN px: it reads the real zoom of the viewport's
-	# canvas transform (the player camera zooms 2x, so 35 world px).
+	assert_eq(material.get_shader_parameter("light_center"), Vector2(500, 200), "the light follows the player")
+	# Inside the zone: a tiny circle (24 screen px) without the flashlight,
+	# the soft 70 screen px circle with it. The radius is in SCREEN px, so
+	# it reads the real zoom of the viewport's canvas transform (the player
+	# camera zooms 2x).
+	player.global_position = Vector2(356, 80)
+	assert_true(zone.has_point(player.global_position), "the test player stands inside the dark zone")
 	var saved_canvas: Transform2D = root.canvas_transform
 	root.canvas_transform = Transform2D.IDENTITY.scaled(Vector2(2, 2))
 	dark.step(0.0)
-	var radius: float = material.get_shader_parameter("light_radius")
-	assert_true(is_equal_approx(radius, 35.0), "flashlight radius is 35 world px at zoom 2 (70 screen px)")
+	assert_true(not dark.has_flashlight(), "the player starts without the flashlight")
+	assert_true(is_equal_approx(material.get_shader_parameter("light_radius"), 12.0), "in the zone without the flashlight: a tiny circle, 12 world px at zoom 2 (24 screen px)")
 	root.canvas_transform = Transform2D.IDENTITY
 	dark.step(0.0)
-	radius = material.get_shader_parameter("light_radius")
-	assert_true(is_equal_approx(radius, 70.0), "flashlight radius is 70 world px at zoom 1 (70 screen px)")
+	assert_true(is_equal_approx(material.get_shader_parameter("light_radius"), 24.0), "in the zone without the flashlight: 24 world px at zoom 1")
+	player.inventory["flashlight"] = 1
+	dark.step(0.0)
+	assert_true(dark.has_flashlight(), "the flashlight item is seen in the inventory")
+	assert_true(is_equal_approx(material.get_shader_parameter("light_radius"), 70.0), "in the zone with the flashlight: 70 world px at zoom 1 (70 screen px)")
+	root.canvas_transform = Transform2D.IDENTITY.scaled(Vector2(2, 2))
+	dark.step(0.0)
+	assert_true(is_equal_approx(material.get_shader_parameter("light_radius"), 35.0), "in the zone with the flashlight: 35 world px at zoom 2")
+	assert_true(is_equal_approx(material.get_shader_parameter("zone_darkness"), 0.95), "the zone is just as dark with the flashlight: the light changes, not the dark")
+	player.inventory.erase("flashlight")
 	root.canvas_transform = saved_canvas
-	# Outside the room (west of the doorway): never active.
+	# Outside the room (west of the doorway): nothing is drawn.
 	player.global_position = Vector2(-40, 256)
 	dark.step(5.0)
-	assert_true(not dark.is_dark(), "not dark while the player is outside the medical room")
-	assert_true(is_equal_approx(dark.darkness(), 0.0), "no darkness while the player is outside")
+	assert_true(not dark.player_inside(), "not inside while the player is west of the doorway")
+	assert_true(is_equal_approx(dark.zone_darkness(), 0.0), "no darkness while the player is outside")
 	assert_true(not overlay.visible, "the overlay is hidden while the player is outside")
-	# The other three sides: dark inside first, then outside means no darkness.
+	# The other three sides: inside first, then outside means no darkness.
 	for outside in [Vector2(700, 200), Vector2(300, -40), Vector2(300, 420)]:
 		player.global_position = room.spawn_point
 		dark.step(5.0)
 		player.global_position = outside
 		dark.step(5.0)
-		assert_true(not dark.is_dark() and not overlay.visible and is_equal_approx(dark.darkness(), 0.0), "no darkness with the player outside the room at %s" % outside)
-	# Back inside, power still off: dark again; fades in over 0.25 s.
+		assert_true(not dark.player_inside() and not overlay.visible and is_equal_approx(dark.zone_darkness(), 0.0), "no darkness with the player outside the room at %s" % outside)
+	# Back inside: the zone fades in over 0.25 s.
 	player.global_position = room.spawn_point
-	assert_true(dark.is_dark(), "dark again when the player comes back in")
+	assert_true(dark.player_inside(), "inside again when the player comes back in")
 	dark.step(0.125)
-	assert_true(is_equal_approx(dark.darkness(), 0.5), "half dark 0.125 s after entering")
+	assert_true(is_equal_approx(dark.zone_darkness(), 0.5), "the zone is half dark 0.125 s after entering")
 	dark.step(0.125)
-	assert_true(is_equal_approx(dark.darkness(), 1.0), "fully dark 0.25 s after entering")
-	# restore_power(): signal once, the darkness fades out over about 1 s.
+	assert_true(is_equal_approx(dark.zone_darkness(), 1.0), "the zone is fully dark 0.25 s after entering")
+	# restore_power(): the local power stabilises. Signal once, flicker
+	# stopped for good; the dark zone stays dark.
 	var fired := [0]
 	room.power_restored.connect(func() -> void: fired[0] += 1)
+	dark.flicker_enabled = true
 	room.restore_power()
 	assert_true(room.power_on, "power_on is true after restore_power()")
 	assert_true(dark.power_on, "the darkness node holds the power state")
 	assert_eq(fired[0], 1, "power_restored is emitted once")
-	dark.step(0.5)
-	assert_true(is_equal_approx(dark.darkness(), 0.5), "the darkness is half gone 0.5 s after restore_power()")
-	dark.step(1.0)
-	assert_true(is_equal_approx(dark.darkness(), 0.0), "the darkness is gone after restore_power()")
-	assert_true(not overlay.visible, "the overlay is hidden after the fade-out")
-	assert_true(not dark.is_dark(), "never dark again with the power on, even inside")
+	assert_true(not dark.flicker_enabled, "restore_power() stops the flicker")
+	dark.step(5.0)
+	assert_true(is_equal_approx(dark.zone_darkness(), 1.0), "the dark zone stays dark after restore_power()")
 	room.restore_power()
 	assert_eq(fired[0], 1, "a second restore_power() does nothing")
 	play.queue_free()
@@ -745,12 +785,138 @@ func test_medical_darkness_standalone() -> bool:
 	return true
 
 
-## Medical Wing power-out darkness (P2, 2026-11-24), full game: the level
-## starts in command_center without darkness, walking east into the
-## medical wing turns it on, going back turns it off. The assembler frees
-## the MedicalWing node and moves its children into the level translated
-## by (640, 0), so the live API is level.get_node("MedicalDarkness"), and
-## it must keep working in WORLD coordinates (rect, light, inside test).
+## Step `dark` by `dt` for `seconds` and return the flicker pulses that
+## completed, as [start, end] pairs in seconds (edges are seen at step
+## boundaries, so they are right to within dt). No frame passes.
+func _flicker_pulses(dark: Node2D, seconds: float, dt: float) -> Array:
+	var pulses: Array = []
+	var t := 0.0
+	var start := 0.0
+	var was: bool = dark.is_flicker_dark()
+	while t < seconds:
+		dark.step(dt)
+		t += dt
+		var now: bool = dark.is_flicker_dark()
+		if now and not was:
+			start = t
+		elif was and not now:
+			pulses.append([start, t])
+		was = now
+	return pulses
+
+
+## Group pulses into flicker events: pulses less than a second apart
+## belong to the same event.
+func _flicker_events(pulses: Array) -> Array:
+	var events: Array = []
+	for p in pulses:
+		if not events.is_empty() and p[0] - events[-1][-1][1] < 1.0:
+			events[-1].append(p)
+		else:
+			events.append([p])
+	return events
+
+
+## The seeded flicker of the emergency lights (P5, 2026-11-26), standalone
+## room. Two fresh rooms run for 120 s of 1/60 s steps must give identical
+## pulses (deterministic); the pulses must follow the spec — every 5-11 s
+## an event of 1-3 pulses, each 0.12-0.3 s dark, a short lit gap between
+## them; a pulse darkens the whole room (a light circle only with the
+## flashlight) but only while the player is in it; restore_power() stops
+## it for good. No frame passes between a node's creation and its stepping,
+## so the node's own _process never moves the clock.
+func test_medical_flicker() -> bool:
+	if not ResourceLoader.exists(ROOM_SCENES["medical_wing"]):
+		skipped += 1
+		print("SKIP medical flicker: scene not split yet")
+		return true
+	var runs: Array = []
+	for run in 2:
+		var scene: Node2D = load(PLAY_SCENES["medical_wing"]).instantiate()
+		root.add_child(scene)
+		runs.append(_flicker_pulses(scene.room.get_node("MedicalDarkness"), 120.0, FLICKER_DT))
+		scene.queue_free()
+		await process_frame
+		await process_frame
+	var pulses: Array = runs[0]
+	assert_eq(runs[0], runs[1], "two fresh rooms flicker identically (seeded, deterministic)")
+	var events := _flicker_events(pulses)
+	assert_true(events.size() >= 9, "at least 9 flicker events in 120 s (every 5-11 s)")
+	assert_true(not pulses.is_empty() and pulses[0][0] >= 5.0 - FLICKER_DT and pulses[0][0] <= 11.0 + FLICKER_DT, "the first event starts 5-11 s in")
+	var counts_ok := true
+	var waits_ok := true
+	var lengths_ok := true
+	var gaps_ok := true
+	for i in events.size():
+		var event: Array = events[i]
+		if event.size() < 1 or event.size() > 3:
+			counts_ok = false
+		for k in event.size():
+			var length: float = event[k][1] - event[k][0]
+			if length < 0.12 - FLICKER_DT or length > 0.30 + FLICKER_DT:
+				lengths_ok = false
+			if k > 0:
+				var gap: float = event[k][0] - event[k - 1][1]
+				if gap < 0.06 - FLICKER_DT or gap > 0.14 + FLICKER_DT:
+					gaps_ok = false
+		if i > 0:
+			var wait: float = event[0][0] - events[i - 1][-1][1]
+			if wait < 5.0 - FLICKER_DT or wait > 11.0 + FLICKER_DT:
+				waits_ok = false
+	assert_true(counts_ok, "every flicker event has 1-3 pulses")
+	assert_true(waits_ok, "events are 5-11 s apart")
+	assert_true(lengths_ok, "every pulse is dark for 0.12-0.3 s")
+	assert_true(gaps_ok, "pulses of one event are 0.06-0.14 s apart")
+	# One more room, this time looking at what a pulse does to the overlay.
+	var play: Node2D = load(PLAY_SCENES["medical_wing"]).instantiate()
+	root.add_child(play)
+	var room: Node2D = play.room
+	var player: CharacterBody2D = play.player
+	var dark: Node2D = room.get_node("MedicalDarkness")
+	var material: ShaderMaterial = dark.get_node("Overlay").material
+	var saved_canvas: Transform2D = root.canvas_transform
+	root.canvas_transform = Transform2D.IDENTITY.scaled(Vector2(2, 2))
+	var first := 0.0
+	while not dark.is_flicker_dark() and first < 20.0:
+		dark.step(FLICKER_DT)
+		first += FLICKER_DT
+	assert_true(is_equal_approx(first, pulses[0][0]), "the third room's first pulse starts at the same moment")
+	assert_true(dark.is_flicker_dark(), "a pulse is on")
+	dark.step(0.02)
+	assert_true(is_equal_approx(dark.room_darkness(), 1.0), "a pulse fully darkens the whole room")
+	assert_true(is_equal_approx(material.get_shader_parameter("room_darkness"), 0.95), "the shader gets the whole-room opacity (0.95)")
+	assert_true(is_equal_approx(material.get_shader_parameter("light_radius"), 0.0), "without the flashlight a pulse has no light circle at all")
+	player.inventory["flashlight"] = 1
+	dark.step(0.0)
+	assert_true(is_equal_approx(material.get_shader_parameter("light_radius"), 35.0), "with the flashlight a pulse keeps the 70 screen px circle")
+	player.inventory.erase("flashlight")
+	player.global_position = Vector2(-40, 256)
+	dark.step(0.025)
+	assert_true(dark.is_flicker_dark() and is_equal_approx(dark.room_darkness(), 0.0), "a pulse is not drawn while the player is outside the room")
+	player.global_position = room.spawn_point
+	while dark.is_flicker_dark():
+		dark.step(FLICKER_DT)
+	dark.step(0.025)
+	assert_true(not dark.is_flicker_dark() and is_equal_approx(dark.room_darkness(), 0.0), "the room is lit again after the pulse")
+	root.canvas_transform = saved_canvas
+	# The local power stabilises: no pulse ever again.
+	room.restore_power()
+	assert_true(not dark.flicker_enabled and not dark.is_flicker_dark(), "restore_power() stops the flicker")
+	assert_true(_flicker_pulses(dark, 120.0, FLICKER_DT).is_empty(), "no pulse in 120 s after restore_power()")
+	assert_true(is_equal_approx(dark.room_darkness(), 0.0), "the room stays lit after restore_power()")
+	play.queue_free()
+	await process_frame
+	await process_frame
+	return true
+
+
+## Medical Wing darkness (P2; reworked in P5, 2026-11-26), full game: the
+## level starts in command_center without darkness, walking east into the
+## medical wing shows the dark zone (and, in a pulse, the whole wing),
+## going back hides it. The assembler frees the MedicalWing node and moves
+## its children into the level translated by (640, 0), so the live API is
+## level.get_node("MedicalDarkness"), and it must keep working in WORLD
+## coordinates (rect, zone, light, inside test).
 func test_medical_darkness_assembled() -> bool:
 	if not ResourceLoader.exists(ROOM_SCENES["medical_wing"]):
 		skipped += 1
@@ -775,35 +941,61 @@ func test_medical_darkness_assembled() -> bool:
 	assert_eq(dark.global_position, Vector2(640, 0), "the flatten moved it by the medical wing's station offset")
 	assert_eq(Rect2(overlay.global_position, overlay.size), Rect2(640, 0, 640, 368), "the overlay covers exactly the medical wing in world coordinates")
 	assert_true(level.find_children("*", "CanvasModulate", true, false).is_empty(), "the level has no global CanvasModulate")
-	assert_true(not dark.is_dark(), "the full game starts without darkness (command_center)")
+	assert_eq(Rect2(dark.to_global(dark.zone_rect.position), dark.zone_rect.size), Rect2(936, 16, 120, 90), "the dark zone sits at its local spot plus the wing's offset")
+	assert_true(not dark.player_inside(), "the full game starts outside the wing (command_center)")
 	dark.step(5.0)
-	assert_true(is_equal_approx(dark.darkness(), 0.0), "no darkness at the start of the full game")
+	assert_true(is_equal_approx(dark.zone_darkness(), 0.0) and is_equal_approx(dark.room_darkness(), 0.0), "no darkness of either kind at the start of the full game")
 	assert_true(not overlay.visible, "the overlay is hidden at the start of the full game")
+	# Into the wing, flicker off: the zone is dark, the rest of the wing lit.
+	dark.flicker_enabled = false
 	level.player.global_position = Vector2(900, 200)
 	dark.step(5.0)
-	assert_true(dark.is_dark(), "walking east into the medical wing turns the darkness on")
-	assert_true(is_equal_approx(dark.darkness(), 1.0), "fully dark inside the medical wing")
+	assert_true(dark.player_inside(), "walking east into the medical wing counts as inside")
+	assert_true(is_equal_approx(dark.zone_darkness(), 1.0), "the dark zone is dark inside the medical wing")
+	assert_true(is_equal_approx(dark.room_darkness(), 0.0), "the rest of the wing is lit: no whole-room darkness")
 	assert_true(overlay.visible, "the overlay is shown inside the medical wing")
-	assert_eq(material.get_shader_parameter("light_center"), Vector2(260, 200), "the flashlight is at the player's spot in wing px (world 900 - 640, 200)")
-	# The wing's world rect (640, 0, 640, 368): corners just inside are dark,
-	# points just outside each side are not.
+	assert_eq(material.get_shader_parameter("light_center"), Vector2(260, 200), "the light is at the player's spot in wing px (world 900 - 640, 200)")
+	assert_true(not dark.zone_rect.has_point(dark.to_local(Vector2(900, 200))), "world (900, 200) is outside the dark zone")
+	level.player.global_position = Vector2(996, 80)
+	dark.step(0.0)
+	assert_true(dark.zone_rect.has_point(dark.to_local(level.player.global_position)), "world (996, 80) is inside the dark zone")
+	assert_eq(material.get_shader_parameter("light_center"), Vector2(356, 80), "the light follows the player into the zone, in wing px")
+	var tiny: float = material.get_shader_parameter("light_radius")
+	level.player.inventory["flashlight"] = 1
+	dark.step(0.0)
+	var wide: float = material.get_shader_parameter("light_radius")
+	assert_true(is_equal_approx(wide / tiny, 70.0 / 24.0), "in the full game the flashlight widens the light from 24 to 70 screen px")
+	level.player.inventory.erase("flashlight")
+	# The wing's world rect (640, 0, 640, 368): corners just inside are
+	# inside, points just outside each side are not.
 	for inside in [Vector2(641, 2), Vector2(1279, 2), Vector2(641, 366), Vector2(1279, 366)]:
 		level.player.global_position = inside
-		assert_true(dark.is_dark(), "dark just inside the wing's corner at %s" % inside)
+		assert_true(dark.player_inside(), "inside just inside the wing's corner at %s" % inside)
 	for outside in [Vector2(639, 200), Vector2(1281, 200), Vector2(900, -2), Vector2(900, 370)]:
 		level.player.global_position = outside
-		assert_true(not dark.is_dark(), "never dark just outside the wing at %s" % outside)
+		assert_true(not dark.player_inside(), "never inside just outside the wing at %s" % outside)
 	level.player.global_position = Vector2(320, 184)
 	dark.step(5.0)
-	assert_true(not dark.is_dark(), "back in command_center there is no darkness")
+	assert_true(not dark.player_inside() and is_equal_approx(dark.zone_darkness(), 0.0), "back in command_center there is no darkness")
 	assert_true(not overlay.visible, "the overlay is hidden again in command_center")
+	# A flicker pulse darkens the whole wing, but only for a player inside.
+	dark.flicker_enabled = true
+	var waited := 0.0
+	while not dark.is_flicker_dark() and waited < 20.0:
+		dark.step(FLICKER_DT)
+		waited += FLICKER_DT
+	assert_true(dark.is_flicker_dark() and is_equal_approx(dark.room_darkness(), 0.0), "a pulse is not drawn while the player is in command_center")
+	level.player.global_position = Vector2(900, 200)
+	dark.step(0.02)
+	assert_true(is_equal_approx(material.get_shader_parameter("room_darkness"), 0.95), "a pulse darkens the whole wing for a player inside it")
+	# The local power stabilises: restore_power() on the surviving node.
 	var fired := [0]
 	dark.power_restored.connect(func() -> void: fired[0] += 1)
 	dark.restore_power()
-	level.player.global_position = Vector2(900, 200)
+	assert_true(dark.power_on and not dark.flicker_enabled and not dark.is_flicker_dark(), "restore_power() on the node stops the flicker")
+	assert_true(_flicker_pulses(dark, 60.0, FLICKER_DT).is_empty(), "no pulse in 60 s after restore_power() in the full game")
 	dark.step(5.0)
-	assert_true(dark.power_on and not dark.is_dark(), "restore_power() on the node lights the wing")
-	assert_true(is_equal_approx(dark.darkness(), 0.0), "no darkness after restore_power() in the full game")
+	assert_true(is_equal_approx(dark.zone_darkness(), 1.0) and is_equal_approx(dark.room_darkness(), 0.0), "after restore_power() the zone stays dark and the rest of the wing lit")
 	assert_eq(fired[0], 1, "power_restored is emitted once in the full game")
 	dark.restore_power()
 	assert_eq(fired[0], 1, "a second restore_power() does nothing in the full game")
@@ -812,6 +1004,117 @@ func test_medical_darkness_assembled() -> bool:
 	await process_frame
 	await process_frame
 	return true
+
+
+## The flashlight (P5, 2026-11-26), standalone room: a visible pickup on
+## free floor outside the dark zone; E puts exactly one "flashlight" in the
+## inventory (HUD «چراغ‌قوه»), and the light circle in the zone grows from
+## the tiny one to the soft 70 screen px one. The desk's MedFlashlight
+## decor stays a plain prop. A HUD is added first (the standalone launcher
+## has none).
+func test_medical_flashlight() -> bool:
+	if not ResourceLoader.exists(ROOM_SCENES["medical_wing"]):
+		skipped += 1
+		print("SKIP medical flashlight: scene not split yet")
+		return true
+	if _level != null:
+		_level.queue_free()
+		_level = null
+		await process_frame
+		await process_frame
+	var hud: CanvasLayer = (load("res://scenes/ui/hud.tscn") as PackedScene).instantiate()
+	root.add_child(hud)
+	var play: Node2D = load(PLAY_SCENES["medical_wing"]).instantiate()
+	root.add_child(play)
+	var room: Node2D = play.room
+	var player: CharacterBody2D = play.player
+	var dark: Node2D = room.get_node("MedicalDarkness")
+	var item: Node2D = room.get_node_or_null("MedFlashlightPickup")
+	assert_true(item != null, "the medical wing has a MedFlashlightPickup")
+	if item == null:
+		play.queue_free()
+		hud.queue_free()
+		await process_frame
+		await process_frame
+		return true
+	dark.flicker_enabled = false
+	var zone: Rect2 = room.dark_zone_rect()
+	# What it is.
+	assert_eq(item.get_script().resource_path, "res://scripts/levels/rooms/medical_wing/pickup_medical_wing.gd", "the flashlight is the room's own pickup copy")
+	assert_true(item.is_in_group("interactable"), "the flashlight is an interactable")
+	assert_true(not item.is_in_group("hidden") and not item.is_in_group("puzzles"), "the flashlight is neither hidden nor a puzzle")
+	assert_eq(item.item_id, "flashlight", "the flashlight's item id")
+	assert_eq(item.display_name, "چراغ‌قوه", "the flashlight's display name")
+	assert_eq(item.interact_label, "برداشتن چراغ‌قوه", "the flashlight's prompt text")
+	assert_eq(item.amount, 1, "the flashlight is one item")
+	assert_eq((item.get_node("Sprite2D") as Sprite2D).texture, load("res://assets/sprites/medical-wing/flashlight.png"), "the flashlight uses the medical flashlight sprite")
+	assert_true(not room.get_node("MedFlashlight").is_in_group("interactable"), "the desk's MedFlashlight decor is only a prop")
+	# Placement: free floor, clear of doorways and the scanner's line of
+	# sight, 24+ px from every sprite, apart from the consoles, well
+	# outside the dark zone (it must be takeable before going in).
+	var item_rect := Rect2(item.global_position - Vector2(8, 8), Vector2(16, 16))
+	var in_solid := false
+	for r in room.blocked_rects():
+		if item_rect.intersects(r):
+			in_solid = true
+	assert_true(not in_solid, "the flashlight is not inside a wall or a solid prop")
+	var in_keep_out := false
+	for r in [Rect2(0, 224, 160, 64), Rect2(272, 288, 64, 64), Rect2(232, 100, 56, 120)]:
+		if item_rect.intersects(r):
+			in_keep_out = true
+	assert_true(not in_keep_out, "the flashlight is clear of the doorways and the scanner's line of sight")
+	assert_true(not item_rect.grow(40.0).intersects(zone), "the flashlight is at least 40 px outside the dark zone")
+	var nearest_console := INF
+	for c in [Vector2(120, 80), room.get_node("NoteConsole1").global_position,
+			room.get_node("MedDeskDoctor/NoteConsole2").global_position,
+			room.get_node("NoteConsole3").global_position]:
+		nearest_console = minf(nearest_console, item.global_position.distance_to(c))
+	assert_true(nearest_console >= 90.0, "the flashlight is at least 90 px from every console")
+	var too_close := ""
+	for node in room.find_children("*", "Sprite2D", true, false):
+		var sprite := node as Sprite2D
+		if sprite.texture == null or item.is_ancestor_of(sprite):
+			continue
+		var sprite_size: Vector2 = sprite.texture.get_size() * sprite.global_scale
+		var sprite_rect := Rect2(sprite.global_position - sprite_size / 2.0, sprite_size)
+		if item_rect.grow(24.0).intersects(sprite_rect):
+			too_close = str(sprite.name)
+	assert_eq(too_close, "", "the flashlight is at least 24 px from every sprite in the room")
+	# E on it: exactly one flashlight in the inventory, the pickup is gone.
+	player.global_position = Vector2(196, 266)
+	player.velocity = Vector2.ZERO
+	for i in 5:
+		await physics_frame
+	assert_true(player._current_interactable == item, "beside it, the flashlight is the nearest interactable")
+	assert_eq(hud.prompt_label.text, "E — برداشتن چراغ‌قوه", "the HUD prompt beside the flashlight")
+	assert_true(not dark.has_flashlight(), "no flashlight before E")
+	await _press_interact()
+	assert_eq(int(player.inventory.get("flashlight", 0)), 1, "E on the flashlight puts one flashlight in the inventory")
+	assert_eq(hud.inventory_label.text, "وسایل: چراغ‌قوه ×1", "the HUD inventory shows the flashlight")
+	assert_eq(hud.message_label.text, "چراغ‌قوه برداشته شد.", "the flashlight-collected message")
+	assert_true(not is_instance_valid(item), "the flashlight pickup is gone once collected")
+	await _press_interact()
+	assert_eq(int(player.inventory.get("flashlight", 0)), 1, "a second E does not give a second flashlight")
+	# In the dark zone the light is now the 70 screen px circle; the zone
+	# is as dark as ever.
+	player.global_position = Vector2(356, 80)
+	var saved_canvas: Transform2D = root.canvas_transform
+	root.canvas_transform = Transform2D.IDENTITY.scaled(Vector2(2, 2))
+	dark.step(5.0)
+	var material: ShaderMaterial = dark.get_node("Overlay").material
+	assert_true(dark.has_flashlight() and is_equal_approx(dark.light_radius_screen(), 70.0), "with the flashlight the light is 70 screen px")
+	assert_true(is_equal_approx(material.get_shader_parameter("light_radius"), 35.0), "the shader radius is 35 world px at zoom 2")
+	assert_true(is_equal_approx(material.get_shader_parameter("zone_darkness"), 0.95), "the zone is still fully dark with the flashlight")
+	root.canvas_transform = saved_canvas
+	play.queue_free()
+	hud.queue_free()
+	await process_frame
+	await process_frame
+	return true
+
+
+## Seconds per step when a test drives MedicalDarkness.step(): 60 Hz.
+const FLICKER_DT := 1.0 / 60.0
 
 
 ## Hold E for three physics frames (one just-pressed edge), then release.
@@ -905,10 +1208,12 @@ func test_medical_robots_dormant() -> bool:
 	return true
 
 
-## The power puzzle (P4, 2026-11-25; replaces the P3 placeholder switch),
-## standalone room, LOCAL coordinates: a visible FUSE pickup on free floor
-## and a FUSE BOX that refuses without a fuse and, with one, consumes it
-## and restores the power once. Neither is a puzzle or a hidden object.
+## The power puzzle (P4, 2026-11-25; replaces the P3 placeholder switch;
+## P5, 2026-11-26: the fuse now lies in the dark zone and the box stops
+## the flicker), standalone room, LOCAL coordinates: a visible FUSE pickup
+## inside the dark zone and a FUSE BOX that refuses without a fuse and,
+## with one, consumes it and stabilises the power once. Neither is a
+## puzzle or a hidden object.
 ## The positions are pinned in ROOM_CHECKS. A HUD is added before the room
 ## (the standalone launcher has none), so the HUD texts and the inventory
 ## line can be read.
@@ -930,6 +1235,7 @@ func test_medical_fuse_puzzle() -> bool:
 	var room: Node2D = play.room
 	var player: CharacterBody2D = play.player
 	var scanner: CharacterBody2D = room.get_node("ScannerRobot")
+	var dark: Node2D = room.get_node("MedicalDarkness")
 	var box: Node2D = room.get_node_or_null("MedFuseBox")
 	var fuse: Node2D = room.get_node_or_null("MedFusePickup")
 	assert_true(box != null and fuse != null, "the medical wing has a MedFuseBox and a MedFusePickup")
@@ -964,6 +1270,7 @@ func test_medical_fuse_puzzle() -> bool:
 		if fuse_rect.intersects(r):
 			in_solid = true
 	assert_true(not in_solid, "the fuse is not inside a wall or a solid prop")
+	assert_true(room.dark_zone_rect().encloses(fuse_rect), "the fuse lies inside the dark zone")
 	var in_keep_out := false
 	for r in [Rect2(0, 224, 160, 64), Rect2(272, 288, 64, 64), Rect2(232, 100, 56, 120)]:
 		if fuse_rect.intersects(r):
@@ -989,7 +1296,8 @@ func test_medical_fuse_puzzle() -> bool:
 	# The room starts dark; the scanner is dormant until the power is back.
 	var fired := [0]
 	room.power_restored.connect(func() -> void: fired[0] += 1)
-	assert_true(not room.power_on and scanner.dormant, "the wing starts without power and the scanner is dormant")
+	assert_true(not room.power_on and scanner.dormant, "the wing starts on emergency power and the scanner is dormant")
+	assert_true(dark.flicker_enabled, "the lights flicker until the box is solved")
 	# E on the box WITHOUT a fuse: a message, nothing else.
 	player.global_position = Vector2(590, 70)
 	player.velocity = Vector2.ZERO
@@ -1005,7 +1313,7 @@ func test_medical_fuse_puzzle() -> bool:
 	assert_eq((box.get_node("Sprite2D") as Sprite2D).texture, closed_tex, "the box stays closed after an empty-handed E")
 	assert_eq(int(player.inventory.get("fuse", 0)), 0, "the player holds no fuse yet")
 	# E on the fuse: exactly one fuse in the inventory, the pickup is gone.
-	player.global_position = Vector2(356, 262)
+	player.global_position = Vector2(356, 86)
 	player.velocity = Vector2.ZERO
 	for i in 5:
 		await physics_frame
@@ -1028,6 +1336,7 @@ func test_medical_fuse_puzzle() -> bool:
 	assert_true(room.power_on, "E on the box with a fuse restores the power")
 	assert_eq(fired[0], 1, "power_restored is emitted once")
 	assert_true(not scanner.dormant, "the scanner wakes when the box restores the power")
+	assert_true(not dark.flicker_enabled and not dark.is_flicker_dark(), "the flicker stops once the box is solved")
 	assert_eq(int(player.inventory.get("fuse", 0)), 0, "the box consumes the fuse")
 	assert_eq(hud.inventory_label.text, "وسایل: —", "the HUD inventory is empty again")
 	assert_eq((box.get_node("Sprite2D") as Sprite2D).texture, open_tex, "the box shows fusebox_open")
@@ -1053,13 +1362,16 @@ func test_medical_fuse_puzzle() -> bool:
 
 
 ## Full game (main.tscn, so the HUD and AudioManager exist), P4
-## (2026-11-25; replaces the P3 switch test): only the medical wing's
-## scanner is dormant at the start; a robot with the medical copy is dormant
-## inside the medical rect (WORLD (640, 0, 640, 368)) only while the power
-## is out; a robot of another room is left alone; the fuse puzzle works
-## through the real player, HUD and wiring (empty box, pickup, box, chime),
-## wakes the scanner, works once and leaves every mission counter, the 3
-## puzzles and the 3 hidden objects alone.
+## (2026-11-25; replaces the P3 switch test; P5, 2026-11-26: the fuse lies
+## in the dark zone, the box stops the flicker, the flashlight is
+## collectable): only the medical wing's scanner is dormant at the start; a
+## robot with the medical copy is dormant inside the medical rect (WORLD
+## (640, 0, 640, 368)) only until the power stabilises; a robot of another
+## room is left alone; the fuse puzzle works through the real player, HUD
+## and wiring (empty box, pickup, box, chime), wakes the scanner, stops the
+## flicker, works once and leaves every mission counter, the 3 puzzles and
+## the 3 hidden objects alone. The shared player has no display name for
+## the flashlight yet, so its HUD inventory line is not pinned here.
 func test_medical_fuse_full_game() -> bool:
 	if not ResourceLoader.exists(ROOM_SCENES["medical_wing"]):
 		skipped += 1
@@ -1090,7 +1402,8 @@ func test_medical_fuse_full_game() -> bool:
 		return true
 	assert_true(level.get_node_or_null("PowerSwitch") == null, "the placeholder PowerSwitch is gone from the assembled level")
 	assert_eq(box.global_position, Vector2(1230, 44), "the fuse box sits at its local spot plus the wing's offset")
-	assert_eq(fuse.global_position, Vector2(996, 244), "the fuse sits at its local spot plus the wing's offset")
+	assert_eq(fuse.global_position, Vector2(996, 64), "the fuse sits at its local spot plus the wing's offset")
+	assert_true(dark.zone_rect.has_point(dark.to_local(fuse.global_position)), "the fuse lies inside the dark zone")
 	var scanner: CharacterBody2D = level.get_node("ScannerRobot")
 	var asleep: Array = []
 	for enemy in get_nodes_in_group("enemies"):
@@ -1124,7 +1437,7 @@ func test_medical_fuse_full_game() -> bool:
 	assert_true(not dark.power_on and not chimed[0], "an empty-handed E restores no power and plays no chime")
 	assert_true(scanner.dormant, "the scanner stays dormant after an empty-handed E")
 	# Collect the fuse through the level's wiring.
-	player.global_position = Vector2(996, 262)
+	player.global_position = Vector2(996, 86)
 	player.velocity = Vector2.ZERO
 	for i in 5:
 		await physics_frame
@@ -1144,6 +1457,8 @@ func test_medical_fuse_full_game() -> bool:
 	assert_eq(hud.message_label.text, "فیوز جا خورد. برق اضطراری وصل شد.", "the HUD shows the power-restored message")
 	assert_true(chimed[0], "the chime plays when the power returns")
 	assert_true(not scanner.dormant, "the scanner wakes in the full game")
+	assert_true(not dark.flicker_enabled and not dark.is_flicker_dark(), "the flicker stops once the box is solved in the full game")
+	assert_true(_flicker_pulses(dark, 60.0, FLICKER_DT).is_empty(), "no pulse in 60 s after the box is solved")
 	assert_eq(int(player.inventory.get("fuse", 0)), 0, "the box consumes the fuse")
 	assert_eq(hud.inventory_label.text, "وسایل: —", "the HUD inventory is empty again")
 	assert_eq((box.get_node("Sprite2D") as Sprite2D).texture, load("res://assets/sprites/medical-wing/fusebox_open.png"), "the box shows fusebox_open")
@@ -1159,6 +1474,17 @@ func test_medical_fuse_full_game() -> bool:
 	assert_eq(hud.message_label.text, "", "a second E on the used box shows nothing")
 	assert_true(not hud.prompt_label.visible, "the prompt is gone once the box is used")
 	assert_true(not box.is_in_group("interactable"), "the used box stays out of the interactable group")
+	# The flashlight, through the real wiring (its HUD inventory line is the
+	# shared player's, which has no display name for it yet: not pinned).
+	player.global_position = Vector2(836, 266)
+	player.velocity = Vector2.ZERO
+	for i in 5:
+		await physics_frame
+	assert_eq(hud.prompt_label.text, "E — برداشتن چراغ‌قوه", "the HUD prompt beside the flashlight")
+	await _press_interact()
+	assert_eq(int(player.inventory.get("flashlight", 0)), 1, "E on the flashlight puts one flashlight in the inventory")
+	assert_eq(hud.message_label.text, "چراغ‌قوه برداشته شد.", "the HUD shows the flashlight-collected message")
+	assert_true(dark.has_flashlight(), "the darkness node sees the flashlight")
 	main.queue_free()
 	await process_frame
 	await process_frame
