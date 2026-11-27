@@ -125,6 +125,10 @@ func setup_minimap(areas: Array, walls: Array[Rect2], player_node: Node2D, tower
 	minimap.setup(areas, walls, player_node, tower_nodes, hidden_nodes, enemy_nodes)
 
 
+func set_minimap_outline(floor_polys: Array[PackedVector2Array], hole_polys: Array[PackedVector2Array]) -> void:
+	minimap.set_outline(floor_polys, hole_polys)
+
+
 func set_minimap_area(area_name: String) -> void:
 	minimap_label.text = area_name
 

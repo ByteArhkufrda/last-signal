@@ -38,6 +38,7 @@ horizontal_alignment = 1
 text_direction = 3
 
 [node name="ObjectiveLabel" type="Label" parent="."]
+visible = false
 anchors_preset = 10
 anchor_left = 0.5
 anchor_right = 0.5
@@ -52,6 +53,7 @@ horizontal_alignment = 1
 text_direction = 3
 
 [node name="RadarLabel" type="Label" parent="."]
+visible = false
 offset_left = 12.0
 offset_top = 12.0
 offset_right = 220.0
@@ -61,6 +63,7 @@ text = "رادار [Q] آماده است"
 text_direction = 3
 
 [node name="PuzzlesLabel" type="Label" parent="."]
+visible = false
 offset_left = 12.0
 offset_top = 36.0
 offset_right = 220.0
@@ -70,6 +73,7 @@ text = "پازل‌های حل‌شده: 0/3"
 text_direction = 3
 
 [node name="BatteryBar" type="ProgressBar" parent="."]
+visible = false
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
@@ -89,7 +93,7 @@ anchor_right = 1.0
 offset_left = -220.0
 offset_top = 36.0
 offset_right = -12.0
-offset_bottom = 187.0
+offset_bottom = 153.0
 grow_horizontal = 0
 mouse_filter = 2
 script = ExtResource("2_minimap")
@@ -99,9 +103,9 @@ anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
 offset_left = -220.0
-offset_top = 190.0
+offset_top = 156.0
 offset_right = -12.0
-offset_bottom = 210.0
+offset_bottom = 176.0
 grow_horizontal = 0
 theme_override_font_sizes/font_size = 12
 text = "کنترل مرکزی"
@@ -113,9 +117,9 @@ anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
 offset_left = -220.0
-offset_top = 210.0
+offset_top = 176.0
 offset_right = -12.0
-offset_bottom = 228.0
+offset_bottom = 194.0
 grow_horizontal = 0
 theme_override_font_sizes/font_size = 11
 text = "● تو   ● دکل   ● دشمن (رادار)"
@@ -123,6 +127,7 @@ horizontal_alignment = 1
 text_direction = 3
 
 [node name="InventoryLabel" type="Label" parent="."]
+visible = false
 anchors_preset = 3
 anchor_top = 1.0
 anchor_bottom = 1.0

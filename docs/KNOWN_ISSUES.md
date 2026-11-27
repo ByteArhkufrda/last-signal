@@ -33,6 +33,12 @@
   not match its caption). Every sprite used was visually inspected on a
   contact sheet before use.
 
+## Fixed (2026-11-24)
+- **Battery soft-lock.** The hidden fuse needs a radar pulse, and a
+  drained battery blocked the radar for good. Passive drain now floors at
+  one pulse (radar_cost) and the battery trickle-recharges to it from below.
+  Untested (no Godot on the review machine): run the test runner.
+
 ## Fixed (v1.2, 2026-11-12)
 - **Walls were flat dark placeholders.** The atlas still has no sci-fi
   wall segment (verified across all 1.4M rows), so a 16x16 seamless

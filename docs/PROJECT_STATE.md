@@ -190,7 +190,7 @@ Updated: 2026-11-15 (v1.4 Medical Wing pack wired in, verified — code only, no
   v1.2, battery at 0 has no fail state, no inventory cap).
 
 ## Current errors
-- None. Last test run: 439 passed, 0 failed.
+- None. Last recorded test run: 661 passed, 0 failed (v1.4; 2 new battery-reserve tests added 2026-11-24, not yet run).
 
 ## Verification limits (honest)
 - No Godot MCP connection on this VM: godot-ai needs a live Godot editor + `uv`; this VM is headless, so there is no live-editor link. Verification is via the headless test runner + headless game runs, not via MCP tools.

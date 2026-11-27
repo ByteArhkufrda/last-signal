@@ -29,7 +29,7 @@ func assert_true(value: bool, label: String) -> void:
 
 func run_tests() -> void:
 	await process_frame
-	for t in ["test_input_actions_exist", "test_player_scene_loads", "test_compute_velocity", "test_level_loads_camera_limits", "test_player_moves_and_wall_blocks", "test_diagonal_speed_capped", "test_player_stops_and_is_moving", "test_walk_bob_and_camera_lookahead", "test_interact_action_exists", "test_interactables_present", "test_floor_variation", "test_console_interact", "test_door_toggle", "test_hud_prompt", "test_radar_action_exists", "test_hidden_objects_start_hidden", "test_pulse_reveals_near_hidden", "test_pulse_cooldown_and_signal", "test_hud_radar_status", "test_enemy_patrols", "test_enemy_investigates_pulse", "test_enemy_chases_when_player_visible", "test_enemy_loses_player", "test_enemy_does_not_see_through_walls", "test_player_caught_respawn", "test_battery_drains", "test_radar_costs_battery", "test_radar_blocked_when_battery_low", "test_hidden_pickup_collects", "test_visible_pickup_collects", "test_hud_battery_and_inventory", "test_breaker_wrong_order_resets", "test_breaker_correct_order_solves", "test_wire_panel_solves", "test_fuse_box_needs_fuse", "test_fuse_box_solves_with_fuse", "test_fuse_pickup_collects", "test_hud_puzzle_counter", "test_tower_blocked_without_power", "test_tower_activates_after_puzzle", "test_mission_objectives_advance", "test_transmission_completes_mission", "test_transmit_blocked_early", "test_hud_objective", "test_main_menu_loads", "test_pause_menu_toggles", "test_pause_stops_player", "test_audio_manager_generates_sounds", "test_fx_ring_frees_itself", "test_hud_flash", "test_battery_bar_red_when_low", "test_full_playthrough", "test_win_screen_shows", "test_effect_spam_stress", "test_win_screen_blocks_pause", "test_radar_investigates_inside_radius", "test_radar_ignores_outside_radius", "test_radar_boundary_investigates", "test_radar_does_not_interrupt_chase", "test_radar_multiple_enemies_by_distance", "test_ambient_has_no_fade", "test_sfx_still_fade", "test_ambient_pause_resume_volume", "test_player_walk_down", "test_player_walk_up", "test_player_walk_left", "test_player_walk_right", "test_player_idle_preserves_facing", "test_player_diagonal_uses_cardinal_animation", "test_player_animation_stops_at_wall", "test_player_spriteframes_complete", "test_enemy_path_avoids_crate", "test_enemy_navigates_around_crate", "test_enemy_path_through_doorway", "test_enemy_no_grid_fallback", "test_area_medical_entry", "test_area_wall_blocks_except_doorway", "test_areas_reachable_by_walking", "test_scanner_stays_at_post_and_scans", "test_scanner_chases_visible_player", "test_scanner_returns_to_post", "test_radar_blocked_by_crate", "test_radar_reveals_with_line_of_sight", "test_radar_blocked_by_alcove_wall", "test_environment_props_exist", "test_medical_floor_uses_medical_atlas", "test_medical_props_exist", "test_medical_doorways_stay_open", "test_medical_fuse_texture", "test_minimap_action_exists", "test_minimap_in_hud", "test_minimap_world_to_map", "test_minimap_tracks_player", "test_minimap_tower_states", "test_minimap_enemies_revealed_by_pulse", "test_minimap_toggle", "test_minimap_hidden_objects_only_when_revealed", "test_minimap_area_label", "test_wall_texture_file", "test_wall_texture_applied", "test_persian_font_file", "test_mission_stage_accessor", "test_help_screen_loads", "test_main_menu_help_button", "test_pause_menu_help_button", "test_one_robot_per_area", "test_robots_patrol_own_area", "test_hud_stage_hint", "test_area_entry_shows_hint"]:
+	for t in ["test_input_actions_exist", "test_player_scene_loads", "test_compute_velocity", "test_level_loads_camera_limits", "test_player_moves_and_wall_blocks", "test_diagonal_speed_capped", "test_player_stops_and_is_moving", "test_walk_bob_and_camera_lookahead", "test_interact_action_exists", "test_interactables_present", "test_floor_variation", "test_console_interact", "test_door_toggle", "test_hud_prompt", "test_radar_action_exists", "test_hidden_objects_start_hidden", "test_pulse_reveals_near_hidden", "test_pulse_cooldown_and_signal", "test_hud_radar_status", "test_enemy_patrols", "test_enemy_investigates_pulse", "test_enemy_chases_when_player_visible", "test_enemy_loses_player", "test_enemy_does_not_see_through_walls", "test_player_caught_respawn", "test_battery_drains", "test_radar_costs_battery", "test_radar_blocked_when_battery_low", "test_hidden_pickup_collects", "test_visible_pickup_collects", "test_hud_battery_and_inventory", "test_breaker_wrong_order_resets", "test_breaker_correct_order_solves", "test_wire_panel_solves", "test_fuse_box_needs_fuse", "test_fuse_box_solves_with_fuse", "test_fuse_pickup_collects", "test_hud_puzzle_counter", "test_tower_blocked_without_power", "test_tower_activates_after_puzzle", "test_mission_objectives_advance", "test_transmission_completes_mission", "test_transmit_blocked_early", "test_hud_objective", "test_main_menu_loads", "test_pause_menu_toggles", "test_pause_stops_player", "test_audio_manager_generates_sounds", "test_fx_ring_frees_itself", "test_hud_flash", "test_battery_bar_red_when_low", "test_full_playthrough", "test_win_screen_shows", "test_effect_spam_stress", "test_win_screen_blocks_pause", "test_radar_investigates_inside_radius", "test_radar_ignores_outside_radius", "test_radar_boundary_investigates", "test_radar_does_not_interrupt_chase", "test_radar_multiple_enemies_by_distance", "test_ambient_has_no_fade", "test_sfx_still_fade", "test_ambient_pause_resume_volume", "test_player_walk_down", "test_player_walk_up", "test_player_walk_left", "test_player_walk_right", "test_player_idle_preserves_facing", "test_player_diagonal_uses_cardinal_animation", "test_player_animation_stops_at_wall", "test_player_spriteframes_complete", "test_enemy_path_avoids_crate", "test_enemy_navigates_around_crate", "test_enemy_path_through_doorway", "test_enemy_no_grid_fallback", "test_area_medical_entry", "test_area_wall_blocks_except_doorway", "test_areas_reachable_by_walking", "test_scanner_stays_at_post_and_scans", "test_scanner_chases_visible_player", "test_scanner_returns_to_post", "test_radar_blocked_by_crate", "test_radar_reveals_with_line_of_sight", "test_radar_blocked_by_alcove_wall", "test_environment_props_exist", "test_medical_floor_uses_medical_atlas", "test_medical_props_exist", "test_medical_doorways_stay_open", "test_medical_fuse_texture", "test_minimap_action_exists", "test_minimap_in_hud", "test_minimap_world_to_map", "test_minimap_tracks_player", "test_minimap_tower_states", "test_minimap_enemies_revealed_by_pulse", "test_minimap_toggle", "test_minimap_hidden_objects_only_when_revealed", "test_minimap_area_label", "test_wall_texture_file", "test_wall_texture_applied", "test_persian_font_file", "test_mission_stage_accessor", "test_help_screen_loads", "test_main_menu_help_button", "test_pause_menu_help_button", "test_one_robot_per_area", "test_robots_patrol_own_area", "test_hud_stage_hint", "test_area_entry_shows_hint", "test_battery_reserve_prevents_softlock", "test_battery_recovers_to_reserve", "test_menu_backdrop_animates", "test_side_walk_uses_profile_frames", "test_pulse_stuns_robot_two_seconds", "test_stunned_robot_cannot_catch", "test_pulse_stun_only_in_range"]:
 		# A failed pause test must not leave the tree paused: physics
 		# frames stop while paused, and later tests await them.
 		paused = false
@@ -2201,4 +2201,142 @@ func test_area_entry_shows_hint() -> bool:
 	assert_true(entered, "walking through the doorway enters Medical Wing")
 	assert_true(hud.get_node("HintLabel").text.contains("اسکنر"), "entering Medical Wing shows its robot hint")
 	main.queue_free()
+	return true
+
+
+func test_battery_reserve_prevents_softlock() -> bool:
+	var scene: PackedScene = load("res://scenes/levels/level_01.tscn")
+	var level: Node2D = scene.instantiate()
+	root.add_child(level)
+	await process_frame
+	var player: CharacterBody2D = level.get_node("Player")
+	player.battery = player.radar_cost + 0.1
+	for i in 120:
+		await physics_frame
+	assert_true(player.battery >= player.radar_cost, "passive drain stops at the radar reserve (got %s)" % player.battery)
+	level.queue_free()
+	return true
+
+
+func test_battery_recovers_to_reserve() -> bool:
+	var scene: PackedScene = load("res://scenes/levels/level_01.tscn")
+	var level: Node2D = scene.instantiate()
+	root.add_child(level)
+	await process_frame
+	var player: CharacterBody2D = level.get_node("Player")
+	player.battery = 0.0
+	for i in 120:
+		await physics_frame
+	assert_true(player.battery > 0.5, "battery trickle-recharges from 0 (got %s)" % player.battery)
+	assert_true(player.battery <= player.radar_cost, "recharge stops at the radar reserve")
+	level.queue_free()
+	return true
+
+
+func test_menu_backdrop_animates() -> bool:
+	var scene: PackedScene = load("res://scenes/ui/main_menu.tscn")
+	var menu: Control = scene.instantiate()
+	root.add_child(menu)
+	await process_frame
+	var backdrop: Control = menu.get_node_or_null("Backdrop")
+	assert_true(backdrop != null, "menu has the animated backdrop")
+	assert_true(backdrop.mouse_filter == Control.MOUSE_FILTER_IGNORE, "backdrop does not block clicks")
+	var before: Vector2 = (backdrop._stars[0]["pos"] as Vector2)
+	for i in 30:
+		await process_frame
+	var after: Vector2 = (backdrop._stars[0]["pos"] as Vector2)
+	assert_true(before != after, "stars drift")
+	menu.queue_free()
+	return true
+
+
+func test_side_walk_uses_profile_frames() -> bool:
+	var scene: PackedScene = load("res://scenes/levels/level_01.tscn")
+	var level: Node2D = scene.instantiate()
+	root.add_child(level)
+	await process_frame
+	var sprite: AnimatedSprite2D = level.get_node("Player/Sprite2D")
+	var side: Texture2D = sprite.sprite_frames.get_frame_texture("walk_right", 0)
+	var front: Texture2D = sprite.sprite_frames.get_frame_texture("walk_down", 0)
+	assert_true(side != front, "side walk frames are not the front-facing frames")
+	assert_true(sprite.sprite_frames.get_frame_texture("walk_left", 1) == sprite.sprite_frames.get_frame_texture("walk_right", 1), "left reuses the profile frames (flipped at runtime)")
+	var r0: Texture2D = sprite.sprite_frames.get_frame_texture("walk_right", 0)
+	var r1: Texture2D = sprite.sprite_frames.get_frame_texture("walk_right", 1)
+	var r2: Texture2D = sprite.sprite_frames.get_frame_texture("walk_right", 2)
+	assert_true(r0 != r1 and r1 != r2 and r0 != r2, "walk_right frames are distinct textures")
+	level.queue_free()
+	return true
+
+
+func test_pulse_stuns_robot_two_seconds() -> bool:
+	var scene: PackedScene = load("res://scenes/levels/level_01.tscn")
+	var level: Node2D = scene.instantiate()
+	root.add_child(level)
+	await process_frame
+	var enemy: CharacterBody2D = level.get_node("SecurityRobot")
+	var player: CharacterBody2D = level.get_node("Player")
+	player.global_position = Vector2(320, 184)
+	enemy.global_position = Vector2(400, 184)
+	for i in 2:
+		await physics_frame
+	Input.action_press("radar_pulse")
+	for i in 3:
+		await physics_frame
+	Input.action_release("radar_pulse")
+	for i in 30:
+		await physics_frame
+	assert_true(enemy.is_stunned(), "radar wave disrupts a robot it reaches")
+	var pos: Vector2 = enemy.global_position
+	for i in 20:
+		await physics_frame
+	assert_true(enemy.global_position.distance_to(pos) < 1.0, "stunned robot is frozen")
+	for i in 150:
+		await physics_frame
+	assert_true(not enemy.is_stunned(), "stun wears off after about 2 seconds")
+	level.queue_free()
+	return true
+
+
+func test_stunned_robot_cannot_catch() -> bool:
+	var scene: PackedScene = load("res://scenes/enemies/security_robot.tscn")
+	var enemy: CharacterBody2D = scene.instantiate()
+	root.add_child(enemy)
+	await process_frame
+	var dummy := Node2D.new()
+	root.add_child(dummy)
+	enemy.player = dummy
+	enemy.global_position = Vector2(100, 100)
+	dummy.global_position = Vector2(104, 100)
+	var caught := [false]
+	enemy.player_caught.connect(func(): caught[0] = true)
+	enemy.stun(2.0)
+	for i in 10:
+		await physics_frame
+	assert_true(not caught[0], "a stunned robot cannot catch the player")
+	dummy.queue_free()
+	enemy.queue_free()
+	return true
+
+
+func test_pulse_stun_only_in_range() -> bool:
+	var scene: PackedScene = load("res://scenes/levels/level_01.tscn")
+	var level: Node2D = scene.instantiate()
+	root.add_child(level)
+	await process_frame
+	var near: CharacterBody2D = level.get_node("SecurityRobot")
+	var far: CharacterBody2D = level.get_node("YardRobot")
+	var player: CharacterBody2D = level.get_node("Player")
+	player.global_position = Vector2(320, 184)
+	near.global_position = Vector2(400, 184)
+	for i in 2:
+		await physics_frame
+	Input.action_press("radar_pulse")
+	for i in 3:
+		await physics_frame
+	Input.action_release("radar_pulse")
+	for i in 40:
+		await physics_frame
+	assert_true(near.is_stunned(), "robot inside the radius is disrupted")
+	assert_true(not far.is_stunned(), "robot outside the radius is not")
+	level.queue_free()
 	return true

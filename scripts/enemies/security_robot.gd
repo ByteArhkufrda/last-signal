@@ -27,6 +27,8 @@ extends CharacterBody2D
 enum State { PATROL, INVESTIGATE, CHASE }
 
 signal player_caught
+## Emitted when a radar wave disrupts this robot (see stun()).
+signal stunned
 
 @export var patrol_speed: float = 70.0
 @export var investigate_speed: float = 110.0
@@ -39,6 +41,8 @@ signal player_caught
 @export var waypoint_wait: float = 1.0
 @export var catch_distance: float = 18.0
 @export var detection_interval: float = 0.1
+## How long a radar wave disrupts the robot (frozen, blind, sparking).
+@export var stun_duration: float = 2.0
 
 var state: State = State.PATROL
 var patrol_points: Array[Vector2] = []
@@ -60,6 +64,12 @@ var _facing: Vector2 = Vector2.DOWN
 var _path: Array[Vector2] = []
 var _path_target: Vector2 = Vector2.ZERO
 var _repath_timer: float = 0.0
+## Radar disruption (2026-11-24): while > 0 the robot is frozen, cannot see
+## or catch the player, and throws sparks. The FSM state is left untouched,
+## so a chasing robot resumes its chase afterwards.
+var _stun_timer: float = 0.0
+var _spark_timer: float = 0.0
+var _sparks: Array = []
 
 @onready var sprite: Sprite2D = $Sprite2D
 
@@ -73,6 +83,9 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	if _catch_grace > 0.0:
 		_catch_grace -= delta
+	if _stun_timer > 0.0:
+		_update_stun(delta)
+		return
 	if _repath_timer > 0.0:
 		_repath_timer -= delta
 	_detection_timer -= delta
@@ -91,6 +104,63 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 	queue_redraw()
 	_check_catch()
+
+
+## True while a radar wave has this robot disrupted.
+func is_stunned() -> bool:
+	return _stun_timer > 0.0
+
+
+## Disrupt the robot: frozen, blind and harmless, with sparks flying.
+## Called by the radar pulse when its wave front reaches the robot.
+## Re-stunning only extends the timer, never shortens it.
+func stun(duration: float = -1.0) -> void:
+	var length: float = duration if duration > 0.0 else stun_duration
+	var was_stunned: bool = _stun_timer > 0.0
+	_stun_timer = maxf(_stun_timer, length)
+	velocity = Vector2.ZERO
+	_path.clear()
+	if not was_stunned:
+		_spark_timer = 0.0
+		var audio: Node = get_tree().get_first_node_in_group("audio")
+		if audio != null:
+			audio.play("zap")
+		stunned.emit()
+
+
+func _update_stun(delta: float) -> void:
+	_stun_timer = maxf(_stun_timer - delta, 0.0)
+	velocity = Vector2.ZERO
+	_spark_timer -= delta
+	if _spark_timer <= 0.0:
+		_spark_timer = 0.07
+		_roll_sparks()
+	if _stun_timer > 0.0:
+		# Electric flicker: bluish flash on alternate ticks.
+		sprite.modulate = Color(0.55, 0.8, 1.6) if int(_stun_timer * 18.0) % 2 == 0 else Color.WHITE
+	else:
+		sprite.modulate = Color.WHITE
+		_sparks.clear()
+		_detection_timer = 0.0
+		_repath_timer = 0.0
+		_path.clear()
+	queue_redraw()
+
+
+## A fresh set of short zig-zag sparks around the robot (new every 70 ms,
+## which reads as crackling).
+func _roll_sparks() -> void:
+	_sparks.clear()
+	for i in 6:
+		var pos := Vector2(randf_range(-9.0, 9.0), randf_range(-9.0, 9.0))
+		var pts := PackedVector2Array([pos])
+		var dir := Vector2.from_angle(randf() * TAU)
+		for j in 3:
+			dir = dir.rotated(randf_range(-1.4, 1.4))
+			pos += dir * randf_range(2.0, 5.0)
+			pts.append(pos)
+		var colors := [Color(1.0, 0.92, 0.35), Color(0.55, 0.9, 1.0), Color(1.0, 1.0, 1.0)]
+		_sparks.append({"pts": pts, "color": colors[randi() % colors.size()]})
 
 
 func _state_patrol(delta: float) -> void:
@@ -254,6 +324,12 @@ func _check_catch() -> void:
 
 
 func _draw() -> void:
+	if _stun_timer > 0.0:
+		for spark in _sparks:
+			var pts: PackedVector2Array = spark["pts"]
+			draw_polyline(pts, spark["color"], 1.0)
+			draw_rect(Rect2(pts[pts.size() - 1] - Vector2(0.5, 0.5), Vector2(1.5, 1.5)), Color.WHITE)
+		return
 	var half_angle := vision_half_angle
 	var points := PackedVector2Array([Vector2.ZERO])
 	var base_angle := _facing.angle()

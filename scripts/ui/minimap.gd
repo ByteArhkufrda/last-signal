@@ -14,7 +14,7 @@ extends Control
 ## The map is drawn in code (_draw); world_to_map is a pure function so
 ## the headless test runner can verify the mapping without rendering.
 
-const WORLD_SIZE := Vector2(1280, 928)
+const WORLD_SIZE := Vector2(3840, 2160)
 const MAP_WIDTH := 208.0
 const SCALE := MAP_WIDTH / WORLD_SIZE.x
 const MAP_SIZE := Vector2(MAP_WIDTH, WORLD_SIZE.y * SCALE)
@@ -25,6 +25,7 @@ const COLOR_BORDER := Color(0.5, 0.55, 0.65, 0.9)
 const COLOR_WALL := Color(0.78, 0.81, 0.88)
 const COLOR_PLAYER := Color(0.3, 1.0, 0.4)
 const COLOR_ENEMY := Color(1.0, 0.2, 0.2)
+const COLOR_FLOOR := Color(0.12, 0.14, 0.18, 0.95)
 const COLOR_TOWER_OFF := Color(0.5, 0.5, 0.55)
 const COLOR_TOWER_POWERED := Color(1.0, 0.75, 0.2)
 const COLOR_TOWER_ONLINE := Color(0.2, 1.0, 0.4)
@@ -32,12 +33,28 @@ const COLOR_CACHE := Color(1.0, 0.85, 0.3)
 
 var areas: Array = []
 var walls: Array[Rect2] = []
+## Ship outline (walkable polygons) and solid islands, in world pixels.
+var floor_polys: Array[PackedVector2Array] = []
+var hole_polys: Array[PackedVector2Array] = []
 var player: Node2D = null
 var towers: Array = []
 var hidden_objects: Array = []
 var enemies: Array = []
 ## enemy -> expiry time (seconds, Time.get_ticks_msec based).
 var _enemy_marks: Dictionary = {}
+
+
+func set_outline(p_floor: Array[PackedVector2Array], p_holes: Array[PackedVector2Array]) -> void:
+	floor_polys = p_floor
+	hole_polys = p_holes
+	queue_redraw()
+
+
+func _to_map(poly: PackedVector2Array) -> PackedVector2Array:
+	var out := PackedVector2Array()
+	for pt in poly:
+		out.append(world_to_map(pt))
+	return out
 
 
 func setup(p_areas: Array, p_walls: Array[Rect2], p_player: Node2D, p_towers: Array, p_hidden: Array, p_enemies: Array) -> void:
@@ -113,7 +130,20 @@ func _draw() -> void:
 		var r: Rect2 = area["rect"]
 		var map_rect := Rect2(world_to_map(r.position), r.size * SCALE)
 		draw_rect(map_rect, Color(tint.r, tint.g, tint.b, 0.22))
-	# Walls (doorway gaps show because walls are separate rects).
+	# Ship: floor polygons filled, islands cut out, wall-coloured outline.
+	for poly in floor_polys:
+		var mp := _to_map(poly)
+		if Geometry2D.triangulate_polygon(mp).size() >= 3:
+			draw_colored_polygon(mp, COLOR_FLOOR)
+	for poly in hole_polys:
+		var mh := _to_map(poly)
+		if Geometry2D.triangulate_polygon(mh).size() >= 3:
+			draw_colored_polygon(mh, COLOR_WALL)
+	for poly in floor_polys:
+		var closed := _to_map(poly)
+		closed.append(closed[0])
+		draw_polyline(closed, COLOR_WALL, 1.0)
+	# Walls (legacy rect list; empty for the ship map).
 	for wall in walls:
 		var map_rect := Rect2(world_to_map(wall.position), wall.size * SCALE)
 		draw_rect(map_rect, COLOR_WALL)

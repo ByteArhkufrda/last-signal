@@ -21,6 +21,8 @@ extends Node2D
 var current_radius: float = 0.0
 
 var _excluded_rids: Array[RID] = []
+## Robots this wave has already disrupted (each is hit once per pulse).
+var _stunned: Array = []
 
 
 func _ready() -> void:
@@ -33,6 +35,7 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	current_radius = minf(current_radius + expand_speed * delta, max_radius)
 	_reveal_in_range()
+	_disrupt_enemies()
 	queue_redraw()
 	if current_radius >= max_radius:
 		queue_free()
@@ -46,6 +49,19 @@ func _reveal_in_range() -> void:
 			continue
 		if _has_line_of_sight((node as Node2D).global_position):
 			node.reveal()
+
+
+## The wave disrupts every robot its front passes (2 s: frozen, blind,
+## sparking — see security_robot.stun). Like investigation this is
+## radius-based, not occluded: the wave is felt through walls.
+func _disrupt_enemies() -> void:
+	for node in get_tree().get_nodes_in_group("enemies"):
+		if _stunned.has(node) or not node.has_method("stun"):
+			continue
+		if global_position.distance_to((node as Node2D).global_position) > current_radius:
+			continue
+		_stunned.append(node)
+		node.stun()
 
 
 ## True when no wall (StaticBody2D) stands between the pulse origin and

@@ -93,6 +93,7 @@ func _build_streams() -> void:
 	streams["error"] = _build([[140.0, 110.0, 0.18, 0.5, 1]])
 	streams["sting"] = _build([[400.0, 90.0, 0.4, 0.5, 1]])
 	streams["tower"] = _build([[440.0, 440.0, 0.1, 0.5, 0], [660.0, 660.0, 0.1, 0.5, 0], [880.0, 880.0, 0.18, 0.5, 0]])
+	streams["zap"] = _build([[2200.0, 400.0, 0.08, 0.45, 1], [900.0, 1500.0, 0.06, 0.4, 1], [1800.0, 250.0, 0.12, 0.4, 1]])
 	streams["fanfare"] = _build([[523.0, 523.0, 0.14, 0.5, 0], [659.0, 659.0, 0.14, 0.5, 0], [784.0, 784.0, 0.3, 0.5, 0]])
 	# Ambient: constant envelope (no fade). 2.0 s at 55 Hz is exactly
 	# 110 cycles at 22050 Hz, so phase AND amplitude are continuous

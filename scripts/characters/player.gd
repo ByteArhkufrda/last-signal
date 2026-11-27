@@ -116,7 +116,13 @@ const INTERACT_RANGE: float = 40.0
 const WALK_FRAME_PATHS := {
 	"down": ["res://assets/sprites/characters/player_walk/walk_down_0.png", "res://assets/sprites/characters/player_walk/walk_down_1.png", "res://assets/sprites/characters/player_walk/walk_down_2.png", "res://assets/sprites/characters/player_walk/walk_down_3.png"],
 	"up": ["res://assets/sprites/characters/player_walk/walk_up_0.png", "res://assets/sprites/characters/player_walk/walk_up_1.png", "res://assets/sprites/characters/player_walk/walk_up_2.png", "res://assets/sprites/characters/player_walk/walk_up_3.png"],
+	# Side view (2026-11-24): drawn profile frames facing RIGHT; the left
+	# animations reuse them with flip_h. Before this, left/right reused the
+	# front-facing "down" frames, so the character sidestepped while
+	# looking at the camera and looked like it walked backward.
+	"right": ["res://assets/sprites/characters/player_walk/walk_right_0.png", "res://assets/sprites/characters/player_walk/walk_right_1.png", "res://assets/sprites/characters/player_walk/walk_right_2.png", "res://assets/sprites/characters/player_walk/walk_right_3.png"],
 }
+const IDLE_SIDE_PATH := "res://assets/sprites/characters/player_walk/idle_right.png"
 
 @onready var sprite: AnimatedSprite2D = $Sprite2D
 @onready var camera: Camera2D = $Camera2D
@@ -176,11 +182,12 @@ func _physics_process(delta: float) -> void:
 func _build_sprite_frames() -> void:
 	var frames := SpriteFrames.new()
 	for dir in ["down", "up", "left", "right"]:
-		var base_paths: Array = WALK_FRAME_PATHS["up" if dir == "up" else "down"]
+		var is_side: bool = dir == "left" or dir == "right"
+		var base_paths: Array = WALK_FRAME_PATHS["right" if is_side else dir]
 		frames.add_animation("idle_" + dir)
 		frames.set_animation_loop("idle_" + dir, true)
 		frames.set_animation_speed("idle_" + dir, walk_fps)
-		frames.add_frame("idle_" + dir, load(base_paths[0]))
+		frames.add_frame("idle_" + dir, load(IDLE_SIDE_PATH if is_side else base_paths[0]))
 		frames.add_animation("walk_" + dir)
 		frames.set_animation_loop("walk_" + dir, true)
 		frames.set_animation_speed("walk_" + dir, walk_fps)
@@ -214,7 +221,15 @@ static func _dominant_direction(v: Vector2) -> String:
 
 
 func _update_battery(delta: float) -> void:
-	battery = maxf(battery - passive_drain * delta, 0.0)
+	# Soft-lock fix (2026-11-24): the passive drain never takes the battery
+	# below one radar pulse (radar_cost), and below that reserve the battery
+	# slowly trickle-recharges back up to it. Without this, a player who
+	# ran the battery down before finding the hidden fuse (which only the
+	# radar reveals) could never finish the mission.
+	if battery < radar_cost:
+		battery = minf(battery + passive_drain * delta, radar_cost)
+	else:
+		battery = maxf(battery - passive_drain * delta, radar_cost)
 	if battery <= 25.0 and not _low_battery_warned:
 		_low_battery_warned = true
 		var hud := _get_hud()
