@@ -21,13 +21,18 @@ var _stage: int = 0
 
 
 func current_text() -> String:
+	# Kept short on purpose: the shared HUD centers the objective
+	# at x=320, the "puzzles solved" label sits top-left (12..~182)
+	# and the minimap top-right (420..628) on the same row — a text
+	# wider than ~200 px prints under one of them. The order clue
+	# lives in the stage hint and on the power panel warning.
 	match _stage:
 		0:
-			return "هدف: معماهای آزمایشگاه را حل کن (%d/3) — اول برق، بعد سیگنال، بعد محفظه" % puzzles_solved
+			return "حل معماهای آزمایشگاه (%d/3)" % puzzles_solved
 		1:
-			return "هدف: Keycard را از محفظه بردار"
+			return "Keycard را از محفظه بردار"
 		_:
-			return "مأموریت کامل شد — Keycard را داری!"
+			return "Keycard را داری!"
 
 
 ## Current stage (0 = puzzles, 1 = keycard, 2 = done).

@@ -16,6 +16,11 @@ signal solved
 const CODE: Array[int] = [1, 3, 7]
 const KEYCARD_SCENE: PackedScene = preload("res://scenes/levels/rooms/laboratory/keycard_pickup_laboratory.tscn")
 const KEYCARD_OFFSET := Vector2(-40, 0)
+## Traffic-light states (Stage 2, B10): red while locked, amber once
+## unlocked-but-unsolved, green when solved.
+const LOCKED_COLOR := Color(0.9, 0.2, 0.2)
+const UNLOCKED_COLOR := Color(1.0, 0.65, 0.1)
+const SOLVED_COLOR := Color(0.2, 0.9, 0.3)
 
 @export var solved_message: String = "محفظه باز شد! Keycard و گزارش محرمانه داخل آن است."
 
@@ -36,6 +41,7 @@ func _ready() -> void:
 
 func unlock() -> void:
 	unlocked = true
+	light.color = UNLOCKED_COLOR
 	for dial in [dial1, dial2, dial3]:
 		dial.set_locked(false)
 
@@ -51,7 +57,10 @@ func _solve() -> void:
 	is_solved = true
 	for dial in [dial1, dial2, dial3]:
 		dial.lock()
-	light.color = Color(0.2, 0.9, 0.3)
+		# Solved dials stop prompting (Stage 3, Q4): no more
+		# "E — turn the first digit" on an opened vault.
+		dial.remove_from_group("interactable")
+	light.color = SOLVED_COLOR
 	solved.emit()
 	_spawn_keycard()
 

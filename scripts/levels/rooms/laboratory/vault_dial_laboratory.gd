@@ -11,16 +11,22 @@ signal changed(index: int, digit: int)
 
 @export var dial_index: int = 1
 @export var interact_label: String = "Turn dial"
-@export var locked_message: String = "محفظه قفل است — اول سیگنال نمونه را تحلیل کن."
+@export var locked_message: String = "اول سیگنال را تحلیل کن"
+
+## Locked dials read darker than unlocked ones (Stage 2, B10).
+const BOX_LOCKED_COLOR := Color(0.14, 0.15, 0.19)
+const BOX_UNLOCKED_COLOR := Color(0.25, 0.26, 0.32)
 
 var digit: int = 0
 var _locked: bool = true
 
 @onready var digit_label: Label = $DigitLabel
+@onready var box: Polygon2D = $Box
 
 
 func _ready() -> void:
 	_update_label()
+	_update_visual()
 
 
 func interact() -> void:
@@ -46,10 +52,12 @@ func set_digit(value: int) -> void:
 
 func set_locked(value: bool) -> void:
 	_locked = value
+	_update_visual()
 
 
 func lock() -> void:
 	_locked = true
+	_update_visual()
 
 
 func set_highlighted(highlighted: bool) -> void:
@@ -59,3 +67,8 @@ func set_highlighted(highlighted: bool) -> void:
 func _update_label() -> void:
 	if digit_label != null:
 		digit_label.text = str(digit)
+
+
+func _update_visual() -> void:
+	if box != null:
+		box.color = BOX_LOCKED_COLOR if _locked else BOX_UNLOCKED_COLOR

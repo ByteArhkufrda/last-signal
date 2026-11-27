@@ -10,6 +10,7 @@ extends SceneTree
 const POWER_PANEL_SCENE := "res://scenes/levels/rooms/laboratory/power_panel_laboratory.tscn"
 const SIGNAL_ANALYZER_SCENE := "res://scenes/levels/rooms/laboratory/signal_analyzer_laboratory.tscn"
 const RESEARCH_VAULT_SCENE := "res://scenes/levels/rooms/laboratory/research_vault_laboratory.tscn"
+const KEYCARD_SCENE := "res://scenes/levels/rooms/laboratory/keycard_pickup_laboratory.tscn"
 const PLAY_SCENE := "res://scenes/levels/rooms/laboratory/play_laboratory.tscn"
 const MISSION_SCRIPT: Script = preload("res://scripts/levels/rooms/laboratory/mission_laboratory.gd")
 
@@ -40,6 +41,15 @@ func run_tests() -> void:
 	await process_frame
 	for t in ["test_power_panel_sequence", "test_signal_analyzer",
 			"test_research_vault", "test_mission_flow",
+			"test_standalone_has_hud", "test_log_panel_long_text",
+			"test_brain_flash_on_screen", "test_warning_label_fits",
+			"test_wrong_move_flashes_light", "test_unlock_changes_light_state",
+			"test_show_text_routes_by_width", "test_hud_feedback_fits",
+			"test_console_name_labels", "test_analyzer_waveforms",
+			"test_keycard_pulses", "test_solved_devices_leave_interactables",
+			"test_robot_pauses_while_reading",
+			"test_log_panel_closes_when_walking_away",
+			"test_chamber_glow_pulses",
 			"test_full_chain_live"]:
 		paused = false
 		var v = await call(t)
@@ -163,6 +173,410 @@ func test_mission_flow() -> bool:
 	return true
 
 
+## Stage 2 (2026-11-28): the standalone room must ship a HUD — every
+## puzzle/console message is routed through it, so without one the
+## whole story is silent (B1).
+func test_standalone_has_hud() -> bool:
+	var play: Node2D = load(PLAY_SCENE).instantiate()
+	root.add_child(play)
+	var hud: CanvasLayer = play.get_node_or_null("HUD") as CanvasLayer
+	assert_true(hud != null, "hud: standalone play has a HUD child")
+	assert_true(hud != null and hud.is_in_group("hud"), "hud: HUD is in the hud group")
+	assert_true(play.wiring._get_hud() != null, "hud: wiring resolves the HUD")
+	assert_true(hud != null and hud.get_node_or_null("PromptLabel") != null, "hud: prompt label exists")
+	assert_true(hud != null and hud.get_node_or_null("MessageLabel") != null, "hud: message label exists")
+	assert_true(hud != null and hud.get_node_or_null("ObjectiveLabel") != null, "hud: objective label exists")
+	# Spawn shows the area hint once (entering the area never fires at spawn).
+	assert_true(hud != null and hud.get_node_or_null("HintLabel").visible, "hud: area hint shown at spawn")
+	# The objective is centered at x=320 while the "puzzles solved"
+	# label sits top-left and the minimap top-right on the same row —
+	# a wide objective prints under one of them (the old text was
+	# 520 px wide; its "هدف:" prefix hid behind the minimap).
+	var objective: Label = hud.get_node("ObjectiveLabel") as Label
+	var font: Font = objective.get_theme_font("font")
+	var w: float = font.get_string_size(objective.text, HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x
+	assert_true(w <= 200.0, "hud: objective fits between the puzzles label and the minimap")
+	# Every stage's objective text must fit the same slot.
+	var mission_probe: Node = MISSION_SCRIPT.new()
+	for i in 3:
+		var tw: float = font.get_string_size(mission_probe.current_text(), HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x
+		assert_true(tw <= 200.0, "hud: stage %d objective fits (%s)" % [mission_probe.current_stage(), mission_probe.current_text()])
+		mission_probe.on_puzzle_solved()
+	var tw1: float = font.get_string_size(mission_probe.current_text(), HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x
+	assert_true(tw1 <= 200.0, "hud: keycard-stage objective fits")
+	mission_probe.on_keycard_taken()
+	var tw2: float = font.get_string_size(mission_probe.current_text(), HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x
+	assert_true(tw2 <= 200.0, "hud: done objective fits")
+	play.queue_free()
+	await process_frame
+	await process_frame
+	return true
+
+
+## Stage 2 (B2): long story texts must go through a wrapped log panel,
+## not the HUD's single-line message (no autowrap there, 3 s timer).
+func test_log_panel_long_text() -> bool:
+	var play: Node2D = load(PLAY_SCENE).instantiate()
+	root.add_child(play)
+	var wiring: Node = play.wiring
+	var long_text: String = "فایل صوتی بازیابی شد — پیام دانشمند:\n«اگر این پیام را دریافت می‌کنید، یعنی آزمایش شکست خورده است. ما اشتباه کردیم. این نمونه فقط به انرژی واکنش نشان نمی‌دهد... انگار می‌تواند حضور ما را احساس کند.»"
+	wiring.show_log(long_text)
+	assert_true(wiring._log_overlay != null, "log: overlay exists after show_log")
+	assert_true(wiring._log_overlay.visible, "log: overlay visible for long text")
+	var label: Label = wiring._log_label
+	assert_true(label != null, "log: label exists")
+	assert_eq(label.autowrap_mode, TextServer.AUTOWRAP_WORD_SMART, "log: label wraps words")
+	assert_true(label.text.contains("دانشمند"), "log: label carries the log text")
+	assert_true(label.custom_minimum_size.x <= 640.0, "log: panel width bounded to the screen")
+	wiring._hide_log()
+	assert_true(not wiring._log_overlay.visible, "log: overlay hides on close")
+	play.queue_free()
+	await process_frame
+	await process_frame
+	return true
+
+
+## Stage 2 (B2, width routing): the HUD's message slot is only ~200 px
+## wide (radar label left, battery bar right), so the router decides
+## by rendered width, not by character count — a short-looking
+## multiline note still goes to the log panel.
+func test_show_text_routes_by_width() -> bool:
+	var play: Node2D = load(PLAY_SCENE).instantiate()
+	root.add_child(play)
+	var wiring: Node = play.wiring
+	var hud: CanvasLayer = play.get_node("HUD") as CanvasLayer
+	var msg_label: Label = hud.get_node("MessageLabel") as Label
+	wiring._show_text("الگوی اشتباه است")
+	assert_true(msg_label.visible, "route: short feedback shows on the HUD")
+	assert_true(wiring._log_overlay == null or not wiring._log_overlay.visible, "route: short feedback does not open the log panel")
+	wiring._show_text("Experiment 01 — First Contact\nاولین تماس با نمونه: واکنش به محرک الکتریکی ضعیف. یک پالس نوری کوتاه ثبت شد.")
+	assert_true(wiring._log_overlay.visible, "route: a note opens the log panel")
+	assert_true(str(wiring._log_label.text).contains("First Contact"), "route: the note text is in the panel")
+	wiring._hide_log()
+	# The ship AI's ending warning keeps its exact wording and goes
+	# to the panel too — it is ~700 px wide as a HUD message.
+	wiring._apply_ending_phase(1)
+	assert_true(wiring._log_overlay.visible, "route: the AI warning opens the log panel")
+	assert_true(str(wiring._log_label.text).contains("Unauthorized access"), "route: the AI warning text is in the panel")
+	play.queue_free()
+	await process_frame
+	await process_frame
+	return true
+
+
+## Stage 2 (B2, HUD feedback): every wrong-move / locked toast the
+## player can trigger must fit the HUD's ~200 px message slot.
+func test_hud_feedback_fits() -> bool:
+	var play: Node2D = load(PLAY_SCENE).instantiate()
+	root.add_child(play)
+	var player: CharacterBody2D = play.player
+	var hud: CanvasLayer = play.get_node("HUD") as CanvasLayer
+	var msg_label: Label = hud.get_node("MessageLabel") as Label
+	var font: Font = msg_label.get_theme_font("font")
+	# Wrong power flip.
+	await _press_e_near(player, Vector2(204, 200))
+	assert_true(_hud_text_fits(msg_label, font), "hud-fit: wrong power flip toast fits")
+	# Analyzer while the power is off.
+	await _press_e_near(player, Vector2(516, 72))
+	assert_true(_hud_text_fits(msg_label, font), "hud-fit: locked analyzer toast fits")
+	# Solve the power, then a wrong pattern.
+	await _press_e_near(player, Vector2(204, 152))
+	await _press_e_near(player, Vector2(204, 176))
+	await _press_e_near(player, Vector2(204, 200))
+	assert_true(_hud_text_fits(msg_label, font), "hud-fit: power solved toast fits")
+	await _press_e_near(player, Vector2(516, 72))
+	assert_true(_hud_text_fits(msg_label, font), "hud-fit: wrong pattern toast fits")
+	# Vault dial while locked.
+	await _press_e_near(player, Vector2(528, 340))
+	assert_true(_hud_text_fits(msg_label, font), "hud-fit: locked vault toast fits")
+	play.queue_free()
+	await process_frame
+	await process_frame
+	return true
+
+
+func _hud_text_fits(msg_label: Label, font: Font) -> bool:
+	if not msg_label.visible:
+		return false
+	return font.get_string_size(msg_label.text, HORIZONTAL_ALIGNMENT_LEFT, -1, 16).x <= 200.0
+
+
+## Stage 3 (Q1): the five consoles must carry a name label, so the
+## player can tell them apart without reading each one.
+func test_console_name_labels() -> bool:
+	var play: Node2D = load(PLAY_SCENE).instantiate()
+	root.add_child(play)
+	var room: Node2D = play.room
+	var expected := {
+		"ResearchLogConsole": "گزارش",
+		"WaveMonitor": "موج",
+		"Note01": "یادداشت ۰۱",
+		"Note03": "یادداشت ۰۳",
+		"Note07": "یادداشت ۰۷",
+	}
+	for node_name in expected.keys():
+		var console: Node2D = room.get_node_or_null(node_name)
+		assert_true(console != null, "labels: %s exists" % node_name)
+		var label: Label = null
+		if console != null:
+			for child in console.get_children():
+				if child is Label:
+					label = child
+					break
+		assert_true(label != null, "labels: %s has a name label" % node_name)
+		if label != null:
+			assert_eq(label.text, str(expected[node_name]), "labels: %s label text" % node_name)
+			assert_true(label.position.x > 0.0, "labels: %s label sits beside the console" % node_name)
+	play.queue_free()
+	await process_frame
+	await process_frame
+	return true
+
+
+## Stage 3 (Q2): the analyzer must draw the three wave patterns the
+## design doc promises — A steady, B irregular, C three pulses.
+func test_analyzer_waveforms() -> bool:
+	var analyzer: Node = _add_panel(SIGNAL_ANALYZER_SCENE)
+	for wave_name in ["WaveA", "WaveB", "WaveC"]:
+		var wave: Line2D = analyzer.get_node_or_null(wave_name) as Line2D
+		assert_true(wave != null, "waves: %s exists" % wave_name)
+		if wave != null:
+			assert_true(wave.points.size() >= 8, "waves: %s has enough points" % wave_name)
+	var wave_c: Line2D = analyzer.get_node("WaveC") as Line2D
+	var peaks := 0
+	for p in wave_c.points:
+		if p.y < 20.0:
+			peaks += 1
+	assert_eq(peaks, 3, "waves: pattern C shows exactly three pulses")
+	var wave_a: Line2D = analyzer.get_node("WaveA") as Line2D
+	var min_y := INF
+	var max_y := -INF
+	for p in wave_a.points:
+		min_y = minf(min_y, p.y)
+		max_y = maxf(max_y, p.y)
+	assert_true(max_y - min_y <= 8.0, "waves: pattern A is steady")
+	var wave_b: Line2D = analyzer.get_node("WaveB") as Line2D
+	var biggest_jump := 0.0
+	for i in range(1, wave_b.points.size()):
+		biggest_jump = maxf(biggest_jump, absf(wave_b.points[i].y - wave_b.points[i - 1].y))
+	assert_true(biggest_jump > 4.0, "waves: pattern B is irregular")
+	analyzer.queue_free()
+	await process_frame
+	await process_frame
+	return true
+
+
+## Stage 3 (Q3): the keycard pickup must pulse gently so the player
+## notices the small gold card when the vault opens.
+func test_keycard_pulses() -> bool:
+	var kc: Node2D = load(KEYCARD_SCENE).instantiate()
+	root.add_child(kc)
+	assert_true(kc.get("_pulse_tween") != null, "keycard: pulse tween exists")
+	var t: Tween = kc.get("_pulse_tween")
+	assert_true(t != null and t.is_valid(), "keycard: pulse tween is valid")
+	assert_true(t.is_running(), "keycard: pulse tween runs")
+	kc.queue_free()
+	await process_frame
+	await process_frame
+	return true
+
+
+## Stage 3 (Q4): solved devices stop prompting — no more
+## "E — turn the first digit" on a solved vault.
+func test_solved_devices_leave_interactables() -> bool:
+	var panel: Node = _add_panel(POWER_PANEL_SCENE)
+	var s1: Node = panel.get_node("Switch1")
+	var s2: Node = panel.get_node("Switch2")
+	var s3: Node = panel.get_node("Switch3")
+	assert_true(s1.is_in_group("interactable"), "prompts: switch in group before solving")
+	s1.interact()
+	s2.interact()
+	s3.interact()
+	assert_true(panel.is_solved, "prompts: panel solves")
+	assert_true(not s1.is_in_group("interactable"), "prompts: switch 1 leaves the group when solved")
+	assert_true(not s2.is_in_group("interactable"), "prompts: switch 2 leaves the group when solved")
+	assert_true(not s3.is_in_group("interactable"), "prompts: switch 3 leaves the group when solved")
+	panel.queue_free()
+	await process_frame
+	await process_frame
+	var analyzer: Node = _add_panel(SIGNAL_ANALYZER_SCENE)
+	analyzer.unlock()
+	var a: Node = analyzer.get_node("Selector3")
+	a.interact()
+	assert_true(analyzer.is_solved, "prompts: analyzer solves")
+	assert_true(not a.is_in_group("interactable"), "prompts: selector leaves the group when solved")
+	analyzer.queue_free()
+	await process_frame
+	await process_frame
+	var vault: Node = load(RESEARCH_VAULT_SCENE).instantiate()
+	root.add_child(vault)
+	vault.unlock()
+	var d1: Node = vault.get_node("Dial1")
+	var d2: Node = vault.get_node("Dial2")
+	var d3: Node = vault.get_node("Dial3")
+	d1.interact()
+	for i in 3:
+		d2.interact()
+	for i in 7:
+		d3.interact()
+	assert_true(vault.is_solved, "prompts: vault solves")
+	assert_true(not d1.is_in_group("interactable"), "prompts: dial 1 leaves the group when solved")
+	assert_true(not d2.is_in_group("interactable"), "prompts: dial 2 leaves the group when solved")
+	assert_true(not d3.is_in_group("interactable"), "prompts: dial 3 leaves the group when solved")
+	vault.queue_free()
+	await process_frame
+	await process_frame
+	return true
+
+
+## Stage 3 (Q5): the robot freezes while the player reads a log —
+## no catch mid-sentence — and resumes when the panel closes.
+func test_robot_pauses_while_reading() -> bool:
+	var play: Node2D = load(PLAY_SCENE).instantiate()
+	root.add_child(play)
+	var wiring: Node = play.wiring
+	var robot: CharacterBody2D = play.get_tree().get_first_node_in_group("enemies")
+	assert_true(robot != null, "pause: robot exists")
+	wiring.show_log("متن بلند برای تست مکث ربات موقع خواندن لاگ توسط بازیکن.")
+	assert_true(robot.get("reading_paused") == true, "pause: robot paused while the panel is open")
+	var p0: Vector2 = robot.global_position
+	for i in 60:
+		await physics_frame
+	assert_true(robot.global_position.distance_to(p0) < 0.5, "pause: robot does not move while the panel is open")
+	wiring._hide_log()
+	assert_true(robot.get("reading_paused") == false, "pause: robot resumes when the panel closes")
+	# 120 frames: the robot may be in its 1 s waypoint wait when the
+	# panel closes, so a shorter window could catch it standing still.
+	for i in 120:
+		await physics_frame
+	assert_true(robot.global_position.distance_to(p0) > 5.0, "pause: robot moves again after the panel closes")
+	play.queue_free()
+	await process_frame
+	await process_frame
+	return true
+
+
+## Stage 3 (Q9): the log panel closes when the player walks away
+## from the spot where they started reading.
+func test_log_panel_closes_when_walking_away() -> bool:
+	var play: Node2D = load(PLAY_SCENE).instantiate()
+	root.add_child(play)
+	var wiring: Node = play.wiring
+	var player: CharacterBody2D = play.player
+	wiring.show_log("متن بلند برای تست بسته‌شدن پنل با دور شدن بازیکن از محل خواندن.")
+	assert_true(wiring._log_overlay.visible, "walkaway: panel open after reading")
+	player.global_position = play.player.global_position + Vector2(100, 0)
+	for i in 5:
+		await process_frame
+	assert_true(not wiring._log_overlay.visible, "walkaway: panel closes after walking away")
+	play.queue_free()
+	await process_frame
+	await process_frame
+	return true
+
+
+## Stage 3 (Q10): after the power puzzle, the sample chamber glow
+## pulses instead of sitting static.
+func test_chamber_glow_pulses() -> bool:
+	var play: Node2D = load(PLAY_SCENE).instantiate()
+	root.add_child(play)
+	var room: Node2D = play.room
+	room.set_chamber_active(true)
+	assert_true(room.get("_glow_tween") != null, "glow: pulse tween exists")
+	var t: Tween = room.get("_glow_tween")
+	assert_true(t != null and t.is_valid(), "glow: pulse tween is valid")
+	play.queue_free()
+	await process_frame
+	await process_frame
+	return true
+
+
+## Stage 2 (B3): the ending's brain flash must be on screen — the player
+## is at the vault when the ending triggers, so a world-space flash at
+## the wave monitor (224,64) never enters the 320x180 camera view.
+func test_brain_flash_on_screen() -> bool:
+	var play: Node2D = load(PLAY_SCENE).instantiate()
+	root.add_child(play)
+	var wiring: Node = play.wiring
+	wiring._apply_ending_phase(1)
+	wiring._apply_ending_phase(3)
+	assert_true(wiring._brain_flash != null, "flash: brain flash node exists at phase 3")
+	assert_true(wiring._brain_flash is CanvasLayer, "flash: brain flash is screen-space (CanvasLayer)")
+	assert_true(wiring._brain_flash.visible, "flash: brain flash visible at phase 3")
+	assert_true(wiring.brain_flash_shown, "flash: brain flash flag set")
+	# Phase 1 opened the log panel with the AI warning; the flash is
+	# the climax and must not play over the panel.
+	assert_true(not wiring._log_overlay.visible, "flash: brain flash closes the log panel")
+	wiring._apply_ending_phase(4)
+	assert_true(not wiring._brain_flash.visible, "flash: brain flash hides at phase 4")
+	play.queue_free()
+	await process_frame
+	await process_frame
+	return true
+
+
+## Stage 2 (B4): the power panel warning must fit its own rect — the old
+## 110-char text wrapped to 4 lines and overflowed as a floating wall of
+## text, clipped from the spawn view. The rule itself must stay.
+func test_warning_label_fits() -> bool:
+	var panel: Node = _add_panel(POWER_PANEL_SCENE)
+	var label: Label = panel.get_node("WarningLabel") as Label
+	assert_true(label.get_line_count() <= 3, "warning: label fits in at most 3 lines")
+	var low: String = label.text.to_lower()
+	assert_true(low.contains("containment"), "warning: rule still names containment")
+	assert_true(low.contains("cooling"), "warning: rule still names cooling")
+	assert_true(low.contains("stabilization"), "warning: rule still names stabilization")
+	assert_true(panel.get_node_or_null("WarningBacking") != null, "warning: label has a backing panel")
+	panel.queue_free()
+	await process_frame
+	await process_frame
+	return true
+
+
+## Stage 2 (B5): a wrong move must be visible — the panel light was
+## already red before solving, so "red alert" read as nothing.
+func test_wrong_move_flashes_light() -> bool:
+	var panel: Node = _add_panel(POWER_PANEL_SCENE)
+	var s3: Node = panel.get_node("Switch3")
+	s3.interact()
+	assert_eq(panel.light.color, panel.FLASH_COLOR, "power: wrong flip flashes the light")
+	panel.queue_free()
+	await process_frame
+	await process_frame
+	var analyzer: Node = _add_panel(SIGNAL_ANALYZER_SCENE)
+	analyzer.unlock()
+	var a: Node = analyzer.get_node("Selector1")
+	a.interact()
+	assert_eq(analyzer.light.color, analyzer.FLASH_COLOR, "analyzer: wrong pattern flashes the light")
+	analyzer.queue_free()
+	await process_frame
+	await process_frame
+	return true
+
+
+## Stage 2 (B10): locked vs unlocked devices must look different — the
+## analyzer and vault lights stayed red in both states, the dials identical.
+func test_unlock_changes_light_state() -> bool:
+	var analyzer: Node = _add_panel(SIGNAL_ANALYZER_SCENE)
+	assert_eq(analyzer.light.color, Color(0.9, 0.2, 0.2), "unlock: analyzer light red while locked")
+	analyzer.unlock()
+	assert_eq(analyzer.light.color, analyzer.UNLOCKED_COLOR, "unlock: analyzer light amber when unlocked")
+	analyzer.queue_free()
+	await process_frame
+	await process_frame
+	var vault: Node = load(RESEARCH_VAULT_SCENE).instantiate()
+	root.add_child(vault)
+	var d1: Node = vault.get_node("Dial1")
+	var locked_color: Color = (d1.get_node("Box") as Polygon2D).color
+	vault.unlock()
+	assert_eq(vault.light.color, vault.UNLOCKED_COLOR, "unlock: vault light amber when unlocked")
+	assert_true((d1.get_node("Box") as Polygon2D).color != locked_color, "unlock: dial brightens when unlocked")
+	vault.queue_free()
+	await process_frame
+	await process_frame
+	return true
+
+
 ## Teleport next to `pos` and press E exactly once. The lab robot
 ## patrols near the vault, so if it catches the player mid-sequence
 ## (respawn at the spawn point) the helper re-teleports before
@@ -210,6 +624,9 @@ func test_full_chain_live() -> bool:
 	assert_true(analyzer.is_solved, "live: pattern C solves")
 	assert_true(vault.unlocked, "live: signal unlocks the vault")
 	assert_eq(mission.puzzles_solved, 2, "live: mission counts 2 puzzles")
+	# The scientist log reaches the player as a readable wrapped panel.
+	assert_true(wiring._log_overlay != null and wiring._log_overlay.visible, "live: scientist log panel shows")
+	assert_true(str(wiring._log_label.text).contains("دانشمند"), "live: scientist log text shown")
 	# Puzzle 3: dials to 1-3-7.
 	await _press_e_near(player, Vector2(528, 340))
 	for i in 3:

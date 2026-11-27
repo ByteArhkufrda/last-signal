@@ -20,13 +20,17 @@ position = Vector2(0, -32)
 polygon = PackedVector2Array(3, 0, 2.1, 2.1, 0, 3, -2.1, 2.1, -3, 0, -2.1, -2.1, 0, -3, 2.1, -2.1)
 color = Color(0.9, 0.2, 0.2, 1)
 
+[node name="WarningBacking" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(-156, -38, -12, -38, -12, 14, -156, 14)
+color = Color(0.05, 0.05, 0.08, 0.88)
+
 [node name="WarningLabel" type="Label" parent="."]
 offset_left = -154.0
 offset_top = -36.0
 offset_right = -14.0
 offset_bottom = 12.0
 theme_override_font_sizes/font_size = 8
-text = "WARNING: The containment system must never be activated before the cooling and stabilization systems."
+text = "WARNING: Never activate containment before cooling and stabilization."
 autowrap_mode = 2
 
 [node name="Switch1" type="Node2D" parent="." groups=["interactable"]]

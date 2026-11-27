@@ -44,6 +44,9 @@ signal player_caught
 var state: State = State.PATROL
 var patrol_points: Array[Vector2] = []
 var player: Node2D = null
+## Frozen while the player reads a log (Stage 3, Q5): set by the
+## wiring when the log panel opens, cleared when it closes.
+var reading_paused: bool = false
 ## AStarGrid2D built by the level from the real collision geometry
 ## (walls, crate, alcove). Null = direct steering fallback.
 var nav_grid: AStarGrid2D = null
@@ -72,6 +75,10 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	# Frozen while the player reads: no patrol, no detection, no
+	# catch. Timers freeze too — the pause is a real pause.
+	if reading_paused:
+		return
 	if _catch_grace > 0.0:
 		_catch_grace -= delta
 	if _repath_timer > 0.0:
@@ -216,6 +223,13 @@ func _return_to_patrol() -> void:
 			best_dist = d
 			best = i
 	_waypoint_index = best
+
+
+## Freeze / unfreeze while the player reads a log (Stage 3, Q5).
+func set_reading_paused(value: bool) -> void:
+	reading_paused = value
+	if value:
+		velocity = Vector2.ZERO
 
 
 ## Called by the level when the player emits a radar pulse. Chasing is

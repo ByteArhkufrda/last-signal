@@ -10,6 +10,7 @@ extends Node2D
 
 const PLAYER_SCENE: PackedScene = preload("res://scenes/levels/rooms/laboratory/player_laboratory.tscn")
 const MISSION_SCRIPT: Script = preload("res://scripts/levels/rooms/laboratory/mission_laboratory.gd")
+const HUD_SCENE: PackedScene = preload("res://scenes/ui/hud.tscn")
 ## Station position of each room, in tiles. Only the floor builder
 ## reads this (rolls are station-global); the room itself is placed at
 ## (0, 0), so every global position in standalone play is a LOCAL one.
@@ -81,6 +82,12 @@ func _ready() -> void:
 	camera.limit_top = int(room.room_rect.position.y)
 	camera.limit_right = int(room.room_rect.end.x)
 	camera.limit_bottom = int(room.room_rect.end.y)
+	# Standalone HUD (Stage 2, B1): every puzzle/console message is
+	# routed through the HUD — without one the whole story is silent.
+	# The shared HUD scene is only referenced, never modified.
+	var hud: CanvasLayer = HUD_SCENE.instantiate()
+	hud.name = "HUD"
+	add_child(hud)
 	wiring = WIRING_SCRIPT.new()
 	add_child(wiring)
 	# Caught in a standalone room, respawn at that room's spawn — the

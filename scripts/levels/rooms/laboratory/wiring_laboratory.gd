@@ -50,7 +50,18 @@ var ending_phase: int = 0
 var blackout_active: bool = false
 var brain_flash_shown: bool = false
 var _blackout: Polygon2D = null
-var _brain_flash: Node2D = null
+var _brain_flash: CanvasLayer = null
+
+## Readable log panel (Stage 2, B2): the shared HUD's message line
+## has no autowrap and hides after 3 s, so the lab's long story
+## texts (research log, scientist log, classified report) go here
+## instead — wrapped, on screen until read or its timer ends.
+var _log_overlay: CanvasLayer = null
+var _log_label: Label = null
+var _log_hide_id: int = 0
+## Where the player stood when the log opened (Stage 3, Q9): walking
+## away from the reading spot closes the panel.
+var _log_read_position: Vector2 = Vector2.ZERO
 
 
 ## Where a caught player respawns. The full game uses the entrance
@@ -79,6 +90,16 @@ func setup(root: Node2D, player: CharacterBody2D, mission: Node, nav_grid: AStar
 	# The minimap reads the pulse signal too: enemies inside the radius
 	# are marked on the map for a few seconds (see minimap.gd).
 	_player.pulse_emitted.connect(_on_pulse_for_minimap)
+	# Standalone only: the HUD exists now (the launcher adds it), so
+	# feed it the room layout, the objective and the standing hint, and
+	# show the area hint once — spawning inside the area never fires
+	# the area-enter event that shows it in the full game.
+	_setup_minimap()
+	_update_objective_hud()
+	_update_stage_hint()
+	var hud0: CanvasLayer = _get_hud()
+	if hud0 != null:
+		hud0.show_area_hint(AREA_HINT)
 
 
 func puzzles_solved() -> int:
@@ -100,12 +121,133 @@ func _area_name_at(_pos: Vector2) -> String:
 ## suite because setup landed on the previous test's HUD). Falls back
 ## to the group lookup for level-only tests, where there is no Main.
 func _get_hud() -> CanvasLayer:
+	# Standalone: the launcher adds the HUD as a child of the play
+	# root — prefer it over the group lookup, which can return a
+	# stale HUD from a just-freed scene.
+	var own: Node = _root.get_node_or_null("HUD")
+	if own is CanvasLayer:
+		return own
 	var parent: Node = _root.get_parent()
 	if parent != null:
 		var sibling: Node = parent.get_node_or_null("HUD")
 		if sibling is CanvasLayer:
 			return sibling
 	return _root.get_tree().get_first_node_in_group("hud")
+
+
+## Short texts fit the HUD's single line; long story texts go to the
+## wrapped log panel. The HUD's message slot is narrow — centered at
+## x=320 between the radar label and the battery bar, so anything
+## wider than ~200 px prints under one of them — so the decision is
+## by rendered width (font 16), not just by character count: the
+## notes' longest line decides, even for a short-looking multiline
+## text. The length fallback covers the no-HUD case.
+func _show_text(text: String) -> void:
+	var hud: CanvasLayer = _get_hud()
+	var wide := text.length() > 150
+	if hud != null and not wide:
+		var msg_label: Label = hud.get_node_or_null("MessageLabel") as Label
+		if msg_label != null:
+			var font: Font = msg_label.get_theme_font("font")
+			wide = font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 16).x > 200.0
+	if wide:
+		show_log(text)
+		return
+	if hud != null:
+		hud.show_message(text)
+
+
+## Show a long text in the wrapped log panel (built on first use).
+func show_log(text: String) -> void:
+	if _log_overlay == null:
+		_build_log_overlay()
+	_log_label.text = text
+	_log_overlay.visible = true
+	if _player != null:
+		_log_read_position = _player.global_position
+	# The robot freezes while the player reads (Stage 3, Q5): no
+	# catch mid-sentence.
+	_set_robot_reading_paused(true)
+	_log_hide_id += 1
+	var my_id := _log_hide_id
+	# Reading time scales with length: ~25 chars/s, 6-15 s.
+	var hold := clampf(float(text.length()) / 25.0, 6.0, 15.0)
+	var timer := get_tree().create_timer(hold)
+	timer.timeout.connect(_on_log_timer.bind(my_id))
+
+
+func _on_log_timer(id: int) -> void:
+	if id == _log_hide_id:
+		_hide_log()
+
+
+func _hide_log() -> void:
+	_log_hide_id += 1
+	if _log_overlay != null:
+		_log_overlay.visible = false
+	_set_robot_reading_paused(false)
+
+
+func _set_robot_reading_paused(value: bool) -> void:
+	var enemy: Node = _root.get_tree().get_first_node_in_group("enemies")
+	if enemy != null and enemy.has_method("set_reading_paused"):
+		enemy.set_reading_paused(value)
+
+
+func _process(_delta: float) -> void:
+	# Walking away from the reading spot closes the panel (Stage 3,
+	# Q9) — on top of Esc and the auto-hide timer.
+	if _log_overlay != null and _log_overlay.visible and _player != null:
+		if _player.global_position.distance_to(_log_read_position) > 48.0:
+			_hide_log()
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("ui_cancel") and _log_overlay != null and _log_overlay.visible:
+		_hide_log()
+
+
+## The log panel: a centered dark panel with a word-wrapped label.
+## Code-built (no new scene): it lives in this room's wiring only.
+func _build_log_overlay() -> void:
+	var layer := CanvasLayer.new()
+	layer.name = "LogOverlay"
+	layer.layer = 4
+	layer.visible = false
+	var panel := PanelContainer.new()
+	panel.set_anchors_preset(Control.PRESET_CENTER)
+	# Grow both ways from the center anchor: the panel's size comes
+	# from its content, and without this its top-left sits on the
+	# center point and the panel runs off the right/bottom edges.
+	panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	panel.grow_vertical = Control.GROW_DIRECTION_BOTH
+	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.04, 0.06, 0.09, 0.94)
+	style.set_corner_radius_all(6)
+	style.border_color = Color(0.35, 0.5, 0.7)
+	style.set_border_width_all(1)
+	style.content_margin_left = 16.0
+	style.content_margin_right = 16.0
+	style.content_margin_top = 12.0
+	style.content_margin_bottom = 12.0
+	panel.add_theme_stylebox_override("panel", style)
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 8)
+	panel.add_child(vbox)
+	_log_label = Label.new()
+	_log_label.custom_minimum_size = Vector2(560, 0)
+	_log_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_log_label.add_theme_font_size_override("font_size", 16)
+	vbox.add_child(_log_label)
+	var hint := Label.new()
+	hint.text = "Esc — بستن"
+	hint.add_theme_font_size_override("font_size", 12)
+	hint.modulate = Color(0.7, 0.75, 0.8)
+	vbox.add_child(hint)
+	layer.add_child(panel)
+	_root.add_child(layer)
+	_log_overlay = layer
 
 
 func _update_objective_hud() -> void:
@@ -227,15 +369,15 @@ func _on_puzzle_solved(puzzle: Node) -> void:
 	if hud != null:
 		hud.set_puzzles_solved(_puzzles_solved, 3)
 		hud.set_objective(_mission.current_text())
-		match puzzle.name:
-			"PowerPanel":
-				hud.show_message("SIGNAL DETECTED — UNKNOWN FREQUENCY")
-			"SignalAnalyzer":
-				hud.show_message(SCIENTIST_LOG)
-			"ResearchVault":
-				hud.show_message(CLASSIFIED_REPORT)
-			_:
-				hud.show_message(str(puzzle.get("solved_message")))
+	match puzzle.name:
+		"PowerPanel":
+			_show_text("SIGNAL DETECTED")
+		"SignalAnalyzer":
+			_show_text(SCIENTIST_LOG)
+		"ResearchVault":
+			_show_text(CLASSIFIED_REPORT)
+		_:
+			_show_text(str(puzzle.get("solved_message")))
 	_update_stage_hint()
 	# Power restored: the sample chamber lights up.
 	if puzzle.name == "PowerPanel" and _standalone_room != null and _standalone_room.has_method("set_chamber_active"):
@@ -243,9 +385,8 @@ func _on_puzzle_solved(puzzle: Node) -> void:
 
 
 func _on_interacted(node: Node) -> void:
-	var hud: CanvasLayer = _get_hud()
-	if hud != null and node.get("message") != null:
-		hud.show_message(str(node.get("message")))
+	if node.get("message") != null:
+		_show_text(str(node.get("message")))
 
 
 # Phase 9 helpers: sound + one-shot ring effect. Both are null-safe in
@@ -316,18 +457,19 @@ func _apply_ending_phase(phase: int) -> void:
 	match phase:
 		1:
 			_set_blackout(true)
-			if hud != null:
-				hud.show_message("WARNING. Unauthorized access to classified research data. Please return the access card.")
+			# The ship AI's warning is a story beat, not a toast: it
+			# is far too wide for the HUD's message slot, so it goes
+			# to the log panel verbatim.
+			_show_text("WARNING. Unauthorized access to classified research data. Please return the access card.")
 		2:
-			if hud != null:
-				hud.show_message("You were not supposed to see that.")
+			_show_text("You were not supposed to see that.")
 		3:
 			_show_brain_flash(true)
 		4:
 			_show_brain_flash(false)
 			_set_blackout(false)
 			if hud != null:
-				hud.show_message("Keycard را داری — راه Core Chamber باز است.")
+				hud.show_message("راه Core Chamber باز است.")
 				hud.set_objective(_mission.current_text())
 
 
@@ -351,23 +493,31 @@ func _set_blackout(active: bool) -> void:
 
 
 ## The brain flash: a monitor showing a human brain whose activity
-## pattern matches the sample's signal, then off again.
+## pattern matches the sample's signal, then off again. Screen-space
+## (CanvasLayer, Stage 2 B3): the old world-space flash sat on the
+## wave monitor at (224,64), but the player is at the vault when the
+## ending triggers — ~370 px away, outside the 320x180 camera view —
+## so the room's climax never reached the player. Same drawing, now
+## centered on screen.
 func _show_brain_flash(show: bool) -> void:
 	if show:
 		brain_flash_shown = true
-	if _standalone_room == null:
-		return
+		# The flash is the climax: the log panel (the AI's warning)
+		# must not stay open over it.
+		_hide_log()
 	if _brain_flash == null:
 		_brain_flash = _build_brain_flash()
-		_standalone_room.add_child(_brain_flash)
+		_root.add_child(_brain_flash)
 	_brain_flash.visible = show
 
 
-func _build_brain_flash() -> Node2D:
+func _build_brain_flash() -> CanvasLayer:
+	var layer := CanvasLayer.new()
+	layer.name = "BrainFlash"
+	layer.layer = 5
+	layer.visible = false
 	var flash := Node2D.new()
-	flash.name = "BrainFlash"
-	flash.position = Vector2(224, 64)
-	flash.z_index = 110
+	flash.position = Vector2(320, 180)
 	var screen := Polygon2D.new()
 	screen.polygon = PackedVector2Array([
 		Vector2(-56, -24), Vector2(56, -24),
@@ -398,8 +548,8 @@ func _build_brain_flash() -> Node2D:
 	label.add_theme_font_size_override("font_size", 10)
 	label.text = "NEURAL PATTERN MATCH: 99.7%"
 	flash.add_child(label)
-	flash.visible = false
-	return flash
+	layer.add_child(flash)
+	return layer
 
 
 func _on_player_caught() -> void:
@@ -409,4 +559,4 @@ func _on_player_caught() -> void:
 	var hud: CanvasLayer = _get_hud()
 	if hud != null:
 		hud.flash(Color(1.0, 0.2, 0.2))
-		hud.show_message("ربات امنیتی تو را گرفت! به ورودی برگشتی.")
+		hud.show_message("ربات تو را گرفت!")

@@ -20,6 +20,17 @@ signal collected(pickup: Node2D)
 
 @onready var sprite: Sprite2D = $Sprite2D
 
+var _pulse_tween: Tween = null
+
+
+func _ready() -> void:
+	# Gentle scale pulse (Stage 3, Q3): the card is a small 16x10
+	# gold slab, and without motion it is easy to miss when the
+	# vault opens right beside the player.
+	_pulse_tween = create_tween().set_loops()
+	_pulse_tween.tween_property(self, "scale", Vector2(1.15, 1.15), 0.6)
+	_pulse_tween.tween_property(self, "scale", Vector2.ONE, 0.6)
+
 
 func interact() -> void:
 	if collected.get_connections().is_empty():

@@ -36,6 +36,7 @@ const NOTE_07_TEXT := "Experiment 07 — Final Observation\nمشاهده‌ی ن
 ## Sample chamber glow state (set by the wiring when puzzle 1 solves).
 var chamber_active: bool = false
 var _chamber_glow: Polygon2D = null
+var _glow_tween: Tween = null
 
 ## Last Signal — Research Laboratory room (laboratory), split from
 ## level_01.gd / level_01.tscn, 2026-11-15; local coordinates 2026-11-23.
@@ -58,11 +59,11 @@ func _ready() -> void:
 	_build_zone()
 	# Research section (north-west): the log, the wave monitor and
 	# the experiment notes — the first clue and the vault code.
-	_add_named_console(Vector2(80, 64), RESEARCH_LOG_TEXT, "ResearchLogConsole")
-	_add_named_console(Vector2(144, 64), NOTE_07_TEXT, "Note07")
-	_add_named_console(Vector2(224, 64), WAVE_MONITOR_TEXT, "WaveMonitor")
-	_add_named_console(Vector2(80, 128), NOTE_01_TEXT, "Note01")
-	_add_named_console(Vector2(480, 80), NOTE_03_TEXT, "Note03")
+	_add_named_console(Vector2(80, 64), RESEARCH_LOG_TEXT, "ResearchLogConsole", "گزارش")
+	_add_named_console(Vector2(144, 64), NOTE_07_TEXT, "Note07", "یادداشت ۰۷")
+	_add_named_console(Vector2(224, 64), WAVE_MONITOR_TEXT, "WaveMonitor", "موج")
+	_add_named_console(Vector2(80, 128), NOTE_01_TEXT, "Note01", "یادداشت ۰۱")
+	_add_named_console(Vector2(480, 80), NOTE_03_TEXT, "Note03", "یادداشت ۰۳")
 	# Sample section (centre): the containment chamber and its power
 	# panel. Analysis (east): the signal analyzer. Security
 	# (south-east): the research vault holding the keycard.
@@ -304,13 +305,32 @@ func _add_area_console(pos: Vector2, message: String, texture_key: String = "") 
 
 
 ## Named console (ORION): same as _add_area_console, but the node
-## gets a stable name so tests and the assembled level can find it.
-func _add_named_console(pos: Vector2, message: String, node_name: String) -> void:
+## gets a stable name so tests and the assembled level can find it,
+## plus a small name label above it (Stage 3, Q1): all five consoles
+## share one sprite, so without a label the player cannot tell the
+## research log from a note without reading each one.
+func _add_named_console(pos: Vector2, message: String, node_name: String, label_text: String = "") -> void:
 	var console: Node2D = CONSOLE_SCENE.instantiate()
 	console.name = node_name
 	console.position = pos
 	console.message = message
 	add_child(console)
+	if label_text != "":
+		var label := Label.new()
+		label.name = "NameLabel"
+		label.text = label_text
+		# Beside the console, not above it (Stage 3, Q1 fix): a label
+		# above the north-row consoles lands on the HUD's objective
+		# line when the player stands south of them, and 96 px wide
+		# labels on consoles 64 px apart print over each other.
+		# Short names + right-side placement clear both.
+		label.position = Vector2(12, -6)
+		label.size = Vector2(64, 12)
+		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		label.add_theme_font_size_override("font_size", 9)
+		label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.9))
+		label.add_theme_constant_override("outline_size", 2)
+		console.add_child(label)
 
 
 ## The sample containment chamber (ORION, centre of the room):
@@ -352,10 +372,22 @@ func _build_sample_chamber() -> void:
 
 
 ## Light the sample glow (called by the wiring when puzzle 1 solves).
+## Active, the glow pulses gently (Stage 3, Q10): a static cyan slab
+## reads as painted on, a slow pulse reads as a living sample.
 func set_chamber_active(active: bool) -> void:
 	chamber_active = active
-	if _chamber_glow != null:
-		_chamber_glow.color = Color(0.2, 0.85, 1.0) if active else Color(0.1, 0.35, 0.6)
+	if _chamber_glow == null:
+		return
+	if _glow_tween != null and _glow_tween.is_valid():
+		_glow_tween.kill()
+		_glow_tween = null
+	if active:
+		_chamber_glow.color = Color(0.2, 0.85, 1.0)
+		_glow_tween = create_tween().set_loops()
+		_glow_tween.tween_property(_chamber_glow, "color", Color(0.45, 0.95, 1.0), 0.9)
+		_glow_tween.tween_property(_chamber_glow, "color", Color(0.2, 0.85, 1.0), 0.9)
+	else:
+		_chamber_glow.color = Color(0.1, 0.35, 0.6)
 
 ## Solid prop: sprite + physics body (verbatim from level_01.gd).
 func _add_prop(texture: Texture2D, pos: Vector2, size: Vector2 = Vector2(16, 16), prop_name: String = "") -> void:
