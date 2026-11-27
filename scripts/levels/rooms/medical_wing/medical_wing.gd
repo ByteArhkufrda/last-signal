@@ -23,6 +23,7 @@ const WALL_TEXTURE: Texture2D = preload("res://assets/sprites/environment/wall_m
 const CONSOLE_SCENE: PackedScene = preload("res://scenes/levels/rooms/medical_wing/console_medical_wing.tscn")
 const PICKUP_SCENE: PackedScene = preload("res://scenes/levels/rooms/medical_wing/pickup_medical_wing.tscn")
 const FUSE_BOX_SCENE: PackedScene = preload("res://scenes/levels/rooms/medical_wing/fuse_box_medical_wing.tscn")
+const CABINET_SCENE: PackedScene = preload("res://scenes/levels/rooms/medical_wing/cabinet_medical_wing.tscn")
 const MED_WALL_H_TEXTURE: Texture2D = preload("res://assets/sprites/medical-wing/wall_h.png")
 const MED_WALL_V_TEXTURE: Texture2D = preload("res://assets/sprites/medical-wing/wall_v.png")
 const MED_PROP_PATHS := {
@@ -116,13 +117,21 @@ const MED_PROP_PATHS := {
 ## until the local power stabilises (MedicalDarkness sets their `dormant`
 ## flag).
 ##
-## Power puzzle (P4, 2026-11-25; P5, 2026-11-26): find the FLASHLIGHT
-## (MedFlashlightPickup), go into the dark zone, find the FUSE there
+## Power puzzle (P4, 2026-11-25; P5, 2026-11-26): take the FLASHLIGHT that
+## lies on the doctor's desk (MedDeskDoctor/MedFlashlight, see
+## FLASHLIGHT_PICKUP), go into the dark zone, find the FUSE there
 ## (MedFusePickup, see FUSE_PICKUP), put it in the FUSE BOX (MedFuseBox,
 ## see FUSE_BOX) and MedicalDarkness stabilises the local power: the
-## flicker stops, the robots wake, the chime plays. None of these nodes is
-## in group "puzzles" or "hidden": the mission counters and the pinned 3
-## puzzles / 3 hidden objects do not know them.
+## flicker stops, the robots wake, the chime plays.
+##
+## Medical Recovery (P6, 2026-11-26): read the notes (each ends with one code
+## digit, see NOTE_DIGITS), set the code on the three dials of the CABINET
+## (MedCabinetWorn/MedCabinet, see CABINET) and take the MEDICINE it gives
+## (see MEDICINE_PICKUP): the HUD says the pain is gone. No door depends on
+## it yet.
+##
+## None of these nodes is in group "puzzles" or "hidden": the mission
+## counters and the pinned 3 puzzles / 3 hidden objects do not know them.
 
 ## Sprite and prompt of the note consoles. "note_doctor" is the pack's
 ## handwritten-note sprite (it used to lie on the doctor's desk as an
@@ -130,7 +139,8 @@ const MED_PROP_PATHS := {
 const NOTE_TEXTURE_KEY := "note_doctor"
 const NOTE_LABEL := "خواندن یادداشت"
 ## Name, LOCAL position and HUD text of each note console; an "on" key
-## parents the console to that prop's body (see _add_note_console).
+## parents the console to that prop's body (see _add_note_console). The text
+## is the BASE text: the code digit is appended in code (see NOTE_DIGITS).
 ## Placement rules: off both doorways (the entry corridor y 240-272
 ## x 0-160, the south gap x 288-320), off the scanner's line of sight
 ## (x=260, y 120-200), 230+ px from the scanner itself, and 100+ px from
@@ -141,17 +151,25 @@ const NOTE_LABEL := "خواندن یادداشت"
 const NOTE_CONSOLES := [
 	{
 		"name": "NoteConsole1", "pos": Vector2(140, 320),
-		"text": "یادداشت پزشک ایستگاه: هیچ بیماری‌ای در کار نیست. دستور اومد این بخش رو ببندیم.",
+		"text": "یادداشت پزشک: هیچ بیماری‌ای نیست. دستور اومد بخش رو ببندیم.",
 	},
 	{
 		"name": "NoteConsole2", "pos": Vector2(450, 260), "on": "MedDeskDoctor",
-		"text": "یادداشت پزشک ایستگاه: هر بار پیام می‌فرستادیم، یه چیزی جوابمون رو می‌داد.",
+		"text": "یادداشت پزشک: هر بار پیام می‌فرستادیم، یه چیزی جواب می‌داد.",
 	},
 	{
 		"name": "NoteConsole3", "pos": Vector2(560, 160),
-		"text": "یادداشت پزشک ایستگاه: هر سیگنالی که بفرستیم، فقط ما رو نجات نمی‌ده.",
+		"text": "یادداشت پزشک: هر سیگنالی که بفرستیم، فقط ما رو نجات نمی‌ده.",
 	},
 ]
+
+## The cabinet's code (P6): one digit per note (note 1, 2, 3 = dial 1, 2, 3).
+## Each note's HUD message ends with its digit, appended in code
+## (_note_message) and NOT stored in the NOTE_CONSOLES texts, so the texts
+## can be rewritten without touching the code. HUD messages do not wrap
+## (600 px label): base text + "  (رمز: ۴)" must stay <= 72 characters.
+const NOTE_DIGITS := [4, 1, 7]
+const PERSIAN_DIGITS := "۰۱۲۳۴۵۶۷۸۹"
 
 ## The power puzzle (P4). LOCAL positions, pinned in test_rooms.gd.
 ##
@@ -189,16 +207,45 @@ const FUSE_PICKUP := {
 	"name": "MedFusePickup", "pos": Vector2(356, 64),
 }
 
-## The flashlight (P5): a visible pickup on free floor at the exit of the
-## entry corridor, 132 px from the spawn point, 33+ px from every sprite
-## and 68 px from every solid prop, off both doorway approaches and the
-## scanner's line of sight, 90+ px from every console, and well outside
-## the dark zone (the player must be able to take it before going in). It
-## stays here for now; a later step puts it in a locked cabinet. The
-## desk's MedFlashlight decor is only a prop (test_medical_props_exist
-## pins it) and is not collectible.
+## The code cabinet (P6): the solid cabinet prop MedCabinetWorn in the
+## south-east corner (its body, sprite and nav-grid rect stay as they were).
+## Its interactable child "MedCabinet" sits at the prop's centre
+## (540, 320) and carries three dials (MedDial1-3, built by
+## cabinet_medical_wing.gd) in a row 20 px north of it, on the room side:
+## local (560, 300), (540, 300), (520, 300), dial 1 on the right because the
+## HUD text is right-to-left. The corner is far from everything: 80+ px from
+## every console (the nearest-interactable range is 40), 255+ px from the fuse
+## box, 310+ px from the scanner, off both doorway approaches and the
+## scanner's line of sight, and the dial plates (14 px) touch no solid prop
+## or wall (25+ px from every other solid prop, 5 px from the cabinet itself
+## and from the MedLightDamaged decor). Reachable from the entry corridor.
+## Pinned in test_rooms.gd.
+const CABINET := {"prop": "MedCabinetWorn", "name": "MedCabinet"}
+
+## The medicine (P6): what the open cabinet gives, a visible pickup that
+## appears at "offset" from the cabinet prop's body, i.e. at local (530, 276),
+## in front of the dials: 9 px above them, 14 px from the MedLightDamaged
+## decor, 80+ px from every console. Item "medicine" (display «مسکّن», the
+## medical pack's blister pack of pills); collecting it also shows "message"
+## instead of the usual "<name> برداشته شد.".
+const MEDICINE_PICKUP := {
+	"name": "MedMedicinePickup", "offset": Vector2(-10, -44),
+	"item": "medicine", "display": "مسکّن", "label": "برداشتن مسکّن",
+	"texture": "packages_medicine", "message": "درد کم شد. حالم بهتر شد.",
+}
+
+## The flashlight (P5; the desk's own MedFlashlight since P6): the ONE
+## flashlight of the wing, a visible pickup that lies on the doctor's desk
+## where the MedFlashlight decor used to lie, at local (432, 252). There is no
+## separate floor pickup and no decor any more. Like NoteConsole2 it is a
+## CHILD of the desk's body (the only solid rect it may overlap, so the
+## player's line-of-sight ray ignores that body): "pos" is its LOCAL spot,
+## "on" the prop it hangs from. It is 19.7 px from NoteConsole2 (west half of
+## the desk against the east half), so the nearest-interactable pick depends
+## on the side the player stands on; it is well outside the dark zone (the
+## player must take it before going in).
 const FLASHLIGHT_PICKUP := {
-	"name": "MedFlashlightPickup", "pos": Vector2(196, 248),
+	"name": "MedFlashlight", "pos": Vector2(432, 252), "on": "MedDeskDoctor",
 	"item": "flashlight", "display": "چراغ‌قوه", "label": "برداشتن چراغ‌قوه",
 	"texture": "flashlight",
 }
@@ -235,6 +282,7 @@ func _ready() -> void:
 	_build_note_consoles()
 	_build_darkness()
 	_build_flashlight_pickup()
+	_build_cabinet()
 	_build_fuse_pickup()
 	_build_fuse_box()
 
@@ -366,17 +414,25 @@ func _build_medical_props() -> void:
 	_add_med_decor("dust", Vector2(60, 300), "MedDust")
 	_add_med_decor("steam", Vector2(540, 200), "MedSteam")
 	_add_med_decor("spark", Vector2(600, 100), "MedSpark")
-	# The doctor's desk: a flashlight on its surface; the handwritten note
-	# there is NoteConsole2 (_build_note_consoles), no longer a decor.
-	_add_med_decor("flashlight", Vector2(432, 252), "MedFlashlight")
+	# The handwritten note on the doctor's desk is NoteConsole2
+	# (_build_note_consoles) and its flashlight is the pickup MedFlashlight
+	# (_build_flashlight_pickup): neither is a decor any more.
 
 
 ## The three story-note consoles (non-solid: nothing is added to the nav
 ## grid or to prop_solid_rects()). Added after the props so they draw
 ## above any floor clutter.
 func _build_note_consoles() -> void:
-	for note in NOTE_CONSOLES:
-		_add_note_console(note["name"], note["pos"], note["text"], note.get("on", ""))
+	for i in NOTE_CONSOLES.size():
+		var note: Dictionary = NOTE_CONSOLES[i]
+		_add_note_console(note["name"], note["pos"], _note_message(i), note.get("on", ""))
+
+
+## The HUD message of note `index`: its base text plus the code digit,
+## e.g. "...  (رمز: ۴)" (Persian digit; NOTE_DIGITS[index]).
+func _note_message(index: int) -> String:
+	var digit := int(NOTE_DIGITS[index])
+	return str(NOTE_CONSOLES[index]["text"]) + "  (رمز: " + PERSIAN_DIGITS[digit] + ")"
 
 
 ## The dark zone's LOCAL rect (the room contract is untouched: this is an
@@ -413,20 +469,45 @@ func _on_power_restored() -> void:
 	power_restored.emit()
 
 
-## The flashlight (P5): an instance of this room's pickup copy with the
-## item id, texts and sprite of FLASHLIGHT_PICKUP. The player's inventory
-## then holds "flashlight", which MedicalDarkness reads to widen the light.
+## The flashlight (P5; the desk's own MedFlashlight since P6): an instance of
+## this room's pickup copy with the item id, texts and sprite of
+## FLASHLIGHT_PICKUP, hung from the desk's body (see FLASHLIGHT_PICKUP). The
+## player's inventory then holds "flashlight", which MedicalDarkness reads to
+## widen the light. Built after the props (the desk is one of them).
 func _build_flashlight_pickup() -> void:
+	var desk: Node2D = get_node(FLASHLIGHT_PICKUP["on"])
+	var pos: Vector2 = FLASHLIGHT_PICKUP["pos"]
 	var pickup: Node2D = PICKUP_SCENE.instantiate()
 	pickup.name = FLASHLIGHT_PICKUP["name"]
-	pickup.position = FLASHLIGHT_PICKUP["pos"]
+	pickup.position = pos - desk.position
 	pickup.item_id = FLASHLIGHT_PICKUP["item"]
 	pickup.display_name = FLASHLIGHT_PICKUP["display"]
 	pickup.interact_label = FLASHLIGHT_PICKUP["label"]
 	pickup.sprite_texture = _med_texture(FLASHLIGHT_PICKUP["texture"])
 	pickup.amount = 1
 	pickup.battery_restore = 0.0
-	add_child(pickup)
+	desk.add_child(pickup)
+
+
+## The code cabinet (P6): an interactable child of the body of the solid
+## prop CABINET["prop"] (the nav grid and prop_solid_rects() are untouched;
+## the prop's name, sprite and collision stay). It builds its own three dials
+## and, when the dials equal NOTE_DIGITS, opens and spawns the medicine in
+## front of itself (MEDICINE_PICKUP). It never refers to this room, so it
+## keeps working after the full-game flatten frees the room node.
+func _build_cabinet() -> void:
+	var body: Node2D = get_node(CABINET["prop"])
+	var cabinet: Node2D = CABINET_SCENE.instantiate()
+	cabinet.name = CABINET["name"]
+	cabinet.code = NOTE_DIGITS.duplicate()
+	cabinet.reward_node_name = MEDICINE_PICKUP["name"]
+	cabinet.reward_offset = MEDICINE_PICKUP["offset"]
+	cabinet.reward_item = MEDICINE_PICKUP["item"]
+	cabinet.reward_display = MEDICINE_PICKUP["display"]
+	cabinet.reward_label = MEDICINE_PICKUP["label"]
+	cabinet.reward_message = MEDICINE_PICKUP["message"]
+	cabinet.reward_texture = _med_texture(MEDICINE_PICKUP["texture"])
+	body.add_child(cabinet)
 
 
 ## The fuse (P4): an instance of this room's pickup copy, whose defaults

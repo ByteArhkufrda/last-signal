@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/levels/rooms/medical_wing/dial_medical_wing.gd" id="1_dial"]
+
+[node name="Dial" type="Node2D" groups=["interactable"]]
+script = ExtResource("1_dial")

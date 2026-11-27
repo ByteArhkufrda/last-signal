@@ -72,10 +72,19 @@ const ROOM_CHECKS := {
 			# Power puzzle (P4, 2026-11-25; P5, 2026-11-26): the fuse box
 			# (where the P3 placeholder switch stood), the visible fuse
 			# pickup (moved into the dark zone in P5) and the visible
-			# flashlight pickup (P5).
+			# flashlight pickup, the desk's own MedFlashlight since P6 (a
+			# child of the desk's body, where the decor lay).
 			"MedFuseBox": Vector2(590, 44),
 			"MedFusePickup": Vector2(356, 64),
-			"MedFlashlightPickup": Vector2(196, 248),
+			"MedDeskDoctor/MedFlashlight": Vector2(432, 252),
+			# Medical Recovery (P6, 2026-11-26): the code cabinet (an
+			# interactable child of the MedCabinetWorn prop) and its three
+			# dials, dial 1 on the right. The medicine only appears when the
+			# cabinet opens.
+			"MedCabinetWorn/MedCabinet": Vector2(540, 320),
+			"MedCabinetWorn/MedCabinet/MedDial1": Vector2(560, 300),
+			"MedCabinetWorn/MedCabinet/MedDial2": Vector2(540, 300),
+			"MedCabinetWorn/MedCabinet/MedDial3": Vector2(520, 300),
 		},
 		"towers": 0, "puzzles": 0, "enemies": 1, "wall_children": 18,
 	},
@@ -141,7 +150,7 @@ func run_tests() -> void:
 			"test_station_layout_agrees_with_rooms",
 			"test_medical_note_consoles", "test_medical_scanner_tuning",
 			"test_medical_darkness_standalone", "test_medical_darkness_assembled",
-			"test_medical_flicker", "test_medical_flashlight",
+			"test_medical_flicker", "test_medical_cabinet", "test_medical_flashlight",
 			"test_medical_robots_dormant", "test_medical_fuse_puzzle",
 			"test_medical_fuse_full_game", "test_medical_cone_readability"]:
 		paused = false
@@ -554,16 +563,19 @@ func test_medical_note_consoles() -> bool:
 	var notes := [
 		{
 			"name": "NoteConsole1", "path": "NoteConsole1", "stand": Vector2(140, 296),
-			"text": "یادداشت پزشک ایستگاه: هیچ بیماری‌ای در کار نیست. دستور اومد این بخش رو ببندیم.",
+			"text": "یادداشت پزشک: هیچ بیماری‌ای نیست. دستور اومد بخش رو ببندیم.",
+			"digit": "۴",
 		},
 		{
 			"name": "NoteConsole2", "path": "MedDeskDoctor/NoteConsole2", "on_desk": true,
 			"stand": Vector2(470, 262),
-			"text": "یادداشت پزشک ایستگاه: هر بار پیام می‌فرستادیم، یه چیزی جوابمون رو می‌داد.",
+			"text": "یادداشت پزشک: هر بار پیام می‌فرستادیم، یه چیزی جواب می‌داد.",
+			"digit": "۱",
 		},
 		{
 			"name": "NoteConsole3", "path": "NoteConsole3", "stand": Vector2(536, 160),
-			"text": "یادداشت پزشک ایستگاه: هر سیگنالی که بفرستیم، فقط ما رو نجات نمی‌ده.",
+			"text": "یادداشت پزشک: هر سیگنالی که بفرستیم، فقط ما رو نجات نمی‌ده.",
+			"digit": "۷",
 		},
 	]
 	var play: Node2D = load(PLAY_SCENES["medical_wing"]).instantiate()
@@ -575,6 +587,10 @@ func test_medical_note_consoles() -> bool:
 	var desk_rect := Rect2(424, 248, 32, 16)
 	assert_true(solids.has(desk_rect), "the doctor's desk is one of the solid rects")
 	assert_true(room.get_node_or_null("MedNoteDoctor") == null, "the inert desk note decor is gone")
+	# The code digits (P6): one per note, appended to the message in code and
+	# NOT part of the text constants.
+	var room_script: GDScript = room.get_script()
+	assert_eq(room_script.NOTE_DIGITS, [4, 1, 7], "the code digits are 4 1 7, one per note")
 	# Keep-out zones: the west doorway's entry corridor (y 240-272,
 	# x 0-160) and the south gap's approach (x 288-320), each with a
 	# margin, and the scanner's line of sight (x=260, y 120-200).
@@ -583,14 +599,17 @@ func test_medical_note_consoles() -> bool:
 	]
 	# Console centres for the spacing check; the area console is first.
 	var centers: Array[Vector2] = [Vector2(120, 80)]
-	for note in notes:
+	for n in notes.size():
+		var note: Dictionary = notes[n]
 		var label: String = note["name"]
 		var console: Node2D = room.get_node_or_null(str(note["path"]))
 		assert_true(console != null, "%s exists" % label)
 		if console == null:
 			continue
 		assert_true(console.is_in_group("interactable"), "%s is an interactable" % label)
-		assert_eq(console.message, note["text"], "%s message text" % label)
+		assert_eq(console.message, note["text"] + "  (رمز: " + note["digit"] + ")", "%s message is its text plus the code digit" % label)
+		assert_true(console.message.length() <= 72, "%s message fits the HUD (72 characters at most)" % label)
+		assert_eq(room_script.NOTE_CONSOLES[n]["text"], note["text"], "%s text constant holds no code digit" % label)
 		assert_eq((console.get_node("Sprite2D") as Sprite2D).texture, note_tex, "%s uses the doctor's note sprite" % label)
 		assert_eq(console.interact_label, "خواندن یادداشت", "%s prompt says read note" % label)
 		var rect := Rect2(console.global_position - Vector2(8, 8), Vector2(16, 16))
@@ -1006,12 +1025,246 @@ func test_medical_darkness_assembled() -> bool:
 	return true
 
 
-## The flashlight (P5, 2026-11-26), standalone room: a visible pickup on
-## free floor outside the dark zone; E puts exactly one "flashlight" in the
-## inventory (HUD «چراغ‌قوه»), and the light circle in the zone grows from
-## the tiny one to the soft 70 screen px one. The desk's MedFlashlight
-## decor stays a plain prop. A HUD is added first (the standalone launcher
-## has none).
+## The Persian digits 0-9 in order (what the notes and the dials show).
+const TEST_DIGITS := "۰۱۲۳۴۵۶۷۸۹"
+
+
+## How many items with `item_id` are interactable pickups under `ancestor`.
+func _count_item(item_id: String, ancestor: Node) -> int:
+	var n := 0
+	for node in get_nodes_in_group("interactable"):
+		if ancestor.is_ancestor_of(node) and "item_id" in node and node.item_id == item_id:
+			n += 1
+	return n
+
+
+## The code cabinet (P6, 2026-11-26), standalone room (a HUD is added first,
+## the launcher has none): MedCabinetWorn keeps being a solid prop and gains
+## the interactable child MedCabinet with three dials in front of it (dial 1
+## on the right). E on a dial cycles its digit 0-9 and wraps, the HUD shows
+## «کد: ...»; a wrong code changes nothing else; the right code (the note
+## digits 4 1 7) opens the cabinet exactly once: cabinet_open sprite, «کابینت
+## باز شد.», dials locked and out of the interactable group, ONE medicine
+## pickup in front of it. Collecting it gives the "medicine" item and shows
+## «درد کم شد. حالم بهتر شد.». The cabinet never gives a flashlight (the
+## desk's MedFlashlight is the only one, see test_medical_flashlight).
+func test_medical_cabinet() -> bool:
+	if not ResourceLoader.exists(ROOM_SCENES["medical_wing"]):
+		skipped += 1
+		print("SKIP medical cabinet: scene not split yet")
+		return true
+	if _level != null:
+		_level.queue_free()
+		_level = null
+		await process_frame
+		await process_frame
+	var hud: CanvasLayer = (load("res://scenes/ui/hud.tscn") as PackedScene).instantiate()
+	root.add_child(hud)
+	var play: Node2D = load(PLAY_SCENES["medical_wing"]).instantiate()
+	root.add_child(play)
+	var room: Node2D = play.room
+	var player: CharacterBody2D = play.player
+	var body: Node2D = room.get_node_or_null("MedCabinetWorn")
+	var cabinet: Node2D = room.get_node_or_null("MedCabinetWorn/MedCabinet")
+	assert_true(body != null and cabinet != null, "the cabinet prop MedCabinetWorn has the interactable child MedCabinet")
+	if body == null or cabinet == null:
+		play.queue_free()
+		hud.queue_free()
+		await process_frame
+		await process_frame
+		return true
+	var dials: Array = cabinet.dials()
+	assert_eq(dials.size(), 3, "the cabinet has three dials")
+	if dials.size() != 3:
+		play.queue_free()
+		hud.queue_free()
+		await process_frame
+		await process_frame
+		return true
+	var worn_tex: Texture2D = load("res://assets/sprites/medical-wing/cabinet_worn.png")
+	var open_tex: Texture2D = load("res://assets/sprites/medical-wing/cabinet_open.png")
+	var prop_sprite: Sprite2D = null
+	for child in body.get_children():
+		if child is Sprite2D:
+			prop_sprite = child
+	# What it is.
+	assert_true(room.blocked_rects().has(Rect2(532, 312, 16, 16)), "the cabinet prop is still a solid rect")
+	assert_true(prop_sprite != null and prop_sprite.texture == worn_tex, "the closed cabinet shows the worn cabinet sprite")
+	assert_true(cabinet.is_in_group("interactable") and not cabinet.is_in_group("puzzles") and not cabinet.is_in_group("hidden"), "the cabinet is an interactable, neither a puzzle nor hidden")
+	assert_eq([str(dials[0].name), str(dials[1].name), str(dials[2].name)], ["MedDial1", "MedDial2", "MedDial3"], "the dials are MedDial1-3, dial 1 first")
+	var dials_ok := true
+	for d in dials:
+		if not d.is_in_group("interactable") or d.is_in_group("puzzles") or d.is_in_group("hidden") or d.is_locked():
+			dials_ok = false
+	assert_true(dials_ok, "the three dials are unlocked interactables, neither puzzles nor hidden")
+	assert_eq(cabinet.code_text(), "۰ ۰ ۰", "the dials start at 0 0 0")
+	var room_script: GDScript = room.get_script()
+	assert_eq(cabinet.code, room_script.NOTE_DIGITS, "the cabinet's code is the room's NOTE_DIGITS")
+	assert_true(not cabinet.is_open, "the cabinet starts closed")
+	assert_eq(_count_item("medicine", room), 0, "no medicine exists before the cabinet opens")
+	assert_true(room.get_node_or_null("MedMedicinePickup") == null, "no medicine pickup lies around before the cabinet opens")
+	# Placement: the dial plates (14 px) touch no wall or solid prop and sit
+	# clear of the doorways and the scanner's line of sight, 20 px apart, and
+	# well away from every console.
+	var in_solid := false
+	var in_keep_out := false
+	var nearest_console := INF
+	for d in dials:
+		var rect := Rect2(d.global_position - Vector2(7, 7), Vector2(14, 14))
+		for r in room.blocked_rects():
+			if rect.intersects(r):
+				in_solid = true
+		for r in [Rect2(0, 224, 160, 64), Rect2(272, 288, 64, 64), Rect2(232, 100, 56, 120)]:
+			if rect.intersects(r):
+				in_keep_out = true
+		for c in [Vector2(120, 80), room.get_node("NoteConsole1").global_position,
+				room.get_node("MedDeskDoctor/NoteConsole2").global_position,
+				room.get_node("NoteConsole3").global_position]:
+			nearest_console = minf(nearest_console, d.global_position.distance_to(c))
+	assert_true(not in_solid, "the dial plates touch no wall or solid prop")
+	assert_true(not in_keep_out, "the dial plates are clear of the doorways and the scanner's line of sight")
+	assert_true(nearest_console >= 78.0, "the dials are at least 78 px from every console")
+	assert_true(dials[0].global_position.distance_to(dials[1].global_position) >= 20.0 and dials[1].global_position.distance_to(dials[2].global_position) >= 20.0, "neighbouring dials are at least 20 px apart")
+	# Through the real player: beside a dial it is the nearest interactable,
+	# E turns it once and the HUD shows the code.
+	player.global_position = Vector2(560, 284)
+	player.velocity = Vector2.ZERO
+	for i in 5:
+		await physics_frame
+	assert_true(player._current_interactable == dials[0], "beside dial 1 it is the nearest interactable")
+	assert_eq(hud.prompt_label.text, "E — چرخاندن رمز ۱", "the HUD prompt beside dial 1")
+	await _press_interact()
+	assert_eq(dials[0].digit, 1, "E turns dial 1 from 0 to 1")
+	assert_eq(hud.message_label.text, "کد: ۱ ۰ ۰", "the HUD shows the code after the first turn")
+	assert_true(not cabinet.is_open, "a wrong code leaves the cabinet closed")
+	player.global_position = Vector2(540, 284)
+	player.velocity = Vector2.ZERO
+	for i in 5:
+		await physics_frame
+	assert_true(player._current_interactable == dials[1], "beside dial 2 it is the nearest interactable")
+	assert_eq(hud.prompt_label.text, "E — چرخاندن رمز ۲", "the HUD prompt beside dial 2")
+	player.global_position = Vector2(520, 284)
+	player.velocity = Vector2.ZERO
+	for i in 5:
+		await physics_frame
+	assert_true(player._current_interactable == dials[2], "beside dial 3 it is the nearest interactable")
+	assert_eq(hud.prompt_label.text, "E — چرخاندن رمز ۳", "the HUD prompt beside dial 3")
+	# The cabinet itself, from its south-east side: it only says it is locked.
+	player.global_position = Vector2(558, 330)
+	player.velocity = Vector2.ZERO
+	for i in 5:
+		await physics_frame
+	assert_true(player._current_interactable == cabinet, "beside the cabinet itself it is the nearest interactable")
+	assert_eq(hud.prompt_label.text, "E — بررسی کابینت", "the HUD prompt beside the cabinet")
+	await _press_interact()
+	assert_eq(hud.message_label.text, "کابینت قفله. رمز سه‌رقمی می‌خواد.", "E on the closed cabinet says it is locked")
+	assert_true(not cabinet.is_open and dials[0].digit == 1, "the locked message changes nothing")
+	# A dial cycles 0-9 and wraps: ten turns from 0 show 1 ... 9, 0.
+	for d in dials:
+		d.set_digit(0)
+	var seen: Array = []
+	for i in 10:
+		dials[0].interact()
+		seen.append(dials[0].digit)
+	assert_eq(seen, [1, 2, 3, 4, 5, 6, 7, 8, 9, 0], "a dial cycles 0-9 and wraps to 0")
+	assert_eq(hud.message_label.text, "کد: ۰ ۰ ۰", "the HUD shows the wrapped code")
+	dials[1].set_digit(9)
+	assert_eq(dials[1].digit, 9, "set_digit shows a digit directly")
+	dials[1].set_digit(10)
+	assert_eq(dials[1].digit, 0, "set_digit wraps too")
+	# Wrong codes (also near misses) never open it and change nothing else.
+	var opened_count := [0]
+	cabinet.opened.connect(func() -> void: opened_count[0] += 1)
+	for wrong in [[1, 4, 7], [4, 1, 8], [5, 1, 7], [7, 1, 4], [4, 1, 6]]:
+		dials[0].set_digit(wrong[0])
+		dials[1].set_digit(wrong[1])
+		dials[2].set_digit(int(wrong[2]) - 1)
+		dials[2].interact()
+	assert_true(not cabinet.is_open and opened_count[0] == 0, "wrong codes, near misses included, never open the cabinet")
+	assert_eq(hud.message_label.text, "کد: ۴ ۱ ۶", "after the last wrong code the HUD shows it")
+	assert_true(prop_sprite.texture == worn_tex, "a wrong code leaves the sprite alone")
+	assert_eq(_count_item("medicine", room), 0, "a wrong code spawns nothing")
+	var still_live := true
+	for d in dials:
+		if not d.is_in_group("interactable") or d.is_locked():
+			still_live = false
+	assert_true(still_live and cabinet.is_in_group("interactable"), "after wrong codes the dials and the cabinet are still interactable")
+	# The right code (4 1 7) opens it, once.
+	dials[0].set_digit(4)
+	dials[1].set_digit(1)
+	dials[2].set_digit(6)
+	dials[2].interact()
+	assert_true(cabinet.is_open, "the code 4 1 7 opens the cabinet")
+	assert_true(prop_sprite.texture == open_tex, "the open cabinet shows the cabinet_open sprite")
+	assert_eq(hud.message_label.text, "کابینت باز شد.", "the HUD says the cabinet is open")
+	assert_eq(opened_count[0], 1, "the cabinet opens exactly once")
+	var locked_all := true
+	for d in dials:
+		if not d.is_locked() or d.is_in_group("interactable"):
+			locked_all = false
+	assert_true(locked_all, "the dials lock and leave the interactable group")
+	assert_true(not cabinet.is_in_group("interactable"), "the open cabinet leaves the interactable group")
+	assert_eq(_count_item("medicine", room), 1, "exactly one medicine pickup appears")
+	assert_eq(_count_item("flashlight", room), 1, "the cabinet gives no flashlight: the desk's is still the only one")
+	# Locked dials ignore further turns; nothing is spawned or opened twice.
+	dials[0].interact()
+	dials[2].interact()
+	assert_eq(dials[0].digit, 4, "a locked dial no longer turns")
+	assert_eq(opened_count[0], 1, "the cabinet does not open a second time")
+	assert_eq(_count_item("medicine", room), 1, "still exactly one medicine pickup")
+	var item: Node2D = room.get_node_or_null("MedMedicinePickup")
+	assert_true(item != null, "the medicine pickup is named MedMedicinePickup")
+	if item == null:
+		play.queue_free()
+		hud.queue_free()
+		await process_frame
+		await process_frame
+		return true
+	# What the medicine is.
+	assert_eq(item.get_script().resource_path, "res://scripts/levels/rooms/medical_wing/pickup_medical_wing.gd", "the medicine is the room's own pickup copy")
+	assert_true(item.is_in_group("interactable") and not item.is_in_group("hidden") and not item.is_in_group("puzzles"), "the medicine is an interactable, neither hidden nor a puzzle")
+	assert_eq(item.item_id, "medicine", "the medicine's item id")
+	assert_eq(item.display_name, "مسکّن", "the medicine's display name")
+	assert_eq(item.interact_label, "برداشتن مسکّن", "the medicine's prompt text")
+	assert_eq(item.amount, 1, "the medicine is one item")
+	assert_eq((item.get_node("Sprite2D") as Sprite2D).texture, load("res://assets/sprites/medical-wing/packages_medicine.png"), "the medicine uses the medical pack's pills sprite")
+	assert_eq(item.global_position, Vector2(530, 276), "the medicine appears in front of the cabinet")
+	var item_rect := Rect2(item.global_position - Vector2(8, 8), Vector2(16, 16))
+	var item_in_solid := false
+	for r in room.blocked_rects():
+		if item_rect.intersects(r):
+			item_in_solid = true
+	assert_true(not item_in_solid, "the medicine is not inside a wall or a solid prop")
+	# Collect it through the real player: one medicine, the pain message.
+	player.global_position = Vector2(530, 262)
+	player.velocity = Vector2.ZERO
+	for i in 5:
+		await physics_frame
+	assert_true(player._current_interactable == item, "beside it, the medicine is the nearest interactable")
+	assert_eq(hud.prompt_label.text, "E — برداشتن مسکّن", "the HUD prompt beside the medicine")
+	assert_eq(int(player.inventory.get("medicine", 0)), 0, "no medicine in the inventory before E")
+	await _press_interact()
+	assert_eq(int(player.inventory.get("medicine", 0)), 1, "E on the medicine puts one medicine in the inventory")
+	assert_eq(hud.inventory_label.text, "وسایل: مسکّن ×1", "the HUD inventory shows the medicine")
+	assert_eq(hud.message_label.text, "درد کم شد. حالم بهتر شد.", "collecting the medicine shows the pain-gone message")
+	assert_true(not is_instance_valid(item), "the medicine pickup is gone once collected")
+	await _press_interact()
+	assert_eq(int(player.inventory.get("medicine", 0)), 1, "a second E does not give a second medicine")
+	assert_eq(int(player.inventory.get("flashlight", 0)), 0, "the cabinet's medicine is not a flashlight")
+	play.queue_free()
+	hud.queue_free()
+	await process_frame
+	await process_frame
+	return true
+
+
+## The flashlight (P5, 2026-11-26; the desk's own MedFlashlight since P6),
+## standalone room: the ONE flashlight is a visible pickup that lies on the
+## doctor's desk (a child of the desk's body, like NoteConsole2) from the
+## start; there is no floor pickup and no decor any more. E puts exactly one
+## "flashlight" in the inventory (HUD «چراغ‌قوه»), and the light circle in the
+## zone grows from the tiny one to the soft 70 screen px one. A HUD is added
+## first (the standalone launcher has none).
 func test_medical_flashlight() -> bool:
 	if not ResourceLoader.exists(ROOM_SCENES["medical_wing"]):
 		skipped += 1
@@ -1029,8 +1282,8 @@ func test_medical_flashlight() -> bool:
 	var room: Node2D = play.room
 	var player: CharacterBody2D = play.player
 	var dark: Node2D = room.get_node("MedicalDarkness")
-	var item: Node2D = room.get_node_or_null("MedFlashlightPickup")
-	assert_true(item != null, "the medical wing has a MedFlashlightPickup")
+	var item: Node2D = room.get_node_or_null("MedDeskDoctor/MedFlashlight")
+	assert_true(item != null, "the doctor's desk carries the MedFlashlight pickup")
 	if item == null:
 		play.queue_free()
 		hud.queue_free()
@@ -1039,8 +1292,13 @@ func test_medical_flashlight() -> bool:
 		return true
 	dark.flicker_enabled = false
 	var zone: Rect2 = room.dark_zone_rect()
+	# There is only ONE flashlight: no floor pickup, no second node with the
+	# name, no second item with the id.
+	assert_eq(_count_item("flashlight", room), 1, "the wing holds exactly one flashlight item")
+	assert_true(room.get_node_or_null("MedFlashlightPickup") == null, "there is no separate floor pickup")
+	assert_eq(room.find_children("MedFlashlight*", "", true, false).size(), 1, "exactly one node is called MedFlashlight")
 	# What it is.
-	assert_eq(item.get_script().resource_path, "res://scripts/levels/rooms/medical_wing/pickup_medical_wing.gd", "the flashlight is the room's own pickup copy")
+	assert_eq(item.get_script().resource_path, "res://scripts/levels/rooms/medical_wing/pickup_medical_wing.gd", "the flashlight is the room's own pickup copy, not the inert decor")
 	assert_true(item.is_in_group("interactable"), "the flashlight is an interactable")
 	assert_true(not item.is_in_group("hidden") and not item.is_in_group("puzzles"), "the flashlight is neither hidden nor a puzzle")
 	assert_eq(item.item_id, "flashlight", "the flashlight's item id")
@@ -1048,40 +1306,26 @@ func test_medical_flashlight() -> bool:
 	assert_eq(item.interact_label, "برداشتن چراغ‌قوه", "the flashlight's prompt text")
 	assert_eq(item.amount, 1, "the flashlight is one item")
 	assert_eq((item.get_node("Sprite2D") as Sprite2D).texture, load("res://assets/sprites/medical-wing/flashlight.png"), "the flashlight uses the medical flashlight sprite")
-	assert_true(not room.get_node("MedFlashlight").is_in_group("interactable"), "the desk's MedFlashlight decor is only a prop")
-	# Placement: free floor, clear of doorways and the scanner's line of
-	# sight, 24+ px from every sprite, apart from the consoles, well
-	# outside the dark zone (it must be takeable before going in).
+	# Placement: on the desk (the only solid rect it overlaps, and the desk
+	# body is its parent), clear of the doorways and the scanner's line of
+	# sight, well outside the dark zone (it must be takeable before going in).
+	assert_eq(item.get_parent(), room.get_node("MedDeskDoctor"), "the flashlight hangs from the desk's body")
+	assert_eq(item.global_position, Vector2(432, 252), "the flashlight lies where the desk decor lay")
 	var item_rect := Rect2(item.global_position - Vector2(8, 8), Vector2(16, 16))
-	var in_solid := false
+	var overlapped: Array = []
 	for r in room.blocked_rects():
 		if item_rect.intersects(r):
-			in_solid = true
-	assert_true(not in_solid, "the flashlight is not inside a wall or a solid prop")
+			overlapped.append(r)
+	assert_eq(overlapped, [Rect2(424, 248, 32, 16)], "the flashlight overlaps no solid but the desk it lies on")
 	var in_keep_out := false
 	for r in [Rect2(0, 224, 160, 64), Rect2(272, 288, 64, 64), Rect2(232, 100, 56, 120)]:
 		if item_rect.intersects(r):
 			in_keep_out = true
 	assert_true(not in_keep_out, "the flashlight is clear of the doorways and the scanner's line of sight")
 	assert_true(not item_rect.grow(40.0).intersects(zone), "the flashlight is at least 40 px outside the dark zone")
-	var nearest_console := INF
-	for c in [Vector2(120, 80), room.get_node("NoteConsole1").global_position,
-			room.get_node("MedDeskDoctor/NoteConsole2").global_position,
-			room.get_node("NoteConsole3").global_position]:
-		nearest_console = minf(nearest_console, item.global_position.distance_to(c))
-	assert_true(nearest_console >= 90.0, "the flashlight is at least 90 px from every console")
-	var too_close := ""
-	for node in room.find_children("*", "Sprite2D", true, false):
-		var sprite := node as Sprite2D
-		if sprite.texture == null or item.is_ancestor_of(sprite):
-			continue
-		var sprite_size: Vector2 = sprite.texture.get_size() * sprite.global_scale
-		var sprite_rect := Rect2(sprite.global_position - sprite_size / 2.0, sprite_size)
-		if item_rect.grow(24.0).intersects(sprite_rect):
-			too_close = str(sprite.name)
-	assert_eq(too_close, "", "the flashlight is at least 24 px from every sprite in the room")
-	# E on it: exactly one flashlight in the inventory, the pickup is gone.
-	player.global_position = Vector2(196, 266)
+	# E on it from the desk's west side (NoteConsole2 is 40+ px away there):
+	# exactly one flashlight in the inventory, the pickup is gone.
+	player.global_position = Vector2(410, 252)
 	player.velocity = Vector2.ZERO
 	for i in 5:
 		await physics_frame
@@ -1363,15 +1607,17 @@ func test_medical_fuse_puzzle() -> bool:
 
 ## Full game (main.tscn, so the HUD and AudioManager exist), P4
 ## (2026-11-25; replaces the P3 switch test; P5, 2026-11-26: the fuse lies
-## in the dark zone, the box stops the flicker, the flashlight is
-## collectable): only the medical wing's scanner is dormant at the start; a
+## in the dark zone, the box stops the flicker; P6, 2026-11-26: the desk's
+## flashlight is the pickup, and the cabinet chain notes -> code -> medicine
+## runs at the end): only the medical wing's scanner is dormant at the start; a
 ## robot with the medical copy is dormant inside the medical rect (WORLD
 ## (640, 0, 640, 368)) only until the power stabilises; a robot of another
 ## room is left alone; the fuse puzzle works through the real player, HUD
 ## and wiring (empty box, pickup, box, chime), wakes the scanner, stops the
 ## flicker, works once and leaves every mission counter, the 3 puzzles and
-## the 3 hidden objects alone. The shared player has no display name for
-## the flashlight yet, so its HUD inventory line is not pinned here.
+## the 3 hidden objects alone. The shared player has no display names for
+## the flashlight and the medicine yet, so their HUD inventory lines are not
+## pinned here (the fuse's are checked with contains()).
 func test_medical_fuse_full_game() -> bool:
 	if not ResourceLoader.exists(ROOM_SCENES["medical_wing"]):
 		skipped += 1
@@ -1426,6 +1672,28 @@ func test_medical_fuse_full_game() -> bool:
 	assert_true(_walker_dormant_at(level, dark, Vector2(700, 300)), "a robot that walks into the medical rect while the power is out is dormant")
 	var chimed := [false]
 	dark.power_restored.connect(func() -> void: chimed[0] = chimed[0] or _chime_playing(audio))
+	# The ONE flashlight lies on the doctor's desk from the start (a child of
+	# the desk's body); collected through the level's wiring (its HUD
+	# inventory line is the shared player's, which has no display name for it
+	# yet: not pinned).
+	var flash: Node2D = level.get_node_or_null("MedDeskDoctor/MedFlashlight")
+	assert_true(flash != null and level.get_node_or_null("MedFlashlightPickup") == null, "the assembled level has the desk's flashlight pickup and no floor one")
+	if flash == null:
+		main.queue_free()
+		await process_frame
+		await process_frame
+		return true
+	assert_eq(flash.global_position, Vector2(1072, 252), "the flashlight lies on the desk, offset by the wing's position")
+	player.global_position = Vector2(1050, 252)
+	player.velocity = Vector2.ZERO
+	for i in 5:
+		await physics_frame
+	assert_eq(hud.prompt_label.text, "E — برداشتن چراغ‌قوه", "the HUD prompt beside the flashlight")
+	await _press_interact()
+	assert_eq(int(player.inventory.get("flashlight", 0)), 1, "E on the flashlight puts one flashlight in the inventory")
+	assert_eq(hud.message_label.text, "چراغ‌قوه برداشته شد.", "the HUD shows the flashlight-collected message")
+	assert_true(dark.has_flashlight(), "the darkness node sees the flashlight")
+	assert_true(not is_instance_valid(flash), "the flashlight pickup is gone once collected")
 	# Empty-handed E on the box: a message, nothing else.
 	player.global_position = Vector2(1230, 70)
 	player.velocity = Vector2.ZERO
@@ -1444,7 +1712,7 @@ func test_medical_fuse_full_game() -> bool:
 	assert_eq(hud.prompt_label.text, "E — برداشتن فیوز", "the HUD prompt beside the fuse")
 	await _press_interact()
 	assert_eq(int(player.inventory.get("fuse", 0)), 1, "E on the fuse puts exactly one fuse in the inventory")
-	assert_eq(hud.inventory_label.text, "وسایل: فیوز ×1", "the HUD inventory shows the fuse")
+	assert_true(hud.inventory_label.text.contains("فیوز ×1"), "the HUD inventory lists the fuse")
 	assert_eq(hud.message_label.text, "فیوز برداشته شد.", "the HUD shows the fuse-collected message")
 	assert_true(not is_instance_valid(fuse), "the fuse pickup is gone once collected")
 	# Put it in the box.
@@ -1460,7 +1728,7 @@ func test_medical_fuse_full_game() -> bool:
 	assert_true(not dark.flicker_enabled and not dark.is_flicker_dark(), "the flicker stops once the box is solved in the full game")
 	assert_true(_flicker_pulses(dark, 60.0, FLICKER_DT).is_empty(), "no pulse in 60 s after the box is solved")
 	assert_eq(int(player.inventory.get("fuse", 0)), 0, "the box consumes the fuse")
-	assert_eq(hud.inventory_label.text, "وسایل: —", "the HUD inventory is empty again")
+	assert_true(not hud.inventory_label.text.contains("فیوز"), "the HUD inventory no longer lists the fuse")
 	assert_eq((box.get_node("Sprite2D") as Sprite2D).texture, load("res://assets/sprites/medical-wing/fusebox_open.png"), "the box shows fusebox_open")
 	assert_eq([mission.puzzles_solved, mission.towers_active, mission.current_stage(), level._puzzles_solved], [0, 0, 0, 0], "the fuse puzzle leaves the mission counters alone")
 	assert_eq([_count_in_subtree("puzzles", level), _count_in_subtree("hidden", level)], counts_before, "the puzzle and hidden-object counts are unchanged")
@@ -1474,17 +1742,67 @@ func test_medical_fuse_full_game() -> bool:
 	assert_eq(hud.message_label.text, "", "a second E on the used box shows nothing")
 	assert_true(not hud.prompt_label.visible, "the prompt is gone once the box is used")
 	assert_true(not box.is_in_group("interactable"), "the used box stays out of the interactable group")
-	# The flashlight, through the real wiring (its HUD inventory line is the
-	# shared player's, which has no display name for it yet: not pinned).
-	player.global_position = Vector2(836, 266)
+	# Medical Recovery through the real player, HUD and wiring: read the three
+	# notes, set the code they spell, open the cabinet, take the medicine (its
+	# HUD inventory line is the shared player's, which has no display name for
+	# it yet: not pinned).
+	var cabinet: Node2D = level.get_node_or_null("MedCabinetWorn/MedCabinet")
+	assert_true(cabinet != null and level.get_node_or_null("MedMedicinePickup") == null, "the assembled level has the cabinet and no medicine yet")
+	if cabinet == null:
+		main.queue_free()
+		await process_frame
+		await process_frame
+		return true
+	var digits: Array = []
+	var messages_fit := true
+	for stand in [Vector2(780, 296), Vector2(1110, 262), Vector2(1176, 160)]:
+		player.global_position = stand
+		player.velocity = Vector2.ZERO
+		for i in 5:
+			await physics_frame
+		await _press_interact()
+		var note_message: String = hud.message_label.text
+		if note_message.length() > 72 or not note_message.ends_with(")"):
+			messages_fit = false
+		digits.append(TEST_DIGITS.find(note_message.substr(note_message.length() - 2, 1)))
+	assert_true(messages_fit, "the three notes show a message of at most 72 characters that ends with the code digit")
+	assert_eq(digits, [4, 1, 7], "the three notes spell the code 4 1 7 through the real HUD")
+	var dials: Array = cabinet.dials()
+	var dial_x := [1200.0, 1180.0, 1160.0]
+	for d in 3:
+		player.global_position = Vector2(dial_x[d], 284)
+		player.velocity = Vector2.ZERO
+		for i in 5:
+			await physics_frame
+		for t in int(digits[d]):
+			await _press_interact()
+		if d == 1:
+			assert_true(not cabinet.is_open, "with only dials 1 and 2 set the cabinet is still closed")
+			assert_eq(hud.message_label.text, "کد: ۴ ۱ ۰", "the HUD shows the code so far")
+	assert_true(cabinet.is_open, "the code the notes spell opens the cabinet in the full game")
+	assert_eq(hud.message_label.text, "کابینت باز شد.", "the HUD says the cabinet is open")
+	assert_eq([dials[0].digit, dials[1].digit, dials[2].digit], [4, 1, 7], "the dials show 4 1 7")
+	var medicine: Node2D = level.get_node_or_null("MedMedicinePickup")
+	assert_true(medicine != null, "the open cabinet gives a MedMedicinePickup in the level")
+	if medicine == null:
+		main.queue_free()
+		await process_frame
+		await process_frame
+		return true
+	assert_eq(medicine.global_position, Vector2(1170, 276), "the medicine appears in front of the cabinet, offset by the wing's position")
+	player.global_position = Vector2(1170, 262)
 	player.velocity = Vector2.ZERO
 	for i in 5:
 		await physics_frame
-	assert_eq(hud.prompt_label.text, "E — برداشتن چراغ‌قوه", "the HUD prompt beside the flashlight")
+	assert_eq(hud.prompt_label.text, "E — برداشتن مسکّن", "the HUD prompt beside the medicine")
 	await _press_interact()
-	assert_eq(int(player.inventory.get("flashlight", 0)), 1, "E on the flashlight puts one flashlight in the inventory")
-	assert_eq(hud.message_label.text, "چراغ‌قوه برداشته شد.", "the HUD shows the flashlight-collected message")
-	assert_true(dark.has_flashlight(), "the darkness node sees the flashlight")
+	assert_eq(int(player.inventory.get("medicine", 0)), 1, "E on the medicine puts exactly one medicine in the inventory")
+	assert_eq(hud.message_label.text, "درد کم شد. حالم بهتر شد.", "collecting the medicine shows the pain-gone message")
+	assert_true(not is_instance_valid(medicine), "the medicine pickup is gone once collected")
+	await _press_interact()
+	assert_eq(int(player.inventory.get("medicine", 0)), 1, "a second E gives no second medicine")
+	assert_eq([mission.puzzles_solved, mission.towers_active, mission.current_stage(), level._puzzles_solved], [0, 0, 0, 0], "the cabinet chain leaves the mission counters alone")
+	assert_eq([_count_in_subtree("puzzles", level), _count_in_subtree("hidden", level)], counts_before, "the cabinet chain leaves the puzzle and hidden-object counts alone")
 	main.queue_free()
 	await process_frame
 	await process_frame
