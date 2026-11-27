@@ -21,6 +21,21 @@ const MED_FLOOR_WEIGHTS := [0.70, 0.78, 0.84, 0.85, 0.87, 0.89, 0.92, 0.94, 0.97
 const MED_RECT_TILES := Rect2i(40, 0, 40, 23)
 const WALL_TEXTURE: Texture2D = preload("res://assets/sprites/environment/wall_metal.png")
 const CONSOLE_SCENE: PackedScene = preload("res://scenes/levels/rooms/laboratory/console_laboratory.tscn")
+const POWER_PANEL_SCENE: PackedScene = preload("res://scenes/levels/rooms/laboratory/power_panel_laboratory.tscn")
+const SIGNAL_ANALYZER_SCENE: PackedScene = preload("res://scenes/levels/rooms/laboratory/signal_analyzer_laboratory.tscn")
+const RESEARCH_VAULT_SCENE: PackedScene = preload("res://scenes/levels/rooms/laboratory/research_vault_laboratory.tscn")
+
+## ORION texts (design doc, 2026-11-27). The research log is the
+## first clue; the notes carry the vault code (01 / 03 / 07 → 137).
+const RESEARCH_LOG_TEXT := "Research Log — 17/08/2089\nنمونه‌ی دریافتی از ناهنجاری فضایی برخلاف تمام پیش‌بینی‌های ما رفتار می‌کند.\nاین نمونه هیچ ساختار زیستی شناخته‌شده‌ای ندارد، اما به محرک‌های الکتریکی واکنش نشان می‌دهد.\nدکتر آریا معتقد است نمونه نوعی آگاهی مستقل دارد.\nدر آخرین آزمایش، پس از افزایش انرژی ورودی، نمونه شروع به انتشار پالس‌های نوری کرد.\nنمونه فقط به سومین الگوی فرکانسی ثبت‌شده پاسخ داد.\nدستور توقف آزمایش صادر شد.\nارتباط با تیم تحقیقاتی قطع شده است."
+const WAVE_MONITOR_TEXT := "مانیتور موج — سه الگوی ثبت‌شده:\nPattern A: موج یکنواخت\nPattern B: موج نامنظم\nPattern C: سه پالس متوالی با فاصله‌های مشخص"
+const NOTE_01_TEXT := "Experiment 01 — First Contact\nاولین تماس با نمونه: واکنش به محرک الکتریکی ضعیف. یک پالس نوری کوتاه ثبت شد."
+const NOTE_03_TEXT := "Experiment 03 — First Response\nاولین پاسخ معنادار: نمونه به الگوی سوم فرکانس واکنش نشان داد. سه پالس متوالی."
+const NOTE_07_TEXT := "Experiment 07 — Final Observation\nمشاهده‌ی نهایی: یکی از اعضای تیم گفت صدای خودش را از داخل محفظه شنیده است. اما هیچ‌کس داخل محفظه نبود."
+
+## Sample chamber glow state (set by the wiring when puzzle 1 solves).
+var chamber_active: bool = false
+var _chamber_glow: Polygon2D = null
 
 ## Last Signal — Research Laboratory room (laboratory), split from
 ## level_01.gd / level_01.tscn, 2026-11-15; local coordinates 2026-11-23.
@@ -34,14 +49,40 @@ func _ready() -> void:
 	area_name = "آزمایشگاه تحقیقاتی"
 	room_rect = Rect2(0, 0, 640, 368)
 	room_tile_rect = Rect2i(0, 0, 40, 23)
-	area_hint = "آزمایشگاه — یک ربات امنیتی اینجا گشت می‌زند"
+	area_hint = "آزمایشگاه ORION — نمونه‌ی ناشناخته؛ اول گزارش تحقیقاتی را بخوان"
 	spawn_point = Vector2(320, 32)
 	tint_color = Color(0.4, 0.6, 1.0, 0.07)
 	_build_floor_if_standalone()
 	_build_wall_rects(wall_rects())
 	_build_tint()
 	_build_zone()
-	_add_area_console(Vector2(120, 192), "یادداشت‌های تحقیقاتی: برای آرایه‌ی سیگنال باید هر 3 دکل روشن باشند.")
+	# Research section (north-west): the log, the wave monitor and
+	# the experiment notes — the first clue and the vault code.
+	_add_named_console(Vector2(80, 64), RESEARCH_LOG_TEXT, "ResearchLogConsole")
+	_add_named_console(Vector2(144, 64), NOTE_07_TEXT, "Note07")
+	_add_named_console(Vector2(224, 64), WAVE_MONITOR_TEXT, "WaveMonitor")
+	_add_named_console(Vector2(80, 128), NOTE_01_TEXT, "Note01")
+	_add_named_console(Vector2(480, 80), NOTE_03_TEXT, "Note03")
+	# Sample section (centre): the containment chamber and its power
+	# panel. Analysis (east): the signal analyzer. Security
+	# (south-east): the research vault holding the keycard.
+	_build_sample_chamber()
+	var power_panel: StaticBody2D = POWER_PANEL_SCENE.instantiate()
+	power_panel.name = "PowerPanel"
+	power_panel.position = Vector2(240, 176)
+	add_child(power_panel)
+	var analyzer: StaticBody2D = SIGNAL_ANALYZER_SCENE.instantiate()
+	analyzer.name = "SignalAnalyzer"
+	analyzer.position = Vector2(552, 96)
+	add_child(analyzer)
+	var vault: StaticBody2D = RESEARCH_VAULT_SCENE.instantiate()
+	vault.name = "ResearchVault"
+	vault.position = Vector2(552, 312)
+	add_child(vault)
+	# Chained puzzles: power → signal → vault. Each puzzle unlocks
+	# the next one; the wiring counts all three as solved.
+	power_panel.solved.connect(analyzer.unlock)
+	analyzer.solved.connect(vault.unlock)
 	_add_prop(preload("res://assets/sprites/props/crate.png"), Vector2(480, 272))
 
 
@@ -260,6 +301,61 @@ func _add_area_console(pos: Vector2, message: String, texture_key: String = "") 
 	console.position = pos
 	console.message = message
 	add_child(console)
+
+
+## Named console (ORION): same as _add_area_console, but the node
+## gets a stable name so tests and the assembled level can find it.
+func _add_named_console(pos: Vector2, message: String, node_name: String) -> void:
+	var console: Node2D = CONSOLE_SCENE.instantiate()
+	console.name = node_name
+	console.position = pos
+	console.message = message
+	add_child(console)
+
+
+## The sample containment chamber (ORION, centre of the room):
+## hazard-striped frame, dark interior, cyan sample glow. Solid
+## (the player walks around it) but deliberately NOT in
+## prop_solid_rects: it sits inside the patrol rectangle, never on
+## the robot's loop, and the nav grid must keep agreeing with the
+## assembled level cell for cell.
+func _build_sample_chamber() -> void:
+	var chamber := StaticBody2D.new()
+	chamber.name = "SampleChamber"
+	chamber.position = Vector2(320, 176)
+	chamber.collision_layer = 1
+	chamber.collision_mask = 0
+	var frame := Polygon2D.new()
+	frame.polygon = PackedVector2Array([
+		Vector2(-34, -26), Vector2(34, -26),
+		Vector2(34, 26), Vector2(-34, 26)])
+	frame.color = Color(0.85, 0.7, 0.1)
+	chamber.add_child(frame)
+	var inner := Polygon2D.new()
+	inner.polygon = PackedVector2Array([
+		Vector2(-30, -22), Vector2(30, -22),
+		Vector2(30, 22), Vector2(-30, 22)])
+	inner.color = Color(0.08, 0.1, 0.14)
+	chamber.add_child(inner)
+	_chamber_glow = Polygon2D.new()
+	_chamber_glow.polygon = PackedVector2Array([
+		Vector2(-18, -14), Vector2(18, -14),
+		Vector2(18, 14), Vector2(-18, 14)])
+	_chamber_glow.color = Color(0.1, 0.35, 0.6)
+	chamber.add_child(_chamber_glow)
+	var shape := CollisionShape2D.new()
+	var rect := RectangleShape2D.new()
+	rect.size = Vector2(68, 52)
+	shape.shape = rect
+	chamber.add_child(shape)
+	add_child(chamber)
+
+
+## Light the sample glow (called by the wiring when puzzle 1 solves).
+func set_chamber_active(active: bool) -> void:
+	chamber_active = active
+	if _chamber_glow != null:
+		_chamber_glow.color = Color(0.2, 0.85, 1.0) if active else Color(0.1, 0.35, 0.6)
 
 ## Solid prop: sprite + physics body (verbatim from level_01.gd).
 func _add_prop(texture: Texture2D, pos: Vector2, size: Vector2 = Vector2(16, 16), prop_name: String = "") -> void:

@@ -158,7 +158,7 @@ func test_interactables_present() -> bool:
 		# Switches/terminals are grandchildren (children of their panels).
 		if level.is_ancestor_of(node):
 			count += 1
-	assert_eq(count, 19, "level has 19 interactables (6 consoles + 1 door + 1 visible pickup + 3 switches + 3 terminals + 1 fuse box + 3 towers + 1 transmit console)")
+	assert_eq(count, 32, "level has 32 interactables (10 consoles + 1 door + 1 visible pickup + 3 breaker switches + 3 wire terminals + 1 fuse box + 3 towers + 1 transmit console + 3 power switches + 3 pattern selectors + 3 vault dials)")
 	level.queue_free()
 	return true
 

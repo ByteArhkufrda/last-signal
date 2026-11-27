@@ -1,0 +1,78 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/levels/rooms/laboratory/signal_analyzer_laboratory.gd" id="1_analyzer"]
+[ext_resource type="Script" path="res://scripts/levels/rooms/laboratory/pattern_selector_laboratory.gd" id="2_selector"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_panel"]
+size = Vector2(16, 72)
+
+[node name="SignalAnalyzer" type="StaticBody2D" groups=["puzzles"]]
+collision_layer = 1
+collision_mask = 1
+script = ExtResource("1_analyzer")
+
+[node name="PanelBox" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(-8, -36, 8, -36, 8, 36, -8, 36)
+color = Color(0.13, 0.16, 0.24, 1)
+
+[node name="Light" type="Polygon2D" parent="."]
+position = Vector2(0, -32)
+polygon = PackedVector2Array(3, 0, 2.1, 2.1, 0, 3, -2.1, 2.1, -3, 0, -2.1, -2.1, 0, -3, 2.1, -2.1)
+color = Color(0.9, 0.2, 0.2, 1)
+
+[node name="Selector1" type="Node2D" parent="." groups=["interactable"]]
+script = ExtResource("2_selector")
+position = Vector2(0, -24)
+pattern_index = 1
+interact_label = "الگوی A را انتخاب کن"
+
+[node name="Box" type="Polygon2D" parent="Selector1"]
+polygon = PackedVector2Array(-5, -7, 5, -7, 5, 7, -5, 7)
+color = Color(0.45, 0.48, 0.55, 1)
+
+[node name="LetterLabel" type="Label" parent="Selector1"]
+offset_left = -4.0
+offset_top = -7.0
+offset_right = 6.0
+offset_bottom = 7.0
+theme_override_font_sizes/font_size = 10
+text = "A"
+
+[node name="Selector2" type="Node2D" parent="." groups=["interactable"]]
+script = ExtResource("2_selector")
+position = Vector2(0, 0)
+pattern_index = 2
+interact_label = "الگوی B را انتخاب کن"
+
+[node name="Box" type="Polygon2D" parent="Selector2"]
+polygon = PackedVector2Array(-5, -7, 5, -7, 5, 7, -5, 7)
+color = Color(0.45, 0.48, 0.55, 1)
+
+[node name="LetterLabel" type="Label" parent="Selector2"]
+offset_left = -4.0
+offset_top = -7.0
+offset_right = 6.0
+offset_bottom = 7.0
+theme_override_font_sizes/font_size = 10
+text = "B"
+
+[node name="Selector3" type="Node2D" parent="." groups=["interactable"]]
+script = ExtResource("2_selector")
+position = Vector2(0, 24)
+pattern_index = 3
+interact_label = "الگوی C را انتخاب کن"
+
+[node name="Box" type="Polygon2D" parent="Selector3"]
+polygon = PackedVector2Array(-5, -7, 5, -7, 5, 7, -5, 7)
+color = Color(0.45, 0.48, 0.55, 1)
+
+[node name="LetterLabel" type="Label" parent="Selector3"]
+offset_left = -4.0
+offset_top = -7.0
+offset_right = 6.0
+offset_bottom = 7.0
+theme_override_font_sizes/font_size = 10
+text = "C"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_panel")

@@ -108,7 +108,7 @@ var battery: float = 100.0
 ## Inventory: {item_id: count}.
 var inventory: Dictionary = {}
 
-const ITEM_DISPLAY := {"energy_cell": "سلول انرژی", "battery": "باتری", "fuse": "فیوز"}
+const ITEM_DISPLAY := {"energy_cell": "سلول انرژی", "battery": "باتری", "fuse": "فیوز", "keycard": "کارت دسترسی"}
 
 ## Nearest interactable in range right now (null when none).
 var _current_interactable: Node = null
