@@ -28,8 +28,15 @@ extends Node2D
 ## therefore connects the pickup's `collected` itself and does what the
 ## wiring does for a pickup: inventory, blip, ring, HUD message (the room's
 ## own `reward_message` when it sets one, else "<name> برداشته شد.").
+##
+## `reward_collected(item_id)` (P7) is emitted at the end of that handling,
+## once the reward is in the inventory and its message is up: MedicalWing
+## connects the medicine's recovery sequence to it (recovery_medical_wing.gd),
+## since the pickup itself only exists after the cabinet opens.
 
 signal opened
+## The reward pickup was collected and handled (item id of the reward).
+signal reward_collected(item_id: String)
 
 const DIAL_SCENE: PackedScene = preload("res://scenes/levels/rooms/medical_wing/dial_medical_wing.tscn")
 const PICKUP_SCENE: PackedScene = preload("res://scenes/levels/rooms/medical_wing/pickup_medical_wing.tscn")
@@ -49,6 +56,10 @@ const DIAL_OFFSETS: Array[Vector2] = [Vector2(20, -20), Vector2(0, -20), Vector2
 
 ## The code, one digit per dial (dial 1 first). Empty: it never opens.
 var code: Array = []
+## What each dial's prompt calls its digit ("چرخاندن <name>"), in code order;
+## set by the room before add_child (DIGIT_NAMES). A dial without a name
+## falls back to "رقم <its number>".
+var digit_names: Array = []
 ## The pickup that appears in front of the cabinet when it opens (set by the
 ## room before add_child). An empty reward_item: nothing appears.
 var reward_item: String = ""
@@ -74,7 +85,10 @@ func _ready() -> void:
 		dial.name = "MedDial%d" % (i + 1)
 		dial.position = DIAL_OFFSETS[i]
 		dial.dial_index = i + 1
-		dial.interact_label = "چرخاندن رمز " + PERSIAN_DIGITS[i + 1]
+		var digit_name := "رقم " + PERSIAN_DIGITS[i + 1]
+		if i < digit_names.size():
+			digit_name = str(digit_names[i])
+		dial.interact_label = "چرخاندن " + digit_name
 		dial.turned.connect(_on_dial_turned)
 		add_child(dial)
 		_dials.append(dial)
@@ -171,6 +185,7 @@ func _on_reward_collected(pickup: Node2D) -> void:
 		_show_message(reward_message)
 	else:
 		_show_message(pickup.display_name + " برداشته شد.")
+	reward_collected.emit(pickup.item_id)
 
 
 ## The prop's own sprite: the only Sprite2D child of the body this node hangs

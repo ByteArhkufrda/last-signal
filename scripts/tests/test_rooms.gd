@@ -152,7 +152,9 @@ func run_tests() -> void:
 			"test_medical_darkness_standalone", "test_medical_darkness_assembled",
 			"test_medical_flicker", "test_medical_cabinet", "test_medical_flashlight",
 			"test_medical_robots_dormant", "test_medical_fuse_puzzle",
-			"test_medical_fuse_full_game", "test_medical_cone_readability"]:
+			"test_medical_fuse_full_game", "test_medical_cone_readability",
+			"test_medical_pain_vignette", "test_medical_recovery",
+			"test_medical_recovery_hud_hook"]:
 		paused = false
 		var v = await call(t)
 		if v == true:
@@ -563,19 +565,19 @@ func test_medical_note_consoles() -> bool:
 	var notes := [
 		{
 			"name": "NoteConsole1", "path": "NoteConsole1", "stand": Vector2(140, 296),
-			"text": "یادداشت پزشک: هیچ بیماری‌ای نیست. دستور اومد بخش رو ببندیم.",
-			"digit": "۴",
+			"text": "پزشک: هیچ بیماری‌ای نیست. دستور اومد بخش رو ببندیم.",
+			"digit": "۴", "order": "رقم اول",
 		},
 		{
 			"name": "NoteConsole2", "path": "MedDeskDoctor/NoteConsole2", "on_desk": true,
 			"stand": Vector2(470, 262),
-			"text": "یادداشت پزشک: هر بار پیام می‌فرستادیم، یه چیزی جواب می‌داد.",
-			"digit": "۱",
+			"text": "پزشک: هر بار پیام می‌فرستادیم، یه چیزی جواب می‌داد.",
+			"digit": "۱", "order": "رقم دوم",
 		},
 		{
 			"name": "NoteConsole3", "path": "NoteConsole3", "stand": Vector2(536, 160),
-			"text": "یادداشت پزشک: هر سیگنالی که بفرستیم، فقط ما رو نجات نمی‌ده.",
-			"digit": "۷",
+			"text": "پزشک: هر سیگنالی که بفرستیم، فقط ما رو نجات نمی‌ده.",
+			"digit": "۷", "order": "رقم سوم",
 		},
 	]
 	var play: Node2D = load(PLAY_SCENES["medical_wing"]).instantiate()
@@ -591,6 +593,7 @@ func test_medical_note_consoles() -> bool:
 	# NOT part of the text constants.
 	var room_script: GDScript = room.get_script()
 	assert_eq(room_script.NOTE_DIGITS, [4, 1, 7], "the code digits are 4 1 7, one per note")
+	assert_eq(room_script.DIGIT_NAMES, ["رقم اول", "رقم دوم", "رقم سوم"], "the digits are named first, second and third")
 	# Keep-out zones: the west doorway's entry corridor (y 240-272,
 	# x 0-160) and the south gap's approach (x 288-320), each with a
 	# margin, and the scanner's line of sight (x=260, y 120-200).
@@ -607,7 +610,7 @@ func test_medical_note_consoles() -> bool:
 		if console == null:
 			continue
 		assert_true(console.is_in_group("interactable"), "%s is an interactable" % label)
-		assert_eq(console.message, note["text"] + "  (رمز: " + note["digit"] + ")", "%s message is its text plus the code digit" % label)
+		assert_eq(console.message, note["text"] + "  (" + note["order"] + ": " + note["digit"] + ")", "%s message is its text plus the named code digit" % label)
 		assert_true(console.message.length() <= 72, "%s message fits the HUD (72 characters at most)" % label)
 		assert_eq(room_script.NOTE_CONSOLES[n]["text"], note["text"], "%s text constant holds no code digit" % label)
 		assert_eq((console.get_node("Sprite2D") as Sprite2D).texture, note_tex, "%s uses the doctor's note sprite" % label)
@@ -794,6 +797,7 @@ func test_medical_darkness_standalone() -> bool:
 	assert_true(dark.power_on, "the darkness node holds the power state")
 	assert_eq(fired[0], 1, "power_restored is emitted once")
 	assert_true(not dark.flicker_enabled, "restore_power() stops the flicker")
+	assert_true(not dark.robots_awake, "restore_power() does not wake the robots (P7: only wake_robots() does)")
 	dark.step(5.0)
 	assert_true(is_equal_approx(dark.zone_darkness(), 1.0), "the dark zone stays dark after restore_power()")
 	room.restore_power()
@@ -1012,6 +1016,7 @@ func test_medical_darkness_assembled() -> bool:
 	dark.power_restored.connect(func() -> void: fired[0] += 1)
 	dark.restore_power()
 	assert_true(dark.power_on and not dark.flicker_enabled and not dark.is_flicker_dark(), "restore_power() on the node stops the flicker")
+	assert_true(not dark.robots_awake, "restore_power() on the node does not wake the robots in the full game")
 	assert_true(_flicker_pulses(dark, 60.0, FLICKER_DT).is_empty(), "no pulse in 60 s after restore_power() in the full game")
 	dark.step(5.0)
 	assert_true(is_equal_approx(dark.zone_darkness(), 1.0) and is_equal_approx(dark.room_darkness(), 0.0), "after restore_power() the zone stays dark and the rest of the wing lit")
@@ -1132,7 +1137,7 @@ func test_medical_cabinet() -> bool:
 	for i in 5:
 		await physics_frame
 	assert_true(player._current_interactable == dials[0], "beside dial 1 it is the nearest interactable")
-	assert_eq(hud.prompt_label.text, "E — چرخاندن رمز ۱", "the HUD prompt beside dial 1")
+	assert_eq(hud.prompt_label.text, "E — چرخاندن رقم اول", "the HUD prompt beside dial 1")
 	await _press_interact()
 	assert_eq(dials[0].digit, 1, "E turns dial 1 from 0 to 1")
 	assert_eq(hud.message_label.text, "کد: ۱ ۰ ۰", "the HUD shows the code after the first turn")
@@ -1142,13 +1147,13 @@ func test_medical_cabinet() -> bool:
 	for i in 5:
 		await physics_frame
 	assert_true(player._current_interactable == dials[1], "beside dial 2 it is the nearest interactable")
-	assert_eq(hud.prompt_label.text, "E — چرخاندن رمز ۲", "the HUD prompt beside dial 2")
+	assert_eq(hud.prompt_label.text, "E — چرخاندن رقم دوم", "the HUD prompt beside dial 2")
 	player.global_position = Vector2(520, 284)
 	player.velocity = Vector2.ZERO
 	for i in 5:
 		await physics_frame
 	assert_true(player._current_interactable == dials[2], "beside dial 3 it is the nearest interactable")
-	assert_eq(hud.prompt_label.text, "E — چرخاندن رمز ۳", "the HUD prompt beside dial 3")
+	assert_eq(hud.prompt_label.text, "E — چرخاندن رقم سوم", "the HUD prompt beside dial 3")
 	# The cabinet itself, from its south-east side: it only says it is locked.
 	player.global_position = Vector2(558, 330)
 	player.velocity = Vector2.ZERO
@@ -1394,9 +1399,10 @@ func _walker_dormant_at(level: Node2D, dark: Node2D, pos: Vector2) -> bool:
 ## Dormant robots (P3, 2026-11-24, port of old step 5), standalone room,
 ## LOCAL coordinates: with the power out the Medical Wing scanner does not
 ## move, rotate its scan, detect, answer a radar pulse or catch the player
-## — and it is not hidden — and it wakes the moment the power is restored.
-## (Robots elsewhere staying untouched is checked in
-## test_medical_fuse_full_game.)
+## — and it is not hidden. P7: restore_power() (the fuse box) does NOT wake
+## it; MedicalDarkness.wake_robots() does, at once and once (the medicine's
+## recovery sequence calls it). (Robots elsewhere staying untouched is checked
+## in test_medical_fuse_full_game.)
 func test_medical_robots_dormant() -> bool:
 	if not ResourceLoader.exists(ROOM_SCENES["medical_wing"]):
 		skipped += 1
@@ -1437,11 +1443,23 @@ func test_medical_robots_dormant() -> bool:
 		await physics_frame
 	assert_true(player.global_position.distance_to(scanner.global_position) <= scanner.catch_distance, "the player stands inside the scanner's catch distance")
 	assert_eq(caught[0], 0, "the dormant scanner does not catch a player standing on it")
-	# Power back: it wakes at once and chases the player in its cone.
+	# Power back, the player in its cone: it stays dormant (P7); only
+	# wake_robots() wakes it, at once, and then it chases the player.
 	player.global_position = Vector2(260, 150)
 	player.velocity = Vector2.ZERO
+	var dark: Node2D = room.get_node("MedicalDarkness")
+	var woken := [0]
+	dark.robots_woken.connect(func() -> void: woken[0] += 1)
 	room.restore_power()
-	assert_true(not scanner.dormant, "the scanner wakes the moment the power is restored")
+	for i in 4:
+		await physics_frame
+	assert_true(scanner.dormant and not dark.robots_awake, "the scanner stays dormant after restore_power() alone")
+	assert_eq(scanner.state, E_PATROL, "the dormant scanner does not chase the player in its cone after restore_power()")
+	dark.wake_robots()
+	assert_true(not scanner.dormant and dark.robots_awake, "the scanner wakes the moment wake_robots() is called")
+	assert_eq(woken[0], 1, "robots_woken is emitted once")
+	dark.wake_robots()
+	assert_eq(woken[0], 1, "a second wake_robots() does nothing")
 	assert_true(is_equal_approx(scanner.self_modulate.a, 1.0), "the awake scanner's vision cone is back")
 	for i in 4:
 		await physics_frame
@@ -1579,7 +1597,7 @@ func test_medical_fuse_puzzle() -> bool:
 	await _press_interact()
 	assert_true(room.power_on, "E on the box with a fuse restores the power")
 	assert_eq(fired[0], 1, "power_restored is emitted once")
-	assert_true(not scanner.dormant, "the scanner wakes when the box restores the power")
+	assert_true(scanner.dormant, "the scanner stays dormant when the box restores the power: the medicine wakes the robots (P7)")
 	assert_true(not dark.flicker_enabled and not dark.is_flicker_dark(), "the flicker stops once the box is solved")
 	assert_eq(int(player.inventory.get("fuse", 0)), 0, "the box consumes the fuse")
 	assert_eq(hud.inventory_label.text, "وسایل: —", "the HUD inventory is empty again")
@@ -1613,9 +1631,10 @@ func test_medical_fuse_puzzle() -> bool:
 ## robot with the medical copy is dormant inside the medical rect (WORLD
 ## (640, 0, 640, 368)) only until the power stabilises; a robot of another
 ## room is left alone; the fuse puzzle works through the real player, HUD
-## and wiring (empty box, pickup, box, chime), wakes the scanner, stops the
-## flicker, works once and leaves every mission counter, the 3 puzzles and
-## the 3 hidden objects alone. The shared player has no display names for
+## and wiring (empty box, pickup, box, chime), stops the flicker but leaves the
+## scanner dormant (P7: the medicine wakes it, see the end of the test), works
+## once and leaves every mission counter, the 3 puzzles and the 3 hidden
+## objects alone. The shared player has no display names for
 ## the flashlight and the medicine yet, so their HUD inventory lines are not
 ## pinned here (the fuse's are checked with contains()).
 func test_medical_fuse_full_game() -> bool:
@@ -1724,7 +1743,7 @@ func test_medical_fuse_full_game() -> bool:
 	assert_true(dark.power_on, "E on the box with a fuse restores the power in the full game")
 	assert_eq(hud.message_label.text, "فیوز جا خورد. برق اضطراری وصل شد.", "the HUD shows the power-restored message")
 	assert_true(chimed[0], "the chime plays when the power returns")
-	assert_true(not scanner.dormant, "the scanner wakes in the full game")
+	assert_true(scanner.dormant, "the scanner stays dormant after the box in the full game: the medicine wakes the robots (P7)")
 	assert_true(not dark.flicker_enabled and not dark.is_flicker_dark(), "the flicker stops once the box is solved in the full game")
 	assert_true(_flicker_pulses(dark, 60.0, FLICKER_DT).is_empty(), "no pulse in 60 s after the box is solved")
 	assert_eq(int(player.inventory.get("fuse", 0)), 0, "the box consumes the fuse")
@@ -1732,7 +1751,7 @@ func test_medical_fuse_full_game() -> bool:
 	assert_eq((box.get_node("Sprite2D") as Sprite2D).texture, load("res://assets/sprites/medical-wing/fusebox_open.png"), "the box shows fusebox_open")
 	assert_eq([mission.puzzles_solved, mission.towers_active, mission.current_stage(), level._puzzles_solved], [0, 0, 0, 0], "the fuse puzzle leaves the mission counters alone")
 	assert_eq([_count_in_subtree("puzzles", level), _count_in_subtree("hidden", level)], counts_before, "the puzzle and hidden-object counts are unchanged")
-	assert_true(not _walker_dormant_at(level, dark, Vector2(700, 300)), "with the power back a robot inside the medical rect is awake")
+	assert_true(_walker_dormant_at(level, dark, Vector2(700, 300)), "with the power back but the medicine not taken a robot inside the medical rect is still dormant")
 	# Second E: no message, no prompt, no second use.
 	hud.message_label.text = ""
 	hud.message_label.visible = false
@@ -1753,6 +1772,18 @@ func test_medical_fuse_full_game() -> bool:
 		await process_frame
 		await process_frame
 		return true
+	var recovery: Node = level.get_node_or_null("MedicalRecovery")
+	var pain: Node2D = level.get_node_or_null("MedicalPain")
+	assert_true(recovery != null and pain != null, "the assembled level keeps the MedicalRecovery and MedicalPain nodes alive")
+	if recovery == null or pain == null:
+		main.queue_free()
+		await process_frame
+		await process_frame
+		return true
+	# Their own _process off: the sequence below runs from step(delta) only.
+	recovery.set_process(false)
+	pain.set_process(false)
+	assert_true(not recovery.is_done and not pain.is_relieved and scanner.dormant, "before the medicine: the pain is on, the recovery has not started, the scanner is dormant")
 	var digits: Array = []
 	var messages_fit := true
 	for stand in [Vector2(780, 296), Vector2(1110, 262), Vector2(1176, 160)]:
@@ -1801,9 +1832,378 @@ func test_medical_fuse_full_game() -> bool:
 	assert_true(not is_instance_valid(medicine), "the medicine pickup is gone once collected")
 	await _press_interact()
 	assert_eq(int(player.inventory.get("medicine", 0)), 1, "a second E gives no second medicine")
+	# P7: the medicine relieves the pain and starts the recovery; the robots
+	# wake only after the AI's two messages, through the real HUD.
+	assert_true(recovery.is_done and pain.is_relieved, "taking the medicine in the full game relieves the pain and starts the recovery")
+	assert_true(scanner.dormant, "right after the medicine the scanner is still dormant: the AI speaks first")
+	pain.step(1.6)
+	assert_true(pain.is_pain_over() and is_equal_approx(pain.vignette_alpha(), 0.0), "the pain fades out for good in the full game")
+	recovery.step(recovery.message_time(0) + 0.05)
+	assert_eq(hud.message_label.text, AI_TEXTS[0], "the first AI message reaches the real HUD")
+	recovery.step(3.0)
+	assert_eq(hud.message_label.text, AI_TEXTS[1], "the second AI message follows 3 s later")
+	recovery.step(3.0)
+	assert_true(scanner.dormant, "the robots are still dormant just before the end of the sequence")
+	recovery.step(0.5)
+	assert_true(recovery.robots_woken() and dark.robots_awake and not scanner.dormant, "after the sequence the wing's scanner wakes")
+	assert_true(not _walker_dormant_at(level, dark, Vector2(700, 300)), "and a robot walking into the wing is awake too")
 	assert_eq([mission.puzzles_solved, mission.towers_active, mission.current_stage(), level._puzzles_solved], [0, 0, 0, 0], "the cabinet chain leaves the mission counters alone")
 	assert_eq([_count_in_subtree("puzzles", level), _count_in_subtree("hidden", level)], counts_before, "the cabinet chain leaves the puzzle and hidden-object counts alone")
 	main.queue_free()
+	await process_frame
+	await process_frame
+	return true
+
+
+## The AI's two garbled messages, as the spec words them (P7).
+const AI_TEXTS := [
+	"هشدار... هشدار... ورودی ناشناس... ناشنا...",
+	"سیستم... مرکزی... بازیابی... شد؟ هس... هسته...",
+]
+
+
+## Pain vignette (P7, 2026-11-27), standalone room (a HUD is added first only
+## to compare layers; the vignette never touches it). The vignette is a
+## world-canvas ColorRect, so every CanvasLayer, the HUD included, draws
+## above it; its opacity is MAX_ALPHA (0.35) x a raised-cosine pulse (period
+## 2.5 s) x the presence in the room x (1 - relief). Everything goes through
+## MedicalPain.step(delta) with the node's own _process switched off, so no
+## frame passes between a step and its check: the same deltas always give the
+## same opacities. Before the medicine the vignette pulses while the player is
+## inside the room and is gone outside; relieve() fades it out over 1.5 s and
+## it never returns.
+func test_medical_pain_vignette() -> bool:
+	if not ResourceLoader.exists(ROOM_SCENES["medical_wing"]):
+		skipped += 1
+		print("SKIP medical pain vignette: scene not split yet")
+		return true
+	if _level != null:
+		_level.queue_free()
+		_level = null
+		await process_frame
+		await process_frame
+	var hud: CanvasLayer = (load("res://scenes/ui/hud.tscn") as PackedScene).instantiate()
+	root.add_child(hud)
+	var play: Node2D = load(PLAY_SCENES["medical_wing"]).instantiate()
+	root.add_child(play)
+	var room: Node2D = play.room
+	var player: CharacterBody2D = play.player
+	var pain: Node2D = room.get_node_or_null("MedicalPain")
+	assert_true(pain != null, "the medical wing has a MedicalPain node")
+	if pain == null:
+		play.queue_free()
+		hud.queue_free()
+		await process_frame
+		await process_frame
+		return true
+	pain.set_process(false)
+	var pain_script: GDScript = pain.get_script()
+	var overlay: ColorRect = pain.get_node("Overlay")
+	var material: ShaderMaterial = overlay.material
+	var rect: Rect2 = room.room_rect
+	# What it is: the room's own shader, the room plus a margin, in the world
+	# canvas (no CanvasLayer above it), so the HUD (a CanvasLayer on layer 1)
+	# is always drawn over it.
+	assert_eq(material.shader.resource_path, "res://scenes/levels/rooms/medical_wing/pain_medical_wing.gdshader", "the vignette uses the room's own shader")
+	assert_eq(Rect2(overlay.position, overlay.size), rect.grow(340.0), "the overlay covers the room plus a 340 px margin (more than half a screen)")
+	var node: Node = overlay
+	var in_canvas_layer := false
+	while node != null:
+		if node is CanvasLayer:
+			in_canvas_layer = true
+		node = node.get_parent()
+	assert_true(not in_canvas_layer, "the vignette is a world-canvas item, not inside any CanvasLayer")
+	assert_true(hud.layer > 0, "the HUD is a CanvasLayer above the world canvas, so the vignette never covers it")
+	assert_true(pain.z_index > room.get_node("MedicalDarkness").z_index, "the vignette draws above the darkness overlay")
+	assert_eq([pain_script.MAX_ALPHA, pain_script.PULSE_PERIOD, pain_script.RELIEF_FADE_SECONDS], [0.35, 2.5, 1.5], "alpha 0.35, period 2.5 s, fade-out 1.5 s")
+	# At spawn, before any time has passed: inside the room, nothing visible
+	# yet (the pulse starts at 0).
+	assert_true(pain.player_inside(), "the player starts inside the room")
+	pain.step(0.0)
+	assert_true(is_equal_approx(pain.vignette_alpha(), 0.0) and not overlay.visible, "no vignette at clock 0: the pulse starts clear")
+	assert_true(not pain.is_relieved and not pain.is_pain_over(), "the pain is on before the medicine")
+	# The pulse: 0 -> 0.35 -> 0 every 2.5 s, from exact deltas.
+	var pulse_ok := true
+	for t in [0.625, 1.25, 1.875, 2.5, 3.75, 5.0]:
+		pain.step(t - pain.clock())
+		var expected: float = 0.35 * 0.5 * (1.0 - cos(TAU * t / 2.5))
+		if not is_equal_approx(pain.vignette_alpha(), expected):
+			pulse_ok = false
+	assert_true(pulse_ok, "the opacity follows 0.35 x (1 - cos(2 pi t / 2.5)) / 2 at 0.625, 1.25, 1.875, 2.5, 3.75 and 5 s")
+	pain.step(1.25 - fposmod(pain.clock(), 2.5) + 2.5)
+	assert_true(is_equal_approx(pain.vignette_alpha(), 0.35), "the pulse peaks at exactly 0.35")
+	assert_true(overlay.visible and is_equal_approx(material.get_shader_parameter("strength"), 0.35), "the overlay is shown and the shader gets the opacity at the peak")
+	assert_eq(material.get_shader_parameter("vignette_color"), Color(0.1, 0.0, 0.02), "the shader gets the vignette colour")
+	# Deterministic: a second node stepped in 1/60 s slices gives the same
+	# opacity at the same clock as the first one stepped in big strides.
+	var twin: Node2D = load("res://scripts/levels/rooms/medical_wing/pain_medical_wing.gd").new()
+	twin.room_rect = rect
+	room.add_child(twin)
+	twin.set_process(false)
+	var target: float = pain.clock()
+	var slices := int(round(target * 60.0))
+	for i in slices:
+		twin.step(1.0 / 60.0)
+	assert_true(is_equal_approx(twin.clock(), target) and is_equal_approx(twin.vignette_alpha(), pain.vignette_alpha()), "a node stepped in 1/60 s slices shows the same opacity at the same clock")
+	twin.free()
+	# The view rect follows the camera: the shader gets the part of the
+	# overlay the viewport shows, in px from the overlay's corner.
+	var saved_canvas: Transform2D = root.canvas_transform
+	var seen_size: Vector2 = root.get_visible_rect().size
+	root.canvas_transform = Transform2D.IDENTITY.scaled(Vector2(2, 2))
+	pain.step(0.0)
+	assert_eq(material.get_shader_parameter("view_rect"), Vector4(340.0, 340.0, seen_size.x * 0.5, seen_size.y * 0.5), "at zoom 2 the shader sees half the viewport, from the world origin")
+	root.canvas_transform = Transform2D(Vector2(1, 0), Vector2(0, 1), Vector2(-100, -50))
+	pain.step(0.0)
+	assert_eq(material.get_shader_parameter("view_rect"), Vector4(440.0, 390.0, seen_size.x, seen_size.y), "a camera scrolled by (100, 50) moves the view rect by the same")
+	root.canvas_transform = saved_canvas
+	# Outside the room (west of the doorway, and the other three sides)
+	# nothing is drawn: the presence fades to 0 within 0.3 s.
+	player.global_position = Vector2(-40, 256)
+	pain.step(1.0)
+	assert_true(not pain.player_inside() and is_equal_approx(pain.presence(), 0.0), "the presence is 0 while the player is west of the doorway")
+	assert_true(is_equal_approx(pain.vignette_alpha(), 0.0) and not overlay.visible, "no vignette outside the room")
+	var outside_ok := true
+	for outside in [Vector2(700, 200), Vector2(300, -40), Vector2(300, 420)]:
+		player.global_position = room.spawn_point
+		pain.step(5.0)
+		player.global_position = outside
+		pain.step(5.0)
+		if pain.player_inside() or overlay.visible or not is_equal_approx(pain.vignette_alpha(), 0.0):
+			outside_ok = false
+	assert_true(outside_ok, "no vignette with the player outside the room on any of the other three sides")
+	# Back inside: it fades in over 0.3 s.
+	player.global_position = room.spawn_point
+	pain.step(0.15)
+	assert_true(is_equal_approx(pain.presence(), 0.5), "the vignette is half present 0.15 s after entering")
+	pain.step(0.15)
+	assert_true(is_equal_approx(pain.presence(), 1.0), "the vignette is fully present 0.3 s after entering")
+	# The medicine: from a pulse peak, relieve() fades it out over 1.5 s.
+	pain.step(fposmod(1.25 - pain.clock(), 2.5))
+	assert_true(is_equal_approx(pain.vignette_alpha(), 0.35), "the pain is at a peak just before the medicine")
+	pain.relieve()
+	assert_true(pain.is_relieved and not pain.is_pain_over(), "relieve() starts the fade-out")
+	pain.step(0.75)
+	assert_true(is_equal_approx(pain.relief_amount(), 0.5), "the fade-out is half done after 0.75 s")
+	var half_expected: float = 0.35 * pain.pulse_at(pain.clock()) * 0.5
+	assert_true(is_equal_approx(pain.vignette_alpha(), half_expected) and pain.vignette_alpha() <= 0.175 + 0.00001, "halfway through, the opacity is the pulse at half strength")
+	pain.step(0.74)
+	assert_true(not pain.is_pain_over(), "the pain is not over 1.49 s after the medicine")
+	pain.step(0.02)
+	assert_true(pain.is_pain_over() and is_equal_approx(pain.vignette_alpha(), 0.0) and not overlay.visible, "the vignette is gone 1.5 s after the medicine")
+	# It never returns: not while the player stays, not after leaving and
+	# coming back, not after a second relieve().
+	var max_alpha := 0.0
+	for i in 80:
+		pain.step(0.25)
+		max_alpha = maxf(max_alpha, pain.vignette_alpha())
+	assert_eq(max_alpha, 0.0, "no vignette at all in the 20 s after the pain is over")
+	player.global_position = Vector2(-40, 256)
+	pain.step(5.0)
+	player.global_position = room.spawn_point
+	pain.step(5.0)
+	pain.relieve()
+	pain.step(1.25)
+	assert_true(pain.is_pain_over() and is_equal_approx(pain.vignette_alpha(), 0.0) and not overlay.visible, "leaving, coming back and a second relieve() do not bring it back")
+	play.queue_free()
+	hud.queue_free()
+	await process_frame
+	await process_frame
+	return true
+
+
+## The medicine's consequences (P7, 2026-11-27), standalone room with a HUD:
+## the room-1 mission "Medical Recovery". Nothing happens before the medicine.
+## Taking it (through the cabinet, the real pickup and its signal chain) in
+## this order: the pain fades (1.5 s), medical_recovery_done is emitted once
+## (the room's and the node's), the HUD shows the AI's two messages 3 s
+## apart after a 3 s delay, and 0.5 s after the last slot the robots wake up.
+## The medicine does not restore the power: the lights keep flickering until
+## the fuse box. Time is driven by step(delta) on the two nodes with their
+## own _process off, so no frame passes.
+func test_medical_recovery() -> bool:
+	if not ResourceLoader.exists(ROOM_SCENES["medical_wing"]):
+		skipped += 1
+		print("SKIP medical recovery: scene not split yet")
+		return true
+	if _level != null:
+		_level.queue_free()
+		_level = null
+		await process_frame
+		await process_frame
+	var hud: CanvasLayer = (load("res://scenes/ui/hud.tscn") as PackedScene).instantiate()
+	root.add_child(hud)
+	var play: Node2D = load(PLAY_SCENES["medical_wing"]).instantiate()
+	root.add_child(play)
+	var room: Node2D = play.room
+	var player: CharacterBody2D = play.player
+	var cabinet: Node2D = room.get_node_or_null("MedCabinetWorn/MedCabinet")
+	var pain: Node2D = room.get_node_or_null("MedicalPain")
+	var rec: Node = room.get_node_or_null("MedicalRecovery")
+	var dark: Node2D = room.get_node_or_null("MedicalDarkness")
+	var scanner: CharacterBody2D = room.get_node_or_null("ScannerRobot")
+	var have_all: bool = cabinet != null and pain != null and rec != null and dark != null and scanner != null
+	assert_true(have_all, "the room has the cabinet, MedicalPain, MedicalRecovery, MedicalDarkness and the scanner")
+	if not have_all:
+		play.queue_free()
+		hud.queue_free()
+		await process_frame
+		await process_frame
+		return true
+	pain.set_process(false)
+	rec.set_process(false)
+	var rec_script: GDScript = rec.get_script()
+	# The spec's constants and texts.
+	assert_eq(rec_script.AI_MESSAGES, AI_TEXTS, "the AI's two messages are the specified ones")
+	var fit := true
+	for message in rec_script.AI_MESSAGES:
+		if message.length() > 72:
+			fit = false
+	assert_true(fit, "each AI message fits the HUD (72 characters at most)")
+	assert_eq([rec_script.SEQUENCE_DELAY, rec_script.MESSAGE_SECONDS, rec_script.WAKE_DELAY], [3.0, 3.0, 0.5], "3 s before the first message, 3 s each, the robots wake 0.5 s after the last")
+	assert_true(is_equal_approx(rec.sequence_seconds(), 9.5), "the whole sequence takes 9.5 s")
+	# Before the medicine nothing happens, however much time passes.
+	rec.step(100.0)
+	assert_true(not rec.is_done and not rec.robots_woken() and rec.messages_shown() == 0 and scanner.dormant and not dark.robots_awake, "before the medicine the recovery does nothing and the robots stay dormant")
+	assert_true(not pain.is_relieved, "the pain is on before the medicine")
+	# Open the cabinet with the note digits and take the medicine.
+	var fired := [0, 0]
+	rec.medical_recovery_done.connect(func() -> void: fired[0] += 1)
+	room.medical_recovery_done.connect(func() -> void: fired[1] += 1)
+	var dials: Array = cabinet.dials()
+	dials[0].set_digit(4)
+	dials[1].set_digit(1)
+	dials[2].set_digit(6)
+	dials[2].interact()
+	assert_true(cabinet.is_open, "the code 4 1 7 opens the cabinet")
+	var medicine: Node2D = room.get_node_or_null("MedMedicinePickup")
+	assert_true(medicine != null, "the open cabinet gives the medicine")
+	if medicine == null:
+		play.queue_free()
+		hud.queue_free()
+		await process_frame
+		await process_frame
+		return true
+	assert_true(not rec.is_done and not pain.is_relieved and fired == [0, 0], "opening the cabinet starts nothing: only taking the medicine does")
+	medicine.interact()
+	assert_eq(int(player.inventory.get("medicine", 0)), 1, "taking the medicine puts it in the inventory")
+	assert_eq(hud.message_label.text, "درد کم شد. حالم بهتر شد.", "the relief message is up first")
+	assert_true(rec.is_done and pain.is_relieved, "the medicine starts the recovery and relieves the pain")
+	assert_eq(fired, [1, 1], "medical_recovery_done is emitted once by the node and once by the room")
+	assert_true(scanner.dormant and rec.messages_shown() == 0, "right after the medicine the robots are still dormant and the AI is silent")
+	# The sequence, in slices of 0.05 s: the order and the times of the events.
+	var order: Array = []
+	var times := {}
+	var t := 0.0
+	for i in 240:
+		pain.step(0.05)
+		rec.step(0.05)
+		t += 0.05
+		if not times.has("pain") and pain.is_pain_over():
+			times["pain"] = t
+			order.append("pain over")
+		if not times.has("m1") and hud.message_label.text == AI_TEXTS[0]:
+			times["m1"] = t
+			order.append("message 1")
+		if not times.has("m2") and hud.message_label.text == AI_TEXTS[1]:
+			times["m2"] = t
+			order.append("message 2")
+		if not times.has("wake") and not scanner.dormant:
+			times["wake"] = t
+			order.append("robots wake")
+	assert_eq(order, ["pain over", "message 1", "message 2", "robots wake"], "the order after the medicine: the pain fades, the AI speaks twice, the robots wake")
+	assert_true(times.get("pain", 0.0) >= 1.45 and times.get("pain", 99.0) <= 1.6, "the pain is over after about 1.5 s (at %s s)" % times.get("pain", -1.0))
+	assert_true(times.get("m1", 0.0) >= 2.95 and times.get("m1", 99.0) <= 3.1, "the first AI message appears after about 3 s (at %s s)" % times.get("m1", -1.0))
+	assert_true(times.get("m2", 0.0) >= 5.95 and times.get("m2", 99.0) <= 6.1, "the second AI message appears 3 s later (at %s s)" % times.get("m2", -1.0))
+	assert_true(times.get("wake", 0.0) >= 9.45 and times.get("wake", 99.0) <= 9.6, "the robots wake 0.5 s after the last message's slot (at %s s)" % times.get("wake", -1.0))
+	assert_true(rec.robots_woken() and rec.messages_shown() == 2 and dark.robots_awake, "the sequence is finished: two messages shown, robots woken")
+	assert_eq(hud.message_label.text, AI_TEXTS[1], "the last AI message is still up when the robots wake")
+	# Exactly once, however often the medicine is reported.
+	rec.medicine_collected()
+	rec.step(20.0)
+	assert_eq(fired, [1, 1], "medical_recovery_done stays at one emission")
+	assert_eq(rec.messages_shown(), 2, "no AI message is shown twice")
+	# The medicine does not restore the power: the lights still flicker until
+	# the fuse box (restore_power()), which stops them without touching the robots.
+	assert_true(not room.power_on and dark.flicker_enabled, "the medicine does not restore the power: the lights still flicker")
+	room.restore_power()
+	assert_true(not dark.flicker_enabled and not dark.is_flicker_dark(), "restore_power() still stops the flicker")
+	assert_true(not scanner.dormant, "and the robots stay awake")
+	# The mission does not know it.
+	assert_eq([play.mission.puzzles_solved, play.mission.towers_active, play.mission.current_stage(), play._puzzles_solved], [0, 0, 0, 0], "the recovery leaves the mission counters alone")
+	assert_eq([_count_in_subtree("puzzles", room), _count_in_subtree("hidden", room)], [0, 0], "the medical wing still has no puzzle and no hidden object")
+	play.queue_free()
+	hud.queue_free()
+	await process_frame
+	await process_frame
+	return true
+
+
+## A HUD stub whose script is built at run time: show_message() records the
+## texts; the "tasks" variant also has set_task_done(). Null when the script
+## does not compile (the test then fails on its own assert).
+const HUD_STUB_PLAIN := "extends CanvasLayer\nvar shown: Array = []\nfunc show_message(text: String) -> void:\n\tshown.append(text)\n"
+const HUD_STUB_TASKS := HUD_STUB_PLAIN + "var done: Array = []\nfunc set_task_done(index: int) -> void:\n\tdone.append(index)\n"
+
+
+func _make_hud_stub(source: String) -> CanvasLayer:
+	var script := GDScript.new()
+	script.source_code = source
+	if script.reload() != OK:
+		return null
+	var stub := CanvasLayer.new()
+	stub.name = "HUD"
+	stub.set_script(script)
+	return stub
+
+
+## The HUD hook of the recovery (P7): hud.set_task_done(0) is called once, only
+## when the HUD has that method (the real HUD does not yet), and a missing
+## method or a missing HUD never raises. Four isolated recovery nodes, each
+## beside its own HUD (a stub with the method, a stub without it, none, the
+## real HUD), no pain or darkness node: the sequence also copes with those
+## being absent. The nodes' _process is off, so time is the steps given.
+func test_medical_recovery_hud_hook() -> bool:
+	var rec_script: GDScript = load("res://scripts/levels/rooms/medical_wing/recovery_medical_wing.gd")
+	var holders: Array = []
+	var recs: Array = []
+	var huds: Array = []
+	var stub_sources := [HUD_STUB_TASKS, HUD_STUB_PLAIN, "", ""]
+	for k in 4:
+		var holder := Node.new()
+		holder.name = "RecoveryHookTest%d" % k
+		root.add_child(holder)
+		holders.append(holder)
+		var hud: CanvasLayer = null
+		if k < 2:
+			hud = _make_hud_stub(stub_sources[k])
+		elif k == 3:
+			hud = (load("res://scenes/ui/hud.tscn") as PackedScene).instantiate()
+		if hud != null:
+			holder.add_child(hud)
+		huds.append(hud)
+		var rec: Node = rec_script.new()
+		rec.name = "MedicalRecovery"
+		holder.add_child(rec)
+		rec.set_process(false)
+		recs.append(rec)
+	assert_true(huds[0] != null and huds[1] != null, "the two stub HUD scripts compile")
+	if huds[0] != null and huds[1] != null:
+		assert_true(huds[0].has_method("set_task_done") and not huds[1].has_method("set_task_done"), "one stub HUD has set_task_done(), the other has not")
+		for k in 4:
+			var fired := [0]
+			recs[k].medical_recovery_done.connect(func() -> void: fired[0] += 1)
+			recs[k].medicine_collected()
+			recs[k].medicine_collected()
+			assert_true(recs[k].is_done and fired[0] == 1, "case %d: the medicine is reported once, the signal fires once" % k)
+			recs[k].step(recs[k].sequence_seconds() + 0.1)
+			assert_true(recs[k].robots_woken() and recs[k].messages_shown() == 2, "case %d: the sequence runs to its end with no pain or darkness node" % k)
+		assert_eq(huds[0].done, [0], "the HUD with set_task_done() gets set_task_done(0) exactly once")
+		assert_eq(huds[0].shown, AI_TEXTS, "the HUD receives the two AI messages, in order")
+		assert_eq(huds[1].shown, AI_TEXTS, "the HUD without set_task_done() still gets the messages, and nothing raised")
+		assert_eq(huds[3].message_label.text, AI_TEXTS[1], "the real HUD (no set_task_done() yet) shows the last AI message")
+	for holder in holders:
+		holder.queue_free()
 	await process_frame
 	await process_frame
 	return true

@@ -1626,9 +1626,10 @@ func test_scanner_stays_at_post_and_scans() -> bool:
 	var level: Node2D = scene.instantiate()
 	root.add_child(level)
 	await process_frame
-	# The game starts with the power out, which leaves this scanner dormant
-	# (P3): restore it so the test sees the awake scanner it is about.
-	level.get_node("MedicalDarkness").restore_power()
+	# The robots of the medical wing start dormant (P3) and wake only when the
+	# darkness node is told to (P7: after the medicine, not at the fuse box):
+	# wake them so the test sees the awake scanner it is about.
+	level.get_node("MedicalDarkness").wake_robots()
 	var scanner: CharacterBody2D = level.get_node("ScannerRobot")
 	scanner.scan_interval = 0.5
 	var post: Vector2 = scanner.global_position
@@ -1645,8 +1646,8 @@ func test_scanner_chases_visible_player() -> bool:
 	var level: Node2D = scene.instantiate()
 	root.add_child(level)
 	await process_frame
-	# Power is out at the start, which leaves this scanner dormant (P3).
-	level.get_node("MedicalDarkness").restore_power()
+	# The medical wing's robots start dormant (P3, woken by wake_robots() since P7).
+	level.get_node("MedicalDarkness").wake_robots()
 	var scanner: CharacterBody2D = level.get_node("ScannerRobot")
 	var player: CharacterBody2D = level.get_node("Player")
 	scanner._facing = Vector2.DOWN
@@ -1667,8 +1668,8 @@ func test_scanner_returns_to_post() -> bool:
 	var level: Node2D = scene.instantiate()
 	root.add_child(level)
 	await process_frame
-	# Power is out at the start, which leaves this scanner dormant (P3).
-	level.get_node("MedicalDarkness").restore_power()
+	# The medical wing's robots start dormant (P3, woken by wake_robots() since P7).
+	level.get_node("MedicalDarkness").wake_robots()
 	var scanner: CharacterBody2D = level.get_node("ScannerRobot")
 	var player: CharacterBody2D = level.get_node("Player")
 	scanner._facing = Vector2.DOWN

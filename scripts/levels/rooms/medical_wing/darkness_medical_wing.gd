@@ -41,16 +41,22 @@ extends Node2D
 ## over it (they work in the standalone room); the fuse box calls
 ## restore_power() on this node through its `solved` signal.
 ##
-## Dormant robots (P3): until restore_power(), every enemy under this
-## node's parent whose position is inside the room's rect gets
-## `dormant = true` (see security_robot_medical_wing.gd) and does
-## nothing; restore_power() wakes them at once. Only enemies of the same
-## branch are touched (two levels alive at once never fight over each
-## other's robots), and only enemies that HAVE a `dormant` flag: the
-## other rooms' robots are their own per-room copies and stay as they are.
+## Dormant robots (P3; the wake trigger moved in P7): until wake_robots(),
+## every enemy under this node's parent whose position is inside the room's
+## rect gets `dormant = true` (see security_robot_medical_wing.gd) and does
+## nothing; wake_robots() wakes them at once and for good. restore_power()
+## (the fuse box) no longer wakes them: since P7 the robots are the central
+## AI's, and they wake when the AI has spoken, after the medicine is taken
+## (recovery_medical_wing.gd calls wake_robots() at the end of its message
+## sequence). Only enemies of the same branch are touched (two levels alive
+## at once never fight over each other's robots), and only enemies that HAVE
+## a `dormant` flag: the other rooms' robots are their own per-room copies
+## and stay as they are.
 
 ## Emitted once, by the first restore_power().
 signal power_restored
+## Emitted once, by the first wake_robots().
+signal robots_woken
 
 const SHADER: Shader = preload("res://scenes/levels/rooms/medical_wing/darkness_medical_wing.gdshader")
 ## Light radius in SCREEN px at the 640x360 base resolution. The player
@@ -92,8 +98,11 @@ var room_rect: Rect2 = Rect2(0, 0, 640, 368)
 ## add_child. An empty rect means "no zone".
 var zone_rect: Rect2 = Rect2()
 ## False until restore_power(): until then the wing runs on emergency
-## power (lit, flickering, robots dormant).
+## power (lit, flickering).
 var power_on: bool = false
+## False until wake_robots(): until then every robot inside the room's rect
+## is dormant. Independent of power_on.
+var robots_awake: bool = false
 ## The lights flicker while this is true; restore_power() turns it off.
 ## (Tests that need a calm room set it false themselves.)
 var flicker_enabled: bool = true
@@ -187,9 +196,9 @@ func light_radius_screen() -> float:
 	return TINY_RADIUS_SCREEN
 
 
-## The local power stabilises: the flicker stops for good, the robots in
-## the room wake up and the chime plays. The dark zone stays dark.
-## Calling it again does nothing.
+## The local power stabilises: the flicker stops for good and the chime
+## plays; the message is the fuse box's. The dark zone stays dark and the
+## robots stay dormant (see wake_robots()). Calling it again does nothing.
 func restore_power() -> void:
 	if power_on:
 		return
@@ -197,9 +206,18 @@ func restore_power() -> void:
 	flicker_enabled = false
 	_flicker_dark = false
 	_pulses_left = 0
-	_update_dormancy()
 	_play_chime()
 	power_restored.emit()
+
+
+## Wake every dormant robot in the room, at once and for good (a robot that
+## walks in later is awake too). Calling it again does nothing.
+func wake_robots() -> void:
+	if robots_awake:
+		return
+	robots_awake = true
+	_update_dormancy()
+	robots_woken.emit()
 
 
 ## Advance the flicker and the fades by delta seconds and refresh the
@@ -253,7 +271,7 @@ func _play_chime() -> void:
 		audio.play(POWER_SOUND)
 
 
-## Robots inside the room's rect are dormant until the power stabilises.
+## Robots inside the room's rect are dormant until wake_robots().
 ## A robot that walks in (a chaser from the next room, say) freezes where
 ## it crosses the line; one that is awake outside is untouched. The rect
 ## is local, so the position goes through to_local like the player's.
@@ -264,7 +282,7 @@ func _update_dormancy() -> void:
 	for enemy in get_tree().get_nodes_in_group("enemies"):
 		if not scope.is_ancestor_of(enemy) or not ("dormant" in enemy):
 			continue
-		enemy.dormant = not power_on and room_rect.has_point(to_local((enemy as Node2D).global_position))
+		enemy.dormant = not robots_awake and room_rect.has_point(to_local((enemy as Node2D).global_position))
 
 
 func _apply() -> void:

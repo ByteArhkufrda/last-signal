@@ -12,8 +12,10 @@ extends Node2D
 ## is consumed (inventory -1), the box shows fusebox_open, a HUD message,
 ## then `solved` fires. MedicalWing connects `solved` to the MedicalDarkness
 ## node (it survives the full-game flatten, this room does not), whose
-## restore_power() fades the darkness, wakes the robots and plays the
-## chime. After that the box is inert and leaves group "interactable".
+## restore_power() stops the lights' flicker and plays the chime (the robots
+## do NOT wake here: since P7 they wake after the medicine, see
+## recovery_medical_wing.gd). After that the box is inert and leaves group
+## "interactable".
 ## Same interactable interface as console.gd: interact_label, interact(),
 ## set_highlighted(bool); it also talks to the HUD itself.
 

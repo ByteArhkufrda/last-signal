@@ -24,6 +24,8 @@ const CONSOLE_SCENE: PackedScene = preload("res://scenes/levels/rooms/medical_wi
 const PICKUP_SCENE: PackedScene = preload("res://scenes/levels/rooms/medical_wing/pickup_medical_wing.tscn")
 const FUSE_BOX_SCENE: PackedScene = preload("res://scenes/levels/rooms/medical_wing/fuse_box_medical_wing.tscn")
 const CABINET_SCENE: PackedScene = preload("res://scenes/levels/rooms/medical_wing/cabinet_medical_wing.tscn")
+const MEDICAL_PAIN: GDScript = preload("res://scripts/levels/rooms/medical_wing/pain_medical_wing.gd")
+const MEDICAL_RECOVERY: GDScript = preload("res://scripts/levels/rooms/medical_wing/recovery_medical_wing.gd")
 const MED_WALL_H_TEXTURE: Texture2D = preload("res://assets/sprites/medical-wing/wall_h.png")
 const MED_WALL_V_TEXTURE: Texture2D = preload("res://assets/sprites/medical-wing/wall_v.png")
 const MED_PROP_PATHS := {
@@ -113,22 +115,32 @@ const MED_PROP_PATHS := {
 ## work only standalone. In the full game, call restore_power() on the
 ## surviving level.get_node("MedicalDarkness") instead.
 ##
-## Dormant robots (P3, 2026-11-24): the robots in this room are dormant
-## until the local power stabilises (MedicalDarkness sets their `dormant`
-## flag).
+## Dormant robots (P3, 2026-11-24; P7, 2026-11-27): the robots in this room
+## are dormant (MedicalDarkness sets their `dormant` flag) until
+## MedicalDarkness.wake_robots(), which the recovery sequence calls after the
+## medicine is taken. The fuse box no longer wakes them.
 ##
 ## Power puzzle (P4, 2026-11-25; P5, 2026-11-26): take the FLASHLIGHT that
 ## lies on the doctor's desk (MedDeskDoctor/MedFlashlight, see
 ## FLASHLIGHT_PICKUP), go into the dark zone, find the FUSE there
 ## (MedFusePickup, see FUSE_PICKUP), put it in the FUSE BOX (MedFuseBox,
 ## see FUSE_BOX) and MedicalDarkness stabilises the local power: the
-## flicker stops, the robots wake, the chime plays.
+## flicker stops and the chime plays (the robots stay dormant, see P7).
 ##
 ## Medical Recovery (P6, 2026-11-26): read the notes (each ends with one code
 ## digit, see NOTE_DIGITS), set the code on the three dials of the CABINET
 ## (MedCabinetWorn/MedCabinet, see CABINET) and take the MEDICINE it gives
 ## (see MEDICINE_PICKUP): the HUD says the pain is gone. No door depends on
 ## it yet.
+##
+## Pain and recovery (P7, 2026-11-27): until the medicine is taken, a slow
+## dark vignette pulses at the screen edges while the player is in the room
+## (MedicalPain, pain_medical_wing.gd). Taking the medicine makes it fade out
+## for good and starts MedicalRecovery (recovery_medical_wing.gd): the central
+## AI's two garbled HUD messages, then MedicalDarkness.wake_robots(); it also
+## emits `medical_recovery_done` once and ticks off task 0 on a HUD that has
+## set_task_done(). Both nodes are children, so they survive the full-game
+## flatten; this node's own `medical_recovery_done` works only standalone.
 ##
 ## None of these nodes is in group "puzzles" or "hidden": the mission
 ## counters and the pinned 3 puzzles / 3 hidden objects do not know them.
@@ -151,15 +163,15 @@ const NOTE_LABEL := "خواندن یادداشت"
 const NOTE_CONSOLES := [
 	{
 		"name": "NoteConsole1", "pos": Vector2(140, 320),
-		"text": "یادداشت پزشک: هیچ بیماری‌ای نیست. دستور اومد بخش رو ببندیم.",
+		"text": "پزشک: هیچ بیماری‌ای نیست. دستور اومد بخش رو ببندیم.",
 	},
 	{
 		"name": "NoteConsole2", "pos": Vector2(450, 260), "on": "MedDeskDoctor",
-		"text": "یادداشت پزشک: هر بار پیام می‌فرستادیم، یه چیزی جواب می‌داد.",
+		"text": "پزشک: هر بار پیام می‌فرستادیم، یه چیزی جواب می‌داد.",
 	},
 	{
 		"name": "NoteConsole3", "pos": Vector2(560, 160),
-		"text": "یادداشت پزشک: هر سیگنالی که بفرستیم، فقط ما رو نجات نمی‌ده.",
+		"text": "پزشک: هر سیگنالی که بفرستیم، فقط ما رو نجات نمی‌ده.",
 	},
 ]
 
@@ -167,8 +179,13 @@ const NOTE_CONSOLES := [
 ## Each note's HUD message ends with its digit, appended in code
 ## (_note_message) and NOT stored in the NOTE_CONSOLES texts, so the texts
 ## can be rewritten without touching the code. HUD messages do not wrap
-## (600 px label): base text + "  (رمز: ۴)" must stay <= 72 characters.
+## (600 px label): base text + "  (رقم اول: ۴)" must stay <= 72 characters.
 const NOTE_DIGITS := [4, 1, 7]
+## How the digits are named, in code order: each note's message ends with
+## "(<name>: <digit>)" and each dial's prompt is "چرخاندن <name>", so the
+## player knows which dial a digit belongs to whatever order the notes are
+## read in. (The HUD's «کد: ۴ ۱ ۷» line and NOTE_DIGITS are unchanged.)
+const DIGIT_NAMES := ["رقم اول", "رقم دوم", "رقم سوم"]
 const PERSIAN_DIGITS := "۰۱۲۳۴۵۶۷۸۹"
 
 ## The power puzzle (P4). LOCAL positions, pinned in test_rooms.gd.
@@ -252,6 +269,10 @@ const FLASHLIGHT_PICKUP := {
 
 ## Emitted once, when the power comes back (the darkness node's signal).
 signal power_restored
+## Emitted once, when the medicine is collected (the recovery node's signal);
+## standalone only, like power_restored: in the full game connect to
+## level.get_node("MedicalRecovery").medical_recovery_done.
+signal medical_recovery_done
 
 const MEDICAL_DARKNESS: GDScript = preload("res://scripts/levels/rooms/medical_wing/darkness_medical_wing.gd")
 
@@ -260,6 +281,8 @@ const MEDICAL_DARKNESS: GDScript = preload("res://scripts/levels/rooms/medical_w
 var power_on: bool = false
 
 var _darkness: Node2D = null
+var _pain: Node2D = null
+var _recovery: Node = null
 
 
 func _ready() -> void:
@@ -281,6 +304,8 @@ func _ready() -> void:
 	_build_medical_props()
 	_build_note_consoles()
 	_build_darkness()
+	_build_pain()
+	_build_recovery()
 	_build_flashlight_pickup()
 	_build_cabinet()
 	_build_fuse_pickup()
@@ -429,10 +454,11 @@ func _build_note_consoles() -> void:
 
 
 ## The HUD message of note `index`: its base text plus the code digit,
-## e.g. "...  (رمز: ۴)" (Persian digit; NOTE_DIGITS[index]).
+## e.g. "...  (رقم اول: ۴)" (DIGIT_NAMES[index], then the Persian digit
+## NOTE_DIGITS[index]).
 func _note_message(index: int) -> String:
 	var digit := int(NOTE_DIGITS[index])
-	return str(NOTE_CONSOLES[index]["text"]) + "  (رمز: " + PERSIAN_DIGITS[digit] + ")"
+	return str(NOTE_CONSOLES[index]["text"]) + "  (" + DIGIT_NAMES[index] + ": " + PERSIAN_DIGITS[digit] + ")"
 
 
 ## The dark zone's LOCAL rect (the room contract is untouched: this is an
@@ -453,12 +479,11 @@ func _build_darkness() -> void:
 	add_child(_darkness)
 
 
-## The local power stabilises: the flicker stops, the robots in the room
-## wake up and the chime plays (the dark zone stays dark). Works while
-## this node is alive
-## (standalone); in the full game use
-## level.get_node("MedicalDarkness").restore_power() (the fuse box does,
-## through its `solved` signal).
+## The local power stabilises: the flicker stops and the chime plays (the dark
+## zone stays dark and the robots stay dormant until the medicine, see
+## MedicalRecovery). Works while this node is alive (standalone); in the full
+## game use level.get_node("MedicalDarkness").restore_power() (the fuse box
+## does, through its `solved` signal).
 func restore_power() -> void:
 	if _darkness != null:
 		_darkness.restore_power()
@@ -467,6 +492,32 @@ func restore_power() -> void:
 func _on_power_restored() -> void:
 	power_on = true
 	power_restored.emit()
+
+
+## The pain vignette (P7): a child node (so the flatten keeps it alive) that
+## pulses at the screen edges while the player is in the room, until the
+## medicine is taken. room_rect is local, and so is the node.
+func _build_pain() -> void:
+	_pain = MEDICAL_PAIN.new()
+	_pain.name = "MedicalPain"
+	_pain.room_rect = room_rect
+	add_child(_pain)
+
+
+## The recovery sequence (P7): what follows the medicine (pain fade, the AI's
+## messages, the robots waking). A plain Node child, so the flatten keeps it
+## alive. It needs the pain and the darkness nodes, built before it.
+func _build_recovery() -> void:
+	_recovery = MEDICAL_RECOVERY.new()
+	_recovery.name = "MedicalRecovery"
+	_recovery.pain = _pain
+	_recovery.darkness = _darkness
+	_recovery.medical_recovery_done.connect(_on_recovery_done)
+	add_child(_recovery)
+
+
+func _on_recovery_done() -> void:
+	medical_recovery_done.emit()
 
 
 ## The flashlight (P5; the desk's own MedFlashlight since P6): an instance of
@@ -494,12 +545,15 @@ func _build_flashlight_pickup() -> void:
 ## the prop's name, sprite and collision stay). It builds its own three dials
 ## and, when the dials equal NOTE_DIGITS, opens and spawns the medicine in
 ## front of itself (MEDICINE_PICKUP). It never refers to this room, so it
-## keeps working after the full-game flatten frees the room node.
+## keeps working after the full-game flatten frees the room node. Its
+## `reward_collected` signal (the medicine was taken) starts the recovery
+## sequence (P7), a sibling node that survives the flatten too.
 func _build_cabinet() -> void:
 	var body: Node2D = get_node(CABINET["prop"])
 	var cabinet: Node2D = CABINET_SCENE.instantiate()
 	cabinet.name = CABINET["name"]
 	cabinet.code = NOTE_DIGITS.duplicate()
+	cabinet.digit_names = DIGIT_NAMES.duplicate()
 	cabinet.reward_node_name = MEDICINE_PICKUP["name"]
 	cabinet.reward_offset = MEDICINE_PICKUP["offset"]
 	cabinet.reward_item = MEDICINE_PICKUP["item"]
@@ -507,6 +561,7 @@ func _build_cabinet() -> void:
 	cabinet.reward_label = MEDICINE_PICKUP["label"]
 	cabinet.reward_message = MEDICINE_PICKUP["message"]
 	cabinet.reward_texture = _med_texture(MEDICINE_PICKUP["texture"])
+	cabinet.reward_collected.connect(_recovery.medicine_collected)
 	body.add_child(cabinet)
 
 

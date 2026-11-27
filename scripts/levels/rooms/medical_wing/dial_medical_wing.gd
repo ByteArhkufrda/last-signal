@@ -24,7 +24,7 @@ const DIGIT_FONT_SIZE := 10
 
 ## 1-based position in the code (dial 1 is the first digit).
 @export var dial_index: int = 1
-@export var interact_label: String = "چرخاندن رمز ۱"
+@export var interact_label: String = "چرخاندن رقم اول"
 
 ## The digit the dial shows now, 0-9.
 var digit: int = 0
