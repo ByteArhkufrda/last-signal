@@ -71,6 +71,9 @@ const SIGN_ELECTRIC_TEXTURE: Texture2D = preload("res://assets/sprites/laborator
 const SIGN_CAUTION_TEXTURE: Texture2D = preload("res://assets/sprites/laboratory/sign_caution.png")
 const EXTINGUISHER_TEXTURE: Texture2D = preload("res://assets/sprites/laboratory/extinguisher.png")
 const CONTAINER_TEXTURE: Texture2D = preload("res://assets/sprites/laboratory/container_blue.png")
+const LOCKER_BLUE_TEXTURE: Texture2D = preload("res://assets/sprites/laboratory/locker_blue.png")
+const LOCKER_RED_TEXTURE: Texture2D = preload("res://assets/sprites/laboratory/locker_red.png")
+const LOCKER_GREEN_TEXTURE: Texture2D = preload("res://assets/sprites/laboratory/locker_green.png")
 const CHAIR_TEXTURE: Texture2D = preload("res://assets/sprites/laboratory/chair.png")
 const DESK_TEXTURE: Texture2D = preload("res://assets/sprites/laboratory/desk.png")
 const MONITOR_TEXTURE: Texture2D = preload("res://assets/sprites/laboratory/monitor.png")
@@ -495,11 +498,19 @@ func _build_wall_signs() -> void:
 		[SIGN_ELECTRIC_TEXTURE, Vector2(752, 688), "ElectricCorridorBottom"],
 		[EXTINGUISHER_TEXTURE, Vector2(592, 80), "FireExtinguisher"],
 		[CONTAINER_TEXTURE, Vector2(48, 400), "BlueContainer"],
+		[LOCKER_BLUE_TEXTURE, Vector2(80, 368), "LockerBlueLeft"],
+		[LOCKER_RED_TEXTURE, Vector2(112, 368), "LockerRedLeft"],
+		[LOCKER_GREEN_TEXTURE, Vector2(144, 368), "LockerGreenLeft"],
 		[DESK_TEXTURE, Vector2(272, 272), "ControlDesk"],
 		[CHAIR_TEXTURE, Vector2(272, 336), "Wheelchair"],
-		[MONITOR_TEXTURE, Vector2(400, 208), "MonitorRow"],
+		[MONITOR_TEXTURE, Vector2(400, 304), "BlueMonitor1"],
+		[MONITOR_TEXTURE, Vector2(432, 304), "BlueMonitor2"],
+		[MONITOR_TEXTURE, Vector2(464, 304), "BlueMonitor3"],
+		[MONITOR_TEXTURE, Vector2(496, 304), "BlueMonitor4"],
 		[VENT_TEXTURE, Vector2(144, 336), "FloorVentLeft"],
 		[VENT_TEXTURE, Vector2(656, 240), "FloorVentCorridor"],
+		[VENT_TEXTURE, Vector2(336, 464), "FloorVentSouth"],
+		[VENT_TEXTURE, Vector2(272, 432), "HallSouthVent"],
 		[CRYSTAL_TEXTURE, Vector2(240, 368), "PurpleGlow"],
 	]
 	for s in signs:
