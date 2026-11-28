@@ -373,10 +373,10 @@ func test_standalone_has_hud() -> bool:
 	var objective: Label = hud.get_node("ObjectiveLabel") as Label
 	var font: Font = objective.get_theme_font("font")
 	var w: float = font.get_string_size(objective.text, HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x
-	assert_true(w <= 200.0, "hud: objective fits between the puzzles label and the minimap")
+	assert_true(w <= 580.0, "hud: objective fits the bottom-center label")
 	var mission_probe: Node = MISSION_SCRIPT.new()
 	var tw: float = font.get_string_size(mission_probe.current_text(), HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x
-	assert_true(tw <= 200.0, "hud: mission objective fits")
+	assert_true(tw <= 580.0, "hud: mission objective fits the bottom-center label")
 	play.queue_free()
 	await process_frame
 	await process_frame
