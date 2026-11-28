@@ -4,3 +4,5 @@
 exports/
 # Build artifacts (Windows exe/pck/zip) — never committed
 build/
+
+releases/
