@@ -566,18 +566,18 @@ func test_medical_note_consoles() -> bool:
 	var notes := [
 		{
 			"name": "NoteConsole1", "path": "NoteConsole1", "stand": Vector2(140, 296),
-			"text": "پزشک: هیچ بیماری‌ای نیست. دستور اومد بخش رو ببندیم.",
+			"text": "پزشک: بیمار بخش سه هنوز بیدار نمی‌شد. علائمش عجیب بود.",
 			"digit": "۴", "order": "رقم اول",
 		},
 		{
 			"name": "NoteConsole2", "path": "MedDeskDoctor/NoteConsole2", "on_desk": true,
 			"stand": Vector2(470, 262),
-			"text": "پزشک: هر بار پیام می‌فرستادیم، یه چیزی جواب می‌داد.",
+			"text": "پزشک: هوش مرکزی دیشب بی‌دلیل همه‌ی بخش‌ها رو قفل کرد.",
 			"digit": "۱", "order": "رقم دوم",
 		},
 		{
 			"name": "NoteConsole3", "path": "NoteConsole3", "stand": Vector2(536, 160),
-			"text": "پزشک: هر سیگنالی که بفرستیم، فقط ما رو نجات نمی‌ده.",
+			"text": "پزشک: هر کی اون نور رو دید، چیزی یادش نموند.",
 			"digit": "۷", "order": "رقم سوم",
 		},
 	]

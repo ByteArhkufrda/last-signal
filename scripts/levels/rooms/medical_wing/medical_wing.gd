@@ -102,8 +102,10 @@ const MED_PROP_PATHS := {
 ## are all local. The
 ## furnishing moved verbatim from _build_medical_props().
 ##
-## Story notes (P1, 2026-11-23): three note consoles that reveal the
-## "outbreak" was a cover story — see NOTE_CONSOLES / _build_note_consoles().
+## Story notes (P1, 2026-11-23; texts rewritten in P8, 2026-11-28): three
+## note consoles in the doctor's voice. The research ship ORION was studying
+## an anomaly, the crew vanished, whoever saw the light lost their memory,
+## and the central AI is acting strangely — see NOTE_CONSOLES.
 ##
 ## Darkness (P2, 2026-11-24; reworked in P5, 2026-11-26): the wing runs on
 ## EMERGENCY power: it is lit from the start, its lights flicker, and one
@@ -163,15 +165,15 @@ const NOTE_LABEL := "خواندن یادداشت"
 const NOTE_CONSOLES := [
 	{
 		"name": "NoteConsole1", "pos": Vector2(140, 320),
-		"text": "پزشک: هیچ بیماری‌ای نیست. دستور اومد بخش رو ببندیم.",
+		"text": "پزشک: بیمار بخش سه هنوز بیدار نمی‌شد. علائمش عجیب بود.",
 	},
 	{
 		"name": "NoteConsole2", "pos": Vector2(450, 260), "on": "MedDeskDoctor",
-		"text": "پزشک: هر بار پیام می‌فرستادیم، یه چیزی جواب می‌داد.",
+		"text": "پزشک: هوش مرکزی دیشب بی‌دلیل همه‌ی بخش‌ها رو قفل کرد.",
 	},
 	{
 		"name": "NoteConsole3", "pos": Vector2(560, 160),
-		"text": "پزشک: هر سیگنالی که بفرستیم، فقط ما رو نجات نمی‌ده.",
+		"text": "پزشک: هر کی اون نور رو دید، چیزی یادش نموند.",
 	},
 ]
 
