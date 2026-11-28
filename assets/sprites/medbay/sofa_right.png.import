@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ccd1pq2gc1cvc"
-path="res://.godot/imported/locker_green.png-e342a1190c88a3ed51a2aaf5b585d651.ctex"
+uid="uid://bq0fkb60nxab"
+path="res://.godot/imported/sofa_right.png-76d641d8603a32bf05a4d6960a20557d.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/medbay/locker_green.png"
-dest_files=["res://.godot/imported/locker_green.png-e342a1190c88a3ed51a2aaf5b585d651.ctex"]
+source_file="res://assets/sprites/medbay/sofa_right.png"
+dest_files=["res://.godot/imported/sofa_right.png-76d641d8603a32bf05a4d6960a20557d.ctex"]
 
 [params]
 

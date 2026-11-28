@@ -12,20 +12,32 @@ extends Node2D
 ##
 ## Layout: the Medbay from SS13 (BoxStation), cut to a 53x41 MAP
 ## (one cell = 32 px, room 1696x1312). Row 0 of the MAP is north.
-## '#' is a metal wall (solid, metal texture), 'X' is void/space
-## (solid, NO visual — the floor sprite already paints it
+## '#' is a metal wall (solid, real SS13 wall art per cell), 'X' is
+## void/space (solid, NO visual — the floor sprite already paints it
 ## near-black, and a metal polygon over it would read as wall),
 ## '.' is corridor floor and the letters are room floors, all
 ## walkable: W central medbay, L lobby, A rear medbay, T recovery,
 ## C chemistry, P pharmacy, V virology, G morgue, Y cryo, S surgery,
-## O storage, B rest room, Q psychology, N maintenance. The floor is
-## one smooth sprite (assets/sprites/medbay/floor_medbay.png,
-## painted from the MAP) — no tile grid. Props come from
-## medbay_props.json (453 items; the 193 in PROPS below are the
+## O storage, B rest room, Q psychology, N maintenance.
+##
+## FAITHFUL REBUILD (2026-11-28): every pixel in this room comes
+## from the SS13 repo (S.P.L.U.R.T-tg) — nothing is drawn by hand
+## and nothing is a lookalike. The floor is one smooth sprite
+## (assets/sprites/medbay/floor_medbay.png), painted tile by tile
+## with the SOUTH frame of each cell's real turf icon (turf_map.json
+## + turf_icons.json in medbay-work/medbay_godot). Walls are
+## per-cell sprites from the real wall/reinforced_wall DMIs, chosen
+## by each cell's smoothing junction (wall_sheet.png, 30 frames).
+## Every prop sprite is the real icon of its SS13 type path
+## (real_sprites.json in medbay-work/medbay_godot). Props come from
+## medbay_props.json (453 items; the 196 in PROPS below are the
 ## room brief's set, placed at their exact SS13 positions).
-## Lighting is BRIGHT (a
-## hospital): near-white ambient + six warm ceiling lights — the
-## deliberately bright, not dim.
+## Lighting is the station's own: uniform neutral white (1,1,1),
+## no ceiling lights, no pools of light — SS13 has no global
+## darkness. The two bench props keep the real chair sprite: their
+## greyscale bench DMI was not locatable in the repo (see the
+## final report). One PROPS row (1328,1136) has no matching SS13
+## data entry and was kept as-is with the real glass-table art.
 ##
 ## Layer structure: Floor (the Sprite2D named
 ## "Floor"), Walls_And_Hazards (the StaticBody2D named
@@ -57,24 +69,52 @@ const TILE_SIZE := 16
 const CELL := 32
 const WALL_TEXTURE: Texture2D = preload("res://assets/sprites/environment/wall_metal.png")
 const FLOOR_MEDBAY_TEXTURE: Texture2D = preload("res://assets/sprites/medbay/floor_medbay.png")
+const WALL_SHEET_TEXTURE: Texture2D = preload("res://assets/sprites/medbay/wall_sheet.png")
 const OPTABLE_TEXTURE: Texture2D = preload("res://assets/sprites/medbay/optable.png")
 const CRYO_CELL_TEXTURE: Texture2D = preload("res://assets/sprites/medbay/cryo_cell.png")
 const STASIS_TEXTURE: Texture2D = preload("res://assets/sprites/medbay/stasis.png")
 const CHEM_DISPENSER_TEXTURE: Texture2D = preload("res://assets/sprites/medbay/chem_dispenser.png")
 const CHEM_MASTER_TEXTURE: Texture2D = preload("res://assets/sprites/medbay/chem_master.png")
 const CHEM_HEATER_TEXTURE: Texture2D = preload("res://assets/sprites/medbay/chem_heater.png")
+const CHEM_MASS_SPEC_TEXTURE: Texture2D = preload("res://assets/sprites/medbay/chem_mass_spec.png")
 const REAGENTGRINDER_TEXTURE: Texture2D = preload("res://assets/sprites/medbay/reagentgrinder.png")
 const MORGUE_CONTAINER_TEXTURE: Texture2D = preload("res://assets/sprites/medbay/morgue_container.png")
+const TABLE_TEXTURE: Texture2D = preload("res://assets/sprites/medbay/table.png")
 const TABLE_GLASS_TEXTURE: Texture2D = preload("res://assets/sprites/medbay/table_glass.png")
-const BED_MED_TEXTURE: Texture2D = preload("res://assets/sprites/medbay/bed_med.png")
+const TABLE_REINFORCED_TEXTURE: Texture2D = preload("res://assets/sprites/medbay/table_reinforced.png")
+const TABLE_RGLASS_TEXTURE: Texture2D = preload("res://assets/sprites/medbay/table_rglass.png")
+const TABLE_WOOD_TEXTURE: Texture2D = preload("res://assets/sprites/medbay/table_wood.png")
+const TABLE_FANCY_TEXTURE: Texture2D = preload("res://assets/sprites/medbay/table_fancy.png")
+const TABLE_FANCY_BLUE_TEXTURE: Texture2D = preload("res://assets/sprites/medbay/table_fancy_blue.png")
+const TABLE_FANCY_RED_TEXTURE: Texture2D = preload("res://assets/sprites/medbay/table_fancy_red.png")
+const TABLE_GREYSCALE_TEXTURE: Texture2D = preload("res://assets/sprites/medbay/table_greyscale.png")
+const BED_TEXTURE: Texture2D = preload("res://assets/sprites/medbay/bed.png")
+const BED_DOUBLE_TEXTURE: Texture2D = preload("res://assets/sprites/medbay/bed_double.png")
 const BED_EMERG_TEXTURE: Texture2D = preload("res://assets/sprites/medbay/bed_emerg.png")
 const LOCKER_BLUE_TEXTURE: Texture2D = preload("res://assets/sprites/medbay/locker_blue.png")
-const LOCKER_RED_TEXTURE: Texture2D = preload("res://assets/sprites/medbay/locker_red.png")
-const LOCKER_GREEN_TEXTURE: Texture2D = preload("res://assets/sprites/medbay/locker_green.png")
+const LOCKER_CHEM_TEXTURE: Texture2D = preload("res://assets/sprites/medbay/locker_chem.png")
+const LOCKER_CMO_TEXTURE: Texture2D = preload("res://assets/sprites/medbay/locker_cmo.png")
+const LOCKER_MED_TEXTURE: Texture2D = preload("res://assets/sprites/medbay/locker_med.png")
+const LOCKER_PARAMED_TEXTURE: Texture2D = preload("res://assets/sprites/medbay/locker_paramed.png")
+const LOCKER_ATMOS_TEXTURE: Texture2D = preload("res://assets/sprites/medbay/locker_atmos.png")
+const LOCKER_CAP_TEXTURE: Texture2D = preload("res://assets/sprites/medbay/locker_cap.png")
+const LOCKER_CABINET_TEXTURE: Texture2D = preload("res://assets/sprites/medbay/locker_cabinet.png")
+const LOCKER_ENG_SECURE_TEXTURE: Texture2D = preload("res://assets/sprites/medbay/locker_eng_secure.png")
+const LOCKER_SECURE_TEXTURE: Texture2D = preload("res://assets/sprites/medbay/locker_secure.png")
 const SMARTFRIDGE_TEXTURE: Texture2D = preload("res://assets/sprites/medbay/smartfridge.png")
-const MONITOR_TEXTURE: Texture2D = preload("res://assets/sprites/medbay/monitor.png")
+const SMARTFRIDGE_ORGAN_TEXTURE: Texture2D = preload("res://assets/sprites/medbay/smartfridge_organ.png")
+const MONITOR_OPERATING_TEXTURE: Texture2D = preload("res://assets/sprites/medbay/monitor_operating.png")
+const MONITOR_VITALS_TEXTURE: Texture2D = preload("res://assets/sprites/medbay/monitor_vitals.png")
 const DEFIB_UNIT_TEXTURE: Texture2D = preload("res://assets/sprites/medbay/defib_unit.png")
 const CHAIR_TEXTURE: Texture2D = preload("res://assets/sprites/medbay/chair.png")
+const CHAIR_COMFY_TEXTURE: Texture2D = preload("res://assets/sprites/medbay/chair_comfy.png")
+const CHAIR_COMFY_TEAL_TEXTURE: Texture2D = preload("res://assets/sprites/medbay/chair_comfy_teal.png")
+const CHAIR_SHUTTLE_TEXTURE: Texture2D = preload("res://assets/sprites/medbay/chair_shuttle.png")
+const CHAIR_OFFICE_TEXTURE: Texture2D = preload("res://assets/sprites/medbay/chair_office.png")
+const CHAIR_OFFICE_DARK_TEXTURE: Texture2D = preload("res://assets/sprites/medbay/chair_office_dark.png")
+const CHAIR_STOOL_TEXTURE: Texture2D = preload("res://assets/sprites/medbay/chair_stool.png")
+const SOFA_TEXTURE: Texture2D = preload("res://assets/sprites/medbay/sofa.png")
+const SOFA_RIGHT_TEXTURE: Texture2D = preload("res://assets/sprites/medbay/sofa_right.png")
 const SINK_TEXTURE: Texture2D = preload("res://assets/sprites/medbay/sink.png")
 const SHOWER_TEXTURE: Texture2D = preload("res://assets/sprites/medbay/shower.png")
 const TOILET_TEXTURE: Texture2D = preload("res://assets/sprites/medbay/toilet.png")
@@ -130,6 +170,54 @@ const MAP := [
 	"..#........#...#.........X#####X...#......#...#....#.",
 ]
 
+## Wall type per cell, from the SS13 turf data (turf_map.json):
+## 'w' = /turf/closed/wall, 'r' = /turf/closed/wall/r_wall,
+## ' ' = not a wall. Picks the wall_sheet.png row (0-14 wall,
+## 15-29 reinforced) for each cell's junction sprite.
+const WALLTYPE := [
+	"     r        r                                      ",
+	"     r        r                                      ",
+	"rrrrrr        r   wwwwwwww     wwwwwwwwwwwwwwwwwww ww",
+	"              r                 w    w   w  w    w   ",
+	" rrrrr        r                      w   w       w w ",
+	"   r rr       r                          w      ww w ",
+	"   r  rr rrrr r   w             w    w   w      w  w ",
+	"   r        w w   w     w       w    wwwww      w  w ",
+	"   r      w w w   w     ww  w   w                  rw",
+	" rrr      w w w   ww    w   ww ww        wwwwwwwww r ",
+	"   rrrrrrrrrr r                          w       w r ",
+	"    w w       r                      w   w       w r ",
+	"    w w           rr  rrr  www     www   w       w rr",
+	"    w w       r   r        r         w   ww www ww  r",
+	"   ww w       r            r                         ",
+	"  ww  rrrrrrrrr                                  w  r",
+	"                                         w      ww wr",
+	"                                         w      r   r",
+	"                  r        r         w   w          r",
+	"  wwwww wwwww w   r        r   r   www   w      r  rr",
+	"  w           wwwwr                      w      r  r ",
+	"  w       ww                         w   wwwwwwwww r ",
+	"  w       w       r                          w   w r ",
+	"  wwwwww ww       r        r   r     w           w rr",
+	"                  r rr rr rrrrrrwwwwww ww   ww   w r ",
+	"  wrrrrrrr                        w     w   w      r ",
+	"   r     rrrrr rrrrrrrrrrwwwwwwww w     ww ww    w r ",
+	"   r     w              r       w w     r   rw www   ",
+	"   r     w                rrrrr w wrrrrrr   r    w r ",
+	"         w                r   r    r    r   rrrrrr r ",
+	"                              r    r    rr rr    r rr",
+	"                          r   r    r   wr        r r ",
+	"         w                rrrrr w wr        r    r r ",
+	"   rww   w                r   r w  rrrrw         r rw",
+	"   r                          r       r          r r ",
+	"   r     w                r   r wwww  r          r r ",
+	"   r   rrrrr   w          rrrrr       r          r r ",
+	"  wrr rr   r   w          r   r w  ww r          r r ",
+	"       w   r   w              r w     rr  rrrrrrrr r ",
+	"           r   w          r   r    w   rrrr   w    r ",
+	"  w        r   w          rrrrr    w      w   w    r ",
+]
+
 ## Props ([sprite key, px, py, solid], 196 placed at their exact
 ## SS13 positions from medbay_props.json — restored 2026-11-28
 ## after the first build's 32 px clearance rule wrongly deleted
@@ -137,108 +225,113 @@ const MAP := [
 ## patch_plan.json for the full list, plus two tables the restore
 ## itself mis-relocated and one it dropped — fixed after the
 ## first test run: 3592 passed / 2 failed on the double-solid
-## cells). Positions are pixel centers.
+## cells). Regenerated 2026-11-28 from medbay_props.json with the
+## real SS13 sprite key per type (regen_props.py); positions and
+## solid flags are unchanged. Positions are pixel centers.
 ## Solid props get a 32x32 collision rect at the cell center.
-## Sprites: 32x32, except
+## Sprite sizes are the real SS13 icon sizes: 32x32, except
 ## cryo_cell 32x64 (sprite offset y -16 so its bottom edge sits on
 ## the cell's bottom edge, collision stays 32x32 at the center),
-## chair 16x16, locker_blue/red/green and smartfridge 24x32.
-## Locker colours cycle blue/red/green in (row, column) order.
-## bed_med and morgue_container intentionally share one sprite
-## (the same SS13 med_down state). vitals_reader monitors are solid
-## here although SS13 marks them non-solid — the brief lists them
-## under the solid monitors. defib_unit is wall decor (non-solid):
-## all five sit against a wall cell.
+## all ten lockers 32x48 (offset y -8, bottom edge on the cell's
+## bottom edge) and the three fancy tables 32x34 (offset y -1).
+## Lockers are keyed by their real SS13 subtype (med_secure,
+## chem_secure, cmo, med, paramed_secure, atmos, cap, cabinet,
+## eng_secure, secure). vitals_reader monitors are solid here
+## although SS13 marks them non-solid — the brief lists them under
+## the solid monitors. defib_unit is wall decor (non-solid): all
+## five sit against a wall cell. The mass-spec machine keeps its
+## real HPLC art under chem_mass_spec (it used to wear the
+## chem_heater key).
 const PROPS := [
-	["chair", 304, 16, false],
-	["chair", 368, 16, false],
-	["table_glass", 144, 48, true],
+	["chair_comfy", 304, 16, false],
+	["chair_comfy", 368, 16, false],
+	["table", 144, 48, true],
 	["chair", 240, 48, false],
-	["chair", 272, 112, false],
+	["chair_shuttle", 272, 112, false],
 	["chem_heater", 720, 112, true],
-	["table_glass", 816, 112, true],
+	["table", 816, 112, true],
 	["chair", 848, 112, false],
 	["chair", 880, 112, false],
 	["table_glass", 1136, 112, true],
-	["bed_med", 1296, 112, true],
-	["table_glass", 1360, 112, true],
-	["monitor", 1392, 112, true],
+	["bed_double", 1296, 112, true],
+	["table_reinforced", 1360, 112, true],
+	["monitor_operating", 1392, 112, true],
 	["morgue_container", 1488, 112, true],
 	["morgue_container", 1520, 112, true],
 	["morgue_container", 1552, 112, true],
-	["chair", 240, 144, false],
-	["table_glass", 592, 144, true],
-	["chair", 624, 144, false],
-	["chair", 752, 144, false],
-	["table_glass", 784, 144, true],
-	["chair", 1104, 144, false],
+	["chair_office_dark", 240, 144, false],
+	["table_reinforced", 592, 144, true],
+	["chair_office", 624, 144, false],
+	["chair_office", 752, 144, false],
+	["table_reinforced", 784, 144, true],
+	["chair_office", 1104, 144, false],
 	["table_glass", 1136, 144, true],
-	["chair", 1168, 144, false],
-	["chair", 1232, 144, false],
+	["chair_office", 1168, 144, false],
+	["chair_comfy_teal", 1232, 144, false],
 	["optable", 1360, 144, true],
-	["table_glass", 1424, 144, true],
+	["table_reinforced", 1424, 144, true],
 	["reagentgrinder", 624, 176, true],
 	["chem_dispenser", 752, 176, true],
 	["smartfridge", 784, 176, true],
-	["smartfridge", 1360, 176, true],
-	["bed_med", 144, 208, true],
-	["locker_blue", 624, 208, true],
-	["table_glass", 912, 208, true],
-	["table_glass", 944, 208, true],
-	["table_glass", 976, 208, true],
-	["table_glass", 1008, 208, true],
-	["locker_red", 1296, 208, true],
+	["smartfridge_organ", 1360, 176, true],
+	["bed_double", 144, 208, true],
+	["locker_chem", 624, 208, true],
+	["table_reinforced", 912, 208, true],
+	["table_reinforced", 944, 208, true],
+	["table_reinforced", 976, 208, true],
+	["table_reinforced", 1008, 208, true],
+	["locker_cmo", 1296, 208, true],
 	["sink", 368, 240, false],
 	["chem_heater", 752, 240, true],
-	["table_glass", 912, 240, true],
-	["chair", 944, 240, false],
-	["chair", 1008, 240, false],
+	["table_reinforced", 912, 240, true],
+	["chair_office", 944, 240, false],
+	["chair_office", 1008, 240, false],
 	["iv_drip", 1360, 240, false],
 	["bed_emerg", 1360, 240, true],
 	["morgue_container", 1424, 240, true],
 	["morgue_container", 1456, 240, true],
 	["morgue_container", 1488, 240, true],
 	["morgue_container", 1520, 240, true],
-	["chair", 176, 272, false],
+	["chair_comfy", 176, 272, false],
 	["toilet", 368, 272, false],
 	["chem_master", 688, 272, true],
-	["chair", 720, 272, false],
+	["chair_office", 720, 272, false],
 	["chem_dispenser", 752, 272, true],
 	["table_glass", 1072, 272, true],
-	["locker_green", 272, 304, true],
+	["locker_cap", 272, 304, true],
 	["shower", 368, 304, false],
 	["smartfridge", 688, 304, true],
-	["table_glass", 720, 304, true],
+	["table_reinforced", 720, 304, true],
 	["iv_drip", 816, 304, false],
 	["sink", 1072, 304, false],
 	["morgue_container", 1680, 304, true],
 	["iv_drip", 1296, 336, false],
-	["monitor", 1360, 336, true],
-	["monitor", 1360, 336, true],
+	["monitor_operating", 1360, 336, true],
+	["monitor_vitals", 1360, 336, true],
 	["defib_unit", 1392, 336, false],
 	["optable", 1392, 336, true],
 	["locker_blue", 1424, 336, true],
-	["locker_red", 1488, 336, true],
+	["locker_blue", 1488, 336, true],
 	["optable", 1520, 336, true],
 	["defib_unit", 1520, 336, false],
-	["monitor", 1552, 336, true],
-	["monitor", 1552, 336, true],
-	["table_glass", 112, 368, true],
-	["table_glass", 240, 368, true],
-	["table_glass", 272, 368, true],
+	["monitor_operating", 1552, 336, true],
+	["monitor_vitals", 1552, 336, true],
+	["table", 112, 368, true],
+	["table", 240, 368, true],
+	["table", 272, 368, true],
 	["table_glass", 1360, 368, true],
 	["iv_drip", 1424, 368, false],
 	["iv_drip", 1488, 368, false],
 	["table_glass", 1552, 368, true],
-	["table_glass", 112, 400, true],
-	["chair", 272, 400, false],
+	["table", 112, 400, true],
+	["chair_stool", 272, 400, false],
 	["sink", 1360, 400, false],
-	["smartfridge", 1456, 400, true],
+	["smartfridge_organ", 1456, 400, true],
 	["table_glass", 688, 432, true],
 	["chem_master", 784, 432, true],
 	["chem_dispenser", 816, 432, true],
 	["chem_heater", 848, 432, true],
-	["monitor", 912, 432, true],
+	["monitor_vitals", 912, 432, true],
 	["table_glass", 912, 432, true],
 	["defib_unit", 944, 432, false],
 	["stasis", 944, 432, true],
@@ -246,10 +339,10 @@ const PROPS := [
 	["iv_drip", 1104, 432, false],
 	["defib_unit", 1136, 432, false],
 	["stasis", 1136, 432, true],
-	["monitor", 1168, 432, true],
+	["monitor_vitals", 1168, 432, true],
 	["table_glass", 1168, 432, true],
 	["table_glass", 1296, 432, true],
-	["chair", 816, 464, false],
+	["chair_office", 816, 464, false],
 	["table_glass", 912, 464, true],
 	["table_glass", 1168, 464, true],
 	["table_glass", 784, 496, true],
@@ -259,12 +352,12 @@ const PROPS := [
 	["smartfridge", 880, 496, true],
 	["shower", 1008, 496, false],
 	["shower", 1072, 496, false],
-	["chair", 848, 528, false],
-	["table_glass", 880, 528, true],
+	["chair_office", 848, 528, false],
+	["table_reinforced", 880, 528, true],
 	["table_glass", 1168, 560, true],
-	["locker_green", 1360, 560, true],
-	["table_glass", 1424, 560, true],
-	["table_glass", 1520, 560, true],
+	["locker_paramed", 1360, 560, true],
+	["table_reinforced", 1424, 560, true],
+	["table", 1520, 560, true],
 	["iv_drip", 976, 592, false],
 	["iv_drip", 1104, 592, false],
 	["defib_unit", 1136, 592, false],
@@ -272,80 +365,79 @@ const PROPS := [
 	["locker_blue", 1360, 592, true],
 	["table_glass", 1360, 624, true],
 	["table_glass", 1520, 624, true],
-	["table_glass", 912, 656, true],
-	["table_glass", 944, 656, true],
-	["locker_red", 976, 656, true],
+	["table_reinforced", 912, 656, true],
+	["table_reinforced", 944, 656, true],
+	["locker_blue", 976, 656, true],
 	["cryo_cell", 1104, 656, true],
 	["cryo_cell", 1168, 656, true],
 	["table_glass", 1360, 656, true],
 	["table_glass", 1520, 656, true],
-	["chair", 144, 688, false],
-	["table_glass", 112, 720, true],
-	["table_glass", 144, 720, true],
-	["table_glass", 912, 720, true],
-	["chair", 944, 720, false],
-	["table_glass", 1392, 720, true],
-	["table_glass", 1424, 720, true],
+	["chair_stool", 144, 688, false],
+	["table", 112, 720, true],
+	["table", 144, 720, true],
+	["table_reinforced", 912, 720, true],
+	["chair_office", 944, 720, false],
+	["table", 1392, 720, true],
+	["table", 1424, 720, true],
 	["table_glass", 1520, 720, true],
 	["table_glass", 1552, 720, true],
-	["table_glass", 912, 752, true],
-	["locker_green", 1040, 752, true],
+	["table_reinforced", 912, 752, true],
+	["locker_secure", 1040, 752, true],
 	["table_glass", 1552, 752, true],
-	["chair", 1168, 816, false],
-	["chair", 1200, 816, false],
-	["chair", 1520, 848, false],
-	["chair", 1552, 848, false],
-	["chair", 1168, 880, false],
-	["locker_blue", 1264, 880, true],
+	["sofa_right", 1168, 816, false],
+	["sofa", 1200, 816, false],
+	["sofa", 1520, 848, false],
+	["sofa_right", 1552, 848, false],
+	["chair_office", 1168, 880, false],
+	["locker_cabinet", 1264, 880, true],
 	["shower", 1328, 912, false],
 	["toilet", 1456, 912, false],
 	["sink", 1520, 912, false],
 	["shower", 1552, 912, false],
-	["chair", 1104, 944, false],
-	["bed_med", 1264, 944, true],
+	["chair_stool", 1104, 944, false],
+	["bed", 1264, 944, true],
 	["sink", 1328, 944, false],
-	["table_glass", 1104, 976, true],
-	["table_glass", 1168, 976, true],
-	["chair", 1200, 976, false],
-	["table_glass", 112, 1008, true],
+	["table", 1104, 976, true],
+	["table", 1168, 976, true],
+	["chair_stool", 1200, 976, false],
+	["table_reinforced", 112, 1008, true],
 	["chair", 144, 1008, false],
-	["chair", 240, 1008, false],
-	["table_glass", 336, 1008, true],
-	["chair", 1104, 1008, false],
-	["table_glass", 1168, 1008, true],
-	["table_glass", 144, 1040, true],
-	["table_glass", 176, 1040, true],
-	["table_glass", 336, 1040, true],
-	["table_glass", 1168, 1040, true],
+	["chair_office_dark", 240, 1008, false],
+	["table", 336, 1008, true],
+	["chair_stool", 1104, 1008, false],
+	["table", 1168, 1008, true],
+	["table", 144, 1040, true],
+	["table", 176, 1040, true],
+	["table", 336, 1040, true],
+	["table", 1168, 1040, true],
 	["reagentgrinder", 1168, 1040, true],
-	["table_glass", 336, 1072, true],
+	["table", 336, 1072, true],
 	["sink", 1296, 1072, false],
 	["smartfridge", 1264, 1104, true],
-	["chair", 1328, 1104, false],
-	["chair", 1200, 1136, false],
-	["table_glass", 1328, 1136, true],
-	["table_glass", 1360, 1136, true],
+	["chair_stool", 1328, 1104, false],
+	["chair_stool", 1200, 1136, false],
+	["table", 1360, 1136, true],
 	["table_glass", 1264, 1168, true],
-	["chair", 1328, 1168, false],
-	["bed_med", 1456, 1168, true],
-	["bed_med", 1552, 1168, true],
-	["locker_red", 304, 1200, true],
+	["chair_office", 1328, 1168, false],
+	["bed", 1456, 1168, true],
+	["bed", 1552, 1168, true],
+	["locker_eng_secure", 304, 1200, true],
 	["shower", 400, 1200, false],
-	["locker_green", 464, 1200, true],
+	["locker_atmos", 464, 1200, true],
 	["table_glass", 1264, 1200, true],
-	["locker_blue", 464, 1232, true],
-	["table_glass", 528, 1232, true],
-	["locker_red", 1328, 1232, true],
-	["table_glass", 80, 1264, true],
+	["locker_atmos", 464, 1232, true],
+	["table", 528, 1232, true],
+	["locker_med", 1328, 1232, true],
+	["table_reinforced", 80, 1264, true],
 	["chair", 112, 1264, false],
-	["chair", 304, 1264, false],
+	["chair_office_dark", 304, 1264, false],
 	["shower", 400, 1264, false],
-	["locker_green", 464, 1264, true],
-	["table_glass", 528, 1264, true],
-	["table_glass", 208, 1296, true],
-	["table_glass", 272, 1296, true],
-	["table_glass", 304, 1296, true],
-	["table_glass", 336, 1296, true],
+	["locker_atmos", 464, 1264, true],
+	["table", 528, 1264, true],
+	["table", 208, 1296, true],
+	["table", 272, 1296, true],
+	["table", 304, 1296, true],
+	["table", 336, 1296, true],
 ]
 
 
@@ -509,12 +601,13 @@ func doorway_gap_rects() -> Array[Rect2]:
 	return out
 
 ## Build the room's code-built walls as one StaticBody2D named
-## "Walls_<room_key>". Textured Polygon2D (UVs = the rect's coords,
-## texture repeats every 16 px, white color) + a darker edge
-## highlight. Coordinates are LOCAL; the assembler translates them to
-## world coordinates when it flattens the room into the level.
+## "Walls_<room_key>". Each wall cell gets one Sprite2D cut from
+## wall_sheet.png — the real SS13 wall/reinforced_wall icon for
+## that cell's smoothing junction (see _wall_junction and
+## WALLTYPE). Coordinates are LOCAL; the assembler translates them
+## to world coordinates when it flattens the room into the level.
 ## 'X' (void) rects get collision but NO visual: the floor sprite
-## already paints them near-black, and a metal polygon over them
+## already paints them near-black, and a wall sprite over them
 ## would read as a wall where there is only space.
 func _build_wall_rects(rects: Array[Rect2], body_name: String = "") -> StaticBody2D:
 	var body := StaticBody2D.new()
@@ -529,30 +622,68 @@ func _build_wall_rects(rects: Array[Rect2], body_name: String = "") -> StaticBod
 		shape.shape = rect
 		shape.position = r.get_center()
 		body.add_child(shape)
-		var wall_tex: Texture2D = _wall_texture_for(r)
-		if wall_tex == null:
-			continue
-		var visual := Polygon2D.new()
-		visual.polygon = PackedVector2Array([
-			r.position, r.position + Vector2(r.size.x, 0),
-			r.position + r.size, r.position + Vector2(0, r.size.y)])
-		visual.uv = visual.polygon
-		visual.texture = wall_tex
-		visual.texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
-		visual.color = Color.WHITE
-		body.add_child(visual)
-		var highlight := Polygon2D.new()
-		if r.size.x >= r.size.y:
-			highlight.polygon = PackedVector2Array([
-				r.position + Vector2(0, r.size.y - 4), r.position + Vector2(r.size.x, r.size.y - 4),
-				r.position + r.size, r.position + Vector2(0, r.size.y)])
-		else:
-			highlight.polygon = PackedVector2Array([
-				r.position + Vector2(r.size.x - 4, 0), r.position + Vector2(r.size.x, 0),
-				r.position + r.size, r.position + Vector2(r.size.x - 4, r.size.y)])
-		highlight.color = Color(0.22, 0.24, 0.32, 1)
-		body.add_child(highlight)
+		# One real SS13 wall sprite per '#' cell in this rect
+		# (junction from the MAP neighbours, type from WALLTYPE).
+		var x0 := int(r.position.x / CELL)
+		var y0 := int(r.position.y / CELL)
+		var w := int(r.size.x / CELL)
+		var h := int(r.size.y / CELL)
+		for cy in range(y0, y0 + h):
+			for cx in range(x0, x0 + w):
+				# Seal rects sit OUTSIDE the MAP (the launcher closes
+				# the open borders with them): they get collision
+				# only, no wall sprite — guard the MAP lookup.
+				if cx < 0 or cy < 0 or cx >= 53 or cy >= 41:
+					continue
+				if MAP[cy][cx] != "#":
+					continue
+				var j := _wall_junction(cx, cy)
+				var row := j if (WALLTYPE[cy] as String)[cx] == "w" else 15 + j
+				var tex := AtlasTexture.new()
+				tex.atlas = WALL_SHEET_TEXTURE
+				tex.region = Rect2(0, row * CELL, CELL, CELL)
+				var spr := Sprite2D.new()
+				spr.texture = tex
+				spr.position = Vector2(cx * CELL + CELL / 2, cy * CELL + CELL / 2)
+				body.add_child(spr)
 	return body
+
+
+## SS13 wall smoothing junction for a wall cell: cardinal bits
+## N=1 S=2 E=4 W=8, plus a diagonal bit (NE=16 NW=32 SE=64 SW=128)
+## only when both adjacent cardinals are walls too. In this MAP
+## only 0-14 occur (walls are one cell thick, so no 2x2 wall block
+## ever sets a diagonal bit) — wall_sheet.png holds exactly those
+## 15 frames per wall type.
+func _wall_junction(cx: int, cy: int) -> int:
+	var n := _is_wall_cell(cx, cy - 1)
+	var s := _is_wall_cell(cx, cy + 1)
+	var e := _is_wall_cell(cx + 1, cy)
+	var w := _is_wall_cell(cx - 1, cy)
+	var j := 0
+	if n:
+		j |= 1
+	if s:
+		j |= 2
+	if e:
+		j |= 4
+	if w:
+		j |= 8
+	if n and e and _is_wall_cell(cx + 1, cy - 1):
+		j |= 16
+	if n and w and _is_wall_cell(cx - 1, cy - 1):
+		j |= 32
+	if s and e and _is_wall_cell(cx + 1, cy + 1):
+		j |= 64
+	if s and w and _is_wall_cell(cx - 1, cy + 1):
+		j |= 128
+	return j
+
+
+func _is_wall_cell(cx: int, cy: int) -> bool:
+	if cx < 0 or cy < 0 or cx >= 53 or cy >= 41:
+		return false
+	return (MAP[cy] as String)[cx] == "#"
 
 ## Area floor tint polygon (skipped when the tint is transparent).
 func _build_tint() -> void:
@@ -605,10 +736,10 @@ func _build_floor_if_standalone() -> void:
 	# Everything else _ready adds draws over the floor.
 	move_child(floor_sprite, 1)
 
-## Standalone only: BRIGHT hospital lighting — the opposite of
-## a dim ambient such as (0.28, 0.30, 0.42). Near-white ambient
-## plus six warm ceiling lights spread over the room, all on
-## walkable floor. Gated on standalone on purpose: the room is
+## Standalone only: the station's own lighting — uniform neutral
+## white (1,1,1), no ceiling lights, no pools of light. SS13 has
+## no global darkness, so there is nothing to fake with
+## PointLight2D. Gated on standalone on purpose: the room is
 ## flattened into the assembled level, and a CanvasModulate there
 ## would re-tint the whole station.
 func _build_lighting_if_standalone() -> void:
@@ -616,39 +747,8 @@ func _build_lighting_if_standalone() -> void:
 		return
 	var mod := CanvasModulate.new()
 	mod.name = "AmbientBright"
-	mod.color = Color(0.96, 0.97, 1.0)
+	mod.color = Color(1, 1, 1)
 	add_child(mod)
-	_add_ceiling_light(Vector2(272, 272), Color(1, 0.98, 0.92), 0.6, 3.0)
-	_add_ceiling_light(Vector2(848, 272), Color(1, 0.98, 0.92), 0.6, 3.0)
-	_add_ceiling_light(Vector2(1392, 272), Color(1, 0.98, 0.92), 0.6, 3.0)
-	_add_ceiling_light(Vector2(272, 1008), Color(1, 0.98, 0.92), 0.6, 3.0)
-	_add_ceiling_light(Vector2(848, 976), Color(1, 0.98, 0.92), 0.6, 3.0)
-	_add_ceiling_light(Vector2(1392, 1008), Color(1, 0.98, 0.92), 0.6, 3.0)
-
-func _add_ceiling_light(pos: Vector2, color: Color, energy: float, tex_scale: float) -> void:
-	var light := _make_light(color, energy, tex_scale)
-	light.position = pos
-	add_child(light)
-
-
-## Radial light texture (main.gd's _make_light, verbatim).
-func _make_light(color: Color, energy: float, tex_scale: float) -> PointLight2D:
-	var grad := Gradient.new()
-	grad.set_color(0, Color.WHITE)
-	grad.set_color(1, Color(1, 1, 1, 0))
-	var tex := GradientTexture2D.new()
-	tex.gradient = grad
-	tex.fill = GradientTexture2D.FILL_RADIAL
-	tex.fill_from = Vector2(0.5, 0.5)
-	tex.fill_to = Vector2(1.0, 0.5)
-	tex.width = 256
-	tex.height = 256
-	var light := PointLight2D.new()
-	light.texture = tex
-	light.color = color
-	light.energy = energy
-	light.texture_scale = tex_scale
-	return light
 
 
 ## Props from the PROPS table. Solid props are direct children
@@ -678,6 +778,12 @@ func _build_props() -> void:
 			sprite.texture = tex
 			if key == "cryo_cell":
 				sprite.position = Vector2(0, -16)
+			elif key.begins_with("locker_"):
+				# 32x48 locker: bottom edge on the cell's bottom edge.
+				sprite.position = Vector2(0, -8)
+			elif key.begins_with("table_fancy"):
+				# 32x34 fancy table: bottom edge on the cell's bottom edge.
+				sprite.position = Vector2(0, -1)
 			body.add_child(sprite)
 			var shape := CollisionShape2D.new()
 			var rect := RectangleShape2D.new()
@@ -708,30 +814,84 @@ func _texture_for_key(key: String) -> Texture2D:
 			return CHEM_MASTER_TEXTURE
 		"chem_heater":
 			return CHEM_HEATER_TEXTURE
+		"chem_mass_spec":
+			return CHEM_MASS_SPEC_TEXTURE
 		"reagentgrinder":
 			return REAGENTGRINDER_TEXTURE
 		"morgue_container":
 			return MORGUE_CONTAINER_TEXTURE
+		"table":
+			return TABLE_TEXTURE
 		"table_glass":
 			return TABLE_GLASS_TEXTURE
-		"bed_med":
-			return BED_MED_TEXTURE
+		"table_reinforced":
+			return TABLE_REINFORCED_TEXTURE
+		"table_rglass":
+			return TABLE_RGLASS_TEXTURE
+		"table_wood":
+			return TABLE_WOOD_TEXTURE
+		"table_fancy":
+			return TABLE_FANCY_TEXTURE
+		"table_fancy_blue":
+			return TABLE_FANCY_BLUE_TEXTURE
+		"table_fancy_red":
+			return TABLE_FANCY_RED_TEXTURE
+		"table_greyscale":
+			return TABLE_GREYSCALE_TEXTURE
+		"bed":
+			return BED_TEXTURE
+		"bed_double":
+			return BED_DOUBLE_TEXTURE
 		"bed_emerg":
 			return BED_EMERG_TEXTURE
 		"locker_blue":
 			return LOCKER_BLUE_TEXTURE
-		"locker_red":
-			return LOCKER_RED_TEXTURE
-		"locker_green":
-			return LOCKER_GREEN_TEXTURE
+		"locker_chem":
+			return LOCKER_CHEM_TEXTURE
+		"locker_cmo":
+			return LOCKER_CMO_TEXTURE
+		"locker_med":
+			return LOCKER_MED_TEXTURE
+		"locker_paramed":
+			return LOCKER_PARAMED_TEXTURE
+		"locker_atmos":
+			return LOCKER_ATMOS_TEXTURE
+		"locker_cap":
+			return LOCKER_CAP_TEXTURE
+		"locker_cabinet":
+			return LOCKER_CABINET_TEXTURE
+		"locker_eng_secure":
+			return LOCKER_ENG_SECURE_TEXTURE
+		"locker_secure":
+			return LOCKER_SECURE_TEXTURE
 		"smartfridge":
 			return SMARTFRIDGE_TEXTURE
-		"monitor":
-			return MONITOR_TEXTURE
+		"smartfridge_organ":
+			return SMARTFRIDGE_ORGAN_TEXTURE
+		"monitor_operating":
+			return MONITOR_OPERATING_TEXTURE
+		"monitor_vitals":
+			return MONITOR_VITALS_TEXTURE
 		"defib_unit":
 			return DEFIB_UNIT_TEXTURE
 		"chair":
 			return CHAIR_TEXTURE
+		"chair_comfy":
+			return CHAIR_COMFY_TEXTURE
+		"chair_comfy_teal":
+			return CHAIR_COMFY_TEAL_TEXTURE
+		"chair_shuttle":
+			return CHAIR_SHUTTLE_TEXTURE
+		"chair_office":
+			return CHAIR_OFFICE_TEXTURE
+		"chair_office_dark":
+			return CHAIR_OFFICE_DARK_TEXTURE
+		"chair_stool":
+			return CHAIR_STOOL_TEXTURE
+		"sofa":
+			return SOFA_TEXTURE
+		"sofa_right":
+			return SOFA_RIGHT_TEXTURE
 		"sink":
 			return SINK_TEXTURE
 		"shower":

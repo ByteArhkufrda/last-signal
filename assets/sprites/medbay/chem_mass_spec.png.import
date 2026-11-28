@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b7oq88e2wamqe"
-path="res://.godot/imported/bed_med.png-e9778b8d7a4dacf355478e9370a6c00f.ctex"
+uid="uid://cs2oun1gtqq8p"
+path="res://.godot/imported/chem_mass_spec.png-cfcb53953870ad4c50f7f11469c1586f.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/medbay/bed_med.png"
-dest_files=["res://.godot/imported/bed_med.png-e9778b8d7a4dacf355478e9370a6c00f.ctex"]
+source_file="res://assets/sprites/medbay/chem_mass_spec.png"
+dest_files=["res://.godot/imported/chem_mass_spec.png-cfcb53953870ad4c50f7f11469c1586f.ctex"]
 
 [params]
 

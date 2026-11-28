@@ -13,32 +13,59 @@ const ROOM_SCRIPT: Script = preload("res://scripts/levels/rooms/medbay/medbay.gd
 
 const SPRITES := {
 	"floor": "res://assets/sprites/medbay/floor_medbay.png",
+	"wall_sheet": "res://assets/sprites/medbay/wall_sheet.png",
 	"optable": "res://assets/sprites/medbay/optable.png",
 	"cryo_cell": "res://assets/sprites/medbay/cryo_cell.png",
 	"stasis": "res://assets/sprites/medbay/stasis.png",
 	"chem_dispenser": "res://assets/sprites/medbay/chem_dispenser.png",
 	"chem_master": "res://assets/sprites/medbay/chem_master.png",
 	"chem_heater": "res://assets/sprites/medbay/chem_heater.png",
+	"chem_mass_spec": "res://assets/sprites/medbay/chem_mass_spec.png",
 	"reagentgrinder": "res://assets/sprites/medbay/reagentgrinder.png",
 	"morgue_container": "res://assets/sprites/medbay/morgue_container.png",
+	"table": "res://assets/sprites/medbay/table.png",
 	"table_glass": "res://assets/sprites/medbay/table_glass.png",
-	"bed_med": "res://assets/sprites/medbay/bed_med.png",
+	"table_reinforced": "res://assets/sprites/medbay/table_reinforced.png",
+	"table_rglass": "res://assets/sprites/medbay/table_rglass.png",
+	"table_wood": "res://assets/sprites/medbay/table_wood.png",
+	"table_fancy": "res://assets/sprites/medbay/table_fancy.png",
+	"table_fancy_blue": "res://assets/sprites/medbay/table_fancy_blue.png",
+	"table_fancy_red": "res://assets/sprites/medbay/table_fancy_red.png",
+	"table_greyscale": "res://assets/sprites/medbay/table_greyscale.png",
+	"bed": "res://assets/sprites/medbay/bed.png",
+	"bed_double": "res://assets/sprites/medbay/bed_double.png",
 	"bed_emerg": "res://assets/sprites/medbay/bed_emerg.png",
 	"locker_blue": "res://assets/sprites/medbay/locker_blue.png",
-	"locker_red": "res://assets/sprites/medbay/locker_red.png",
-	"locker_green": "res://assets/sprites/medbay/locker_green.png",
+	"locker_chem": "res://assets/sprites/medbay/locker_chem.png",
+	"locker_cmo": "res://assets/sprites/medbay/locker_cmo.png",
+	"locker_med": "res://assets/sprites/medbay/locker_med.png",
+	"locker_paramed": "res://assets/sprites/medbay/locker_paramed.png",
+	"locker_atmos": "res://assets/sprites/medbay/locker_atmos.png",
+	"locker_cap": "res://assets/sprites/medbay/locker_cap.png",
+	"locker_cabinet": "res://assets/sprites/medbay/locker_cabinet.png",
+	"locker_eng_secure": "res://assets/sprites/medbay/locker_eng_secure.png",
+	"locker_secure": "res://assets/sprites/medbay/locker_secure.png",
 	"smartfridge": "res://assets/sprites/medbay/smartfridge.png",
-	"monitor": "res://assets/sprites/medbay/monitor.png",
+	"smartfridge_organ": "res://assets/sprites/medbay/smartfridge_organ.png",
+	"monitor_operating": "res://assets/sprites/medbay/monitor_operating.png",
+	"monitor_vitals": "res://assets/sprites/medbay/monitor_vitals.png",
 	"defib_unit": "res://assets/sprites/medbay/defib_unit.png",
 	"chair": "res://assets/sprites/medbay/chair.png",
+	"chair_comfy": "res://assets/sprites/medbay/chair_comfy.png",
+	"chair_comfy_teal": "res://assets/sprites/medbay/chair_comfy_teal.png",
+	"chair_shuttle": "res://assets/sprites/medbay/chair_shuttle.png",
+	"chair_office": "res://assets/sprites/medbay/chair_office.png",
+	"chair_office_dark": "res://assets/sprites/medbay/chair_office_dark.png",
+	"chair_stool": "res://assets/sprites/medbay/chair_stool.png",
+	"sofa": "res://assets/sprites/medbay/sofa.png",
+	"sofa_right": "res://assets/sprites/medbay/sofa_right.png",
 	"sink": "res://assets/sprites/medbay/sink.png",
 	"shower": "res://assets/sprites/medbay/shower.png",
 	"toilet": "res://assets/sprites/medbay/toilet.png",
 	"iv_drip": "res://assets/sprites/medbay/iv_drip.png",
 	"player": "res://assets/sprites/medbay/player.png",
-	"robot": "res://assets/sprites/medbay/robot.png",
+	"robot": "res://assets/sprites/medbay/robot.png"
 }
-
 var passed := 0
 var failed := 0
 
@@ -139,14 +166,23 @@ func test_room_geometry() -> bool:
 	var walls: Node = room.get_node_or_null("Walls_medbay")
 	assert_true(walls != null, "geo: wall body exists")
 	if walls != null:
-		# '#' rects get shape + visual + highlight (3 children);
+		# '#' rects get shape + one junction sprite per cell;
 		# 'X' (void) rects get collision only (1 child).
 		var expected_children := 0
 		for r in rects:
+			var cells := int(r.size.x / 32) * int(r.size.y / 32)
 			var cx := clampi(int(r.position.x / 32), 0, 52)
 			var cy := clampi(int(r.position.y / 32), 0, 40)
-			expected_children += 1 if _char_at(cx, cy) == "X" else 3
+			expected_children += 1 if _char_at(cx, cy) == "X" else 1 + cells
 		assert_eq(walls.get_child_count(), expected_children, "geo: wall body children match the rects")
+	# Every wall cell's smoothing junction fits the wall sheet
+	# (0-14 per type) and WALLTYPE agrees with the MAP.
+	for y in range(41):
+		for x in range(53):
+			if _char_at(x, y) == "#":
+				var j: int = room._wall_junction(x, y)
+				assert_true(j >= 0 and j <= 14, "geo: wall junction (%d,%d) is 0-14" % [x, y])
+				assert_true((ROOM_SCRIPT.WALLTYPE[y] as String)[x] == "w" or (ROOM_SCRIPT.WALLTYPE[y] as String)[x] == "r", "geo: WALLTYPE (%d,%d) is w or r" % [x, y])
 	assert_true(room.exits().is_empty(), "geo: no exits (standalone-only room)")
 	play.queue_free()
 	await process_frame
@@ -160,9 +196,15 @@ func test_floor_and_sprites() -> bool:
 	if floor_tex != null:
 		assert_eq(floor_tex.get_size(), Vector2(1696, 1312), "sprites: floor is 1696x1312")
 	var expected_sizes := {
-		"cryo_cell": Vector2(32, 64), "chair": Vector2(16, 16),
-		"locker_blue": Vector2(24, 32), "locker_red": Vector2(24, 32),
-		"locker_green": Vector2(24, 32), "smartfridge": Vector2(24, 32),
+		"cryo_cell": Vector2(32, 64),
+		"locker_blue": Vector2(32, 48), "locker_chem": Vector2(32, 48),
+		"locker_cmo": Vector2(32, 48), "locker_med": Vector2(32, 48),
+		"locker_paramed": Vector2(32, 48), "locker_atmos": Vector2(32, 48),
+		"locker_cap": Vector2(32, 48), "locker_cabinet": Vector2(32, 48),
+		"locker_eng_secure": Vector2(32, 48), "locker_secure": Vector2(32, 48),
+		"table_fancy": Vector2(32, 34), "table_fancy_blue": Vector2(32, 34),
+		"table_fancy_red": Vector2(32, 34),
+		"wall_sheet": Vector2(32, 960),
 		"player": Vector2(16, 16), "robot": Vector2(16, 16),
 	}
 	for key in SPRITES.keys():
@@ -381,12 +423,12 @@ func test_bright_lighting() -> bool:
 	var mod: CanvasModulate = room.get_node_or_null("AmbientBright") as CanvasModulate
 	assert_true(mod != null, "light: bright ambient node exists")
 	if mod != null:
-		assert_true(mod.color.r >= 0.9 and mod.color.g >= 0.9 and mod.color.b >= 0.9, "light: ambient is near-white, not dark")
+		assert_eq(mod.color, Color(1, 1, 1), "light: ambient is neutral white (1,1,1), no tint")
 	var lights := 0
 	for child in room.get_children():
 		if child is PointLight2D:
 			lights += 1
-	assert_eq(lights, 6, "light: six ceiling lights")
+	assert_eq(lights, 0, "light: no ceiling lights (uniform station lighting)")
 	play.queue_free()
 	await process_frame
 	await process_frame
@@ -405,6 +447,11 @@ func test_seals_close_borders() -> bool:
 		assert_true(outside, "seals: seal rect sits just outside the room")
 	var seal_body: Node = room.get_node_or_null("WallsSeal_medbay")
 	assert_true(seal_body != null, "seals: seal body exists in standalone play")
+	if seal_body != null:
+		# One collision shape per seal rect, no wall sprites: the
+		# seals sit outside the MAP (a bounds bug here once left
+		# the seal body half-built with a SCRIPT ERROR).
+		assert_eq(seal_body.get_child_count(), 159, "seals: seal body has one shape per seal rect")
 	play.queue_free()
 	await process_frame
 	await process_frame

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bpmhnkari1v8l"
-path="res://.godot/imported/monitor.png-b41172c8229ff723e6d462ace30c9d6a.ctex"
+uid="uid://bv7s04mh1t7rj"
+path="res://.godot/imported/chair_shuttle.png-6c52754335a927600a68eaf20b2ba6f1.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/medbay/monitor.png"
-dest_files=["res://.godot/imported/monitor.png-b41172c8229ff723e6d462ace30c9d6a.ctex"]
+source_file="res://assets/sprites/medbay/chair_shuttle.png"
+dest_files=["res://.godot/imported/chair_shuttle.png-6c52754335a927600a68eaf20b2ba6f1.ctex"]
 
 [params]
 

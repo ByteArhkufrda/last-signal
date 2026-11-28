@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://d387wbt6ntp3h"
-path="res://.godot/imported/locker_red.png-7e366161b9d8098044e2ffe98d23e191.ctex"
+uid="uid://blc3i14r7k0wi"
+path="res://.godot/imported/table_rglass.png-a0768c06b4ae6f3e6fdf6aac4dcf8ed5.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/medbay/locker_red.png"
-dest_files=["res://.godot/imported/locker_red.png-7e366161b9d8098044e2ffe98d23e191.ctex"]
+source_file="res://assets/sprites/medbay/table_rglass.png"
+dest_files=["res://.godot/imported/table_rglass.png-a0768c06b4ae6f3e6fdf6aac4dcf8ed5.ctex"]
 
 [params]
 
