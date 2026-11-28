@@ -184,7 +184,7 @@ const NOTE_DIGITS := [4, 1, 7]
 ## How the digits are named, in code order: each note's message ends with
 ## "(<name>: <digit>)" and each dial's prompt is "چرخاندن <name>", so the
 ## player knows which dial a digit belongs to whatever order the notes are
-## read in. (The HUD's «کد: ۴ ۱ ۷» line and NOTE_DIGITS are unchanged.)
+## read in. (The HUD's code line is «کد: ۴۱۷», one number: P7b.)
 const DIGIT_NAMES := ["رقم اول", "رقم دوم", "رقم سوم"]
 const PERSIAN_DIGITS := "۰۱۲۳۴۵۶۷۸۹"
 
@@ -229,11 +229,12 @@ const FUSE_PICKUP := {
 ## Its interactable child "MedCabinet" sits at the prop's centre
 ## (540, 320) and carries three dials (MedDial1-3, built by
 ## cabinet_medical_wing.gd) in a row 20 px north of it, on the room side:
-## local (560, 300), (540, 300), (520, 300), dial 1 on the right because the
-## HUD text is right-to-left. The corner is far from everything: 80+ px from
-## every console (the nearest-interactable range is 40), 255+ px from the fuse
-## box, 310+ px from the scanner, off both doorway approaches and the
-## scanner's line of sight, and the dial plates (14 px) touch no solid prop
+## local (520, 300), (540, 300), (560, 300): dial 1 is the LEFTMOST dial (P7b)
+## so the boxes read 4 1 7 left to right, like the HUD's «کد: ۴۱۷». The corner
+## is far from everything: 80+ px from every console (the nearest-interactable
+## range is 40), 255+ px from the fuse box, 310+ px from the scanner, off both
+## doorway approaches and the scanner's line of sight, and the dial plates
+## (14 px) touch no solid prop
 ## or wall (25+ px from every other solid prop, 5 px from the cabinet itself
 ## and from the MedLightDamaged decor). Reachable from the entry corridor.
 ## Pinned in test_rooms.gd.

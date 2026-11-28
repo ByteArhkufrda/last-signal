@@ -79,12 +79,13 @@ const ROOM_CHECKS := {
 			"MedDeskDoctor/MedFlashlight": Vector2(432, 252),
 			# Medical Recovery (P6, 2026-11-26): the code cabinet (an
 			# interactable child of the MedCabinetWorn prop) and its three
-			# dials, dial 1 on the right. The medicine only appears when the
-			# cabinet opens.
+			# dials, dial 1 on the LEFT (P7b, 2026-11-28; it was on the
+			# right) so the boxes read 4 1 7 left to right. The medicine only
+			# appears when the cabinet opens.
 			"MedCabinetWorn/MedCabinet": Vector2(540, 320),
-			"MedCabinetWorn/MedCabinet/MedDial1": Vector2(560, 300),
+			"MedCabinetWorn/MedCabinet/MedDial1": Vector2(520, 300),
 			"MedCabinetWorn/MedCabinet/MedDial2": Vector2(540, 300),
-			"MedCabinetWorn/MedCabinet/MedDial3": Vector2(520, 300),
+			"MedCabinetWorn/MedCabinet/MedDial3": Vector2(560, 300),
 		},
 		"towers": 0, "puzzles": 0, "enemies": 1, "wall_children": 18,
 	},
@@ -1046,8 +1047,10 @@ func _count_item(item_id: String, ancestor: Node) -> int:
 ## The code cabinet (P6, 2026-11-26), standalone room (a HUD is added first,
 ## the launcher has none): MedCabinetWorn keeps being a solid prop and gains
 ## the interactable child MedCabinet with three dials in front of it (dial 1
-## on the right). E on a dial cycles its digit 0-9 and wraps, the HUD shows
-## «کد: ...»; a wrong code changes nothing else; the right code (the note
+## on the LEFT, P7b). E on a dial cycles its digit 0-9 and wraps, the HUD
+## shows «کد: ...» (the digits as one number, no spaces); the digit label
+## sits DIGIT_Y_OFFSET above the box centre; a wrong code changes nothing
+## else; the right code (the note
 ## digits 4 1 7) opens the cabinet exactly once: cabinet_open sprite, «کابینت
 ## باز شد.», dials locked and out of the interactable group, ONE medicine
 ## pickup in front of it. Collecting it gives the "medicine" item and shows
@@ -1097,12 +1100,21 @@ func test_medical_cabinet() -> bool:
 	assert_true(prop_sprite != null and prop_sprite.texture == worn_tex, "the closed cabinet shows the worn cabinet sprite")
 	assert_true(cabinet.is_in_group("interactable") and not cabinet.is_in_group("puzzles") and not cabinet.is_in_group("hidden"), "the cabinet is an interactable, neither a puzzle nor hidden")
 	assert_eq([str(dials[0].name), str(dials[1].name), str(dials[2].name)], ["MedDial1", "MedDial2", "MedDial3"], "the dials are MedDial1-3, dial 1 first")
+	assert_true(dials[0].global_position.x < dials[1].global_position.x and dials[1].global_position.x < dials[2].global_position.x, "dial 1 is the leftmost dial and dial 3 the rightmost (the boxes read 4 1 7 left to right)")
+	# The digit sits DIGIT_Y_OFFSET above the centre of its 16 x 16 box.
+	var dial_script: GDScript = dials[0].get_script()
+	var digit_label: Label = null
+	for child in dials[0].get_children():
+		if child is Label:
+			digit_label = child
+	assert_eq(dial_script.DIGIT_Y_OFFSET, -2.0, "the digit offset constant is -2 px")
+	assert_true(digit_label != null and digit_label.position == Vector2(-8.0, -8.0 + dial_script.DIGIT_Y_OFFSET), "the digit label is the 16 x 16 box moved up by DIGIT_Y_OFFSET")
 	var dials_ok := true
 	for d in dials:
 		if not d.is_in_group("interactable") or d.is_in_group("puzzles") or d.is_in_group("hidden") or d.is_locked():
 			dials_ok = false
 	assert_true(dials_ok, "the three dials are unlocked interactables, neither puzzles nor hidden")
-	assert_eq(cabinet.code_text(), "۰ ۰ ۰", "the dials start at 0 0 0")
+	assert_eq(cabinet.code_text(), "۰۰۰", "the dials start at 000, one number")
 	var room_script: GDScript = room.get_script()
 	assert_eq(cabinet.code, room_script.NOTE_DIGITS, "the cabinet's code is the room's NOTE_DIGITS")
 	assert_true(not cabinet.is_open, "the cabinet starts closed")
@@ -1132,7 +1144,7 @@ func test_medical_cabinet() -> bool:
 	assert_true(dials[0].global_position.distance_to(dials[1].global_position) >= 20.0 and dials[1].global_position.distance_to(dials[2].global_position) >= 20.0, "neighbouring dials are at least 20 px apart")
 	# Through the real player: beside a dial it is the nearest interactable,
 	# E turns it once and the HUD shows the code.
-	player.global_position = Vector2(560, 284)
+	player.global_position = Vector2(520, 284)
 	player.velocity = Vector2.ZERO
 	for i in 5:
 		await physics_frame
@@ -1140,7 +1152,7 @@ func test_medical_cabinet() -> bool:
 	assert_eq(hud.prompt_label.text, "E — چرخاندن رقم اول", "the HUD prompt beside dial 1")
 	await _press_interact()
 	assert_eq(dials[0].digit, 1, "E turns dial 1 from 0 to 1")
-	assert_eq(hud.message_label.text, "کد: ۱ ۰ ۰", "the HUD shows the code after the first turn")
+	assert_eq(hud.message_label.text, "کد: ۱۰۰", "the HUD shows the code after the first turn")
 	assert_true(not cabinet.is_open, "a wrong code leaves the cabinet closed")
 	player.global_position = Vector2(540, 284)
 	player.velocity = Vector2.ZERO
@@ -1148,7 +1160,7 @@ func test_medical_cabinet() -> bool:
 		await physics_frame
 	assert_true(player._current_interactable == dials[1], "beside dial 2 it is the nearest interactable")
 	assert_eq(hud.prompt_label.text, "E — چرخاندن رقم دوم", "the HUD prompt beside dial 2")
-	player.global_position = Vector2(520, 284)
+	player.global_position = Vector2(560, 284)
 	player.velocity = Vector2.ZERO
 	for i in 5:
 		await physics_frame
@@ -1172,7 +1184,7 @@ func test_medical_cabinet() -> bool:
 		dials[0].interact()
 		seen.append(dials[0].digit)
 	assert_eq(seen, [1, 2, 3, 4, 5, 6, 7, 8, 9, 0], "a dial cycles 0-9 and wraps to 0")
-	assert_eq(hud.message_label.text, "کد: ۰ ۰ ۰", "the HUD shows the wrapped code")
+	assert_eq(hud.message_label.text, "کد: ۰۰۰", "the HUD shows the wrapped code")
 	dials[1].set_digit(9)
 	assert_eq(dials[1].digit, 9, "set_digit shows a digit directly")
 	dials[1].set_digit(10)
@@ -1186,7 +1198,12 @@ func test_medical_cabinet() -> bool:
 		dials[2].set_digit(int(wrong[2]) - 1)
 		dials[2].interact()
 	assert_true(not cabinet.is_open and opened_count[0] == 0, "wrong codes, near misses included, never open the cabinet")
-	assert_eq(hud.message_label.text, "کد: ۴ ۱ ۶", "after the last wrong code the HUD shows it")
+	assert_eq(hud.message_label.text, "کد: ۴۱۶", "after the last wrong code the HUD shows it")
+	var number_ok: bool = cabinet.code_text().length() == 3
+	for ch in cabinet.code_text():
+		if TEST_DIGITS.find(ch) < 0:
+			number_ok = false
+	assert_true(number_ok, "the code text is ONE number: three Persian digits, no spaces")
 	assert_true(prop_sprite.texture == worn_tex, "a wrong code leaves the sprite alone")
 	assert_eq(_count_item("medicine", room), 0, "a wrong code spawns nothing")
 	var still_live := true
@@ -1799,7 +1816,8 @@ func test_medical_fuse_full_game() -> bool:
 	assert_true(messages_fit, "the three notes show a message of at most 72 characters that ends with the code digit")
 	assert_eq(digits, [4, 1, 7], "the three notes spell the code 4 1 7 through the real HUD")
 	var dials: Array = cabinet.dials()
-	var dial_x := [1200.0, 1180.0, 1160.0]
+	assert_true(dials[0].global_position.x < dials[1].global_position.x and dials[1].global_position.x < dials[2].global_position.x, "in the full game dial 1 is the leftmost dial and dial 3 the rightmost")
+	var dial_x := [1160.0, 1180.0, 1200.0]
 	for d in 3:
 		player.global_position = Vector2(dial_x[d], 284)
 		player.velocity = Vector2.ZERO
@@ -1809,7 +1827,7 @@ func test_medical_fuse_full_game() -> bool:
 			await _press_interact()
 		if d == 1:
 			assert_true(not cabinet.is_open, "with only dials 1 and 2 set the cabinet is still closed")
-			assert_eq(hud.message_label.text, "کد: ۴ ۱ ۰", "the HUD shows the code so far")
+			assert_eq(hud.message_label.text, "کد: ۴۱۰", "the HUD shows the code so far")
 	assert_true(cabinet.is_open, "the code the notes spell opens the cabinet in the full game")
 	assert_eq(hud.message_label.text, "کابینت باز شد.", "the HUD says the cabinet is open")
 	assert_eq([dials[0].digit, dials[1].digit, dials[2].digit], [4, 1, 7], "the dials show 4 1 7")
@@ -1865,7 +1883,7 @@ const AI_TEXTS := [
 ## Pain vignette (P7, 2026-11-27), standalone room (a HUD is added first only
 ## to compare layers; the vignette never touches it). The vignette is a
 ## world-canvas ColorRect, so every CanvasLayer, the HUD included, draws
-## above it; its opacity is MAX_ALPHA (0.35) x a raised-cosine pulse (period
+## above it; its opacity is MAX_ALPHA (0.55) x a raised-cosine pulse (period
 ## 2.5 s) x the presence in the room x (1 - relief). Everything goes through
 ## MedicalPain.step(delta) with the node's own _process switched off, so no
 ## frame passes between a step and its check: the same deltas always give the
@@ -1915,25 +1933,31 @@ func test_medical_pain_vignette() -> bool:
 	assert_true(not in_canvas_layer, "the vignette is a world-canvas item, not inside any CanvasLayer")
 	assert_true(hud.layer > 0, "the HUD is a CanvasLayer above the world canvas, so the vignette never covers it")
 	assert_true(pain.z_index > room.get_node("MedicalDarkness").z_index, "the vignette draws above the darkness overlay")
-	assert_eq([pain_script.MAX_ALPHA, pain_script.PULSE_PERIOD, pain_script.RELIEF_FADE_SECONDS], [0.35, 2.5, 1.5], "alpha 0.35, period 2.5 s, fade-out 1.5 s")
+	assert_eq([pain_script.MAX_ALPHA, pain_script.PULSE_PERIOD, pain_script.RELIEF_FADE_SECONDS], [0.55, 2.5, 1.5], "alpha 0.55, period 2.5 s, fade-out 1.5 s")
+	# The colour is a clearly red tone, the same in the script and as the
+	# shader default; the clear middle of the screen is unchanged.
+	assert_eq(pain_script.VIGNETTE_COLOR, Color(0.5, 0.02, 0.05), "the vignette colour is the red (0.5, 0.02, 0.05)")
+	assert_true(pain_script.VIGNETTE_COLOR.r >= 0.4 and pain_script.VIGNETTE_COLOR.g <= 0.1 and pain_script.VIGNETTE_COLOR.b <= 0.1, "the vignette colour is clearly red: strong red, almost no green or blue")
+	assert_true(material.shader.code.contains("vec4(0.5, 0.02, 0.05, 1.0)"), "the shader default colour is the same red")
+	assert_true(material.shader.code.contains("const float CLEAR_FRACTION = 0.55;"), "the clear middle of the screen (CLEAR_FRACTION 0.55) is unchanged")
 	# At spawn, before any time has passed: inside the room, nothing visible
 	# yet (the pulse starts at 0).
 	assert_true(pain.player_inside(), "the player starts inside the room")
 	pain.step(0.0)
 	assert_true(is_equal_approx(pain.vignette_alpha(), 0.0) and not overlay.visible, "no vignette at clock 0: the pulse starts clear")
 	assert_true(not pain.is_relieved and not pain.is_pain_over(), "the pain is on before the medicine")
-	# The pulse: 0 -> 0.35 -> 0 every 2.5 s, from exact deltas.
+	# The pulse: 0 -> 0.55 -> 0 every 2.5 s, from exact deltas.
 	var pulse_ok := true
 	for t in [0.625, 1.25, 1.875, 2.5, 3.75, 5.0]:
 		pain.step(t - pain.clock())
-		var expected: float = 0.35 * 0.5 * (1.0 - cos(TAU * t / 2.5))
+		var expected: float = 0.55 * 0.5 * (1.0 - cos(TAU * t / 2.5))
 		if not is_equal_approx(pain.vignette_alpha(), expected):
 			pulse_ok = false
-	assert_true(pulse_ok, "the opacity follows 0.35 x (1 - cos(2 pi t / 2.5)) / 2 at 0.625, 1.25, 1.875, 2.5, 3.75 and 5 s")
+	assert_true(pulse_ok, "the opacity follows 0.55 x (1 - cos(2 pi t / 2.5)) / 2 at 0.625, 1.25, 1.875, 2.5, 3.75 and 5 s")
 	pain.step(1.25 - fposmod(pain.clock(), 2.5) + 2.5)
-	assert_true(is_equal_approx(pain.vignette_alpha(), 0.35), "the pulse peaks at exactly 0.35")
-	assert_true(overlay.visible and is_equal_approx(material.get_shader_parameter("strength"), 0.35), "the overlay is shown and the shader gets the opacity at the peak")
-	assert_eq(material.get_shader_parameter("vignette_color"), Color(0.1, 0.0, 0.02), "the shader gets the vignette colour")
+	assert_true(is_equal_approx(pain.vignette_alpha(), 0.55), "the pulse peaks at exactly 0.55")
+	assert_true(overlay.visible and is_equal_approx(material.get_shader_parameter("strength"), 0.55), "the overlay is shown and the shader gets the opacity at the peak")
+	assert_eq(material.get_shader_parameter("vignette_color"), Color(0.5, 0.02, 0.05), "the shader gets the vignette colour")
 	# Deterministic: a second node stepped in 1/60 s slices gives the same
 	# opacity at the same clock as the first one stepped in big strides.
 	var twin: Node2D = load("res://scripts/levels/rooms/medical_wing/pain_medical_wing.gd").new()
@@ -1980,13 +2004,13 @@ func test_medical_pain_vignette() -> bool:
 	assert_true(is_equal_approx(pain.presence(), 1.0), "the vignette is fully present 0.3 s after entering")
 	# The medicine: from a pulse peak, relieve() fades it out over 1.5 s.
 	pain.step(fposmod(1.25 - pain.clock(), 2.5))
-	assert_true(is_equal_approx(pain.vignette_alpha(), 0.35), "the pain is at a peak just before the medicine")
+	assert_true(is_equal_approx(pain.vignette_alpha(), 0.55), "the pain is at a peak just before the medicine")
 	pain.relieve()
 	assert_true(pain.is_relieved and not pain.is_pain_over(), "relieve() starts the fade-out")
 	pain.step(0.75)
 	assert_true(is_equal_approx(pain.relief_amount(), 0.5), "the fade-out is half done after 0.75 s")
-	var half_expected: float = 0.35 * pain.pulse_at(pain.clock()) * 0.5
-	assert_true(is_equal_approx(pain.vignette_alpha(), half_expected) and pain.vignette_alpha() <= 0.175 + 0.00001, "halfway through, the opacity is the pulse at half strength")
+	var half_expected: float = 0.55 * pain.pulse_at(pain.clock()) * 0.5
+	assert_true(is_equal_approx(pain.vignette_alpha(), half_expected) and pain.vignette_alpha() <= 0.275 + 0.00001, "halfway through, the opacity is the pulse at half strength")
 	pain.step(0.74)
 	assert_true(not pain.is_pain_over(), "the pain is not over 1.49 s after the medicine")
 	pain.step(0.02)

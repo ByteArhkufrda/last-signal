@@ -6,13 +6,15 @@ extends Node2D
 ## collision and its nav-grid rect untouched, and this node only adds the
 ## interaction. The three dials (dial_medical_wing.tscn) are its children.
 ##
-## E on a dial cycles its digit 0-9 (wrapping) and shows «کد: ۰ ۰ ۰»
-## (the current digits, dial 1 first). When the digits equal `code` (the
-## room passes NOTE_DIGITS) the cabinet opens: the prop's sprite becomes
-## cabinet_open, the HUD says «کابینت باز شد.», the dials lock, the cabinet
-## and the dials leave group "interactable", and the reward pickup (the room
-## sets it: the medicine) appears in front of it. A wrong code does nothing else: no
-## sound, no penalty. E on the closed cabinet itself only says it is locked.
+## E on a dial cycles its digit 0-9 (wrapping) and shows «کد: ۰۰۰» (the
+## current digits as ONE number, no spaces; dial 1 is the first digit and the
+## LEFTMOST dial, so the boxes and the number read the same way). When the
+## digits equal `code` (the room passes NOTE_DIGITS) the cabinet opens: the
+## prop's sprite becomes cabinet_open, the HUD says «کابینت باز شد.», the
+## dials lock, the cabinet and the dials leave group "interactable", and the
+## reward pickup (the room sets it: the medicine) appears in front of it. A
+## wrong code does nothing else: no sound, no penalty. E on the closed
+## cabinet itself only says it is locked.
 ##
 ## Same interactable interface as console.gd: group "interactable" +
 ## interact_label / interact() / set_highlighted(bool). Never in groups
@@ -45,12 +47,19 @@ const OPEN_TEXTURE: Texture2D = preload("res://assets/sprites/medical-wing/cabin
 const PERSIAN_DIGITS := "۰۱۲۳۴۵۶۷۸۹"
 const LOCKED_MESSAGE := "کابینت قفله. رمز سه‌رقمی می‌خواد."
 const OPEN_MESSAGE := "کابینت باز شد."
-## Dial positions relative to this node (the cabinet's centre), dial 1 first.
-## The row is 20 px in front of the cabinet (on the room side) and the dials
-## are 20 px apart, so the player's nearest-interactable pick (range 40) is
-## clear. The HUD text is right-to-left, so the first digit of «کد: ...» is
-## the RIGHTMOST one on screen: dial 1 is the rightmost dial too.
-const DIAL_OFFSETS: Array[Vector2] = [Vector2(20, -20), Vector2(0, -20), Vector2(-20, -20)]
+## The dial row, relative to this node (the cabinet's centre): DIAL_ROW_Y px
+## in front of the cabinet (on the room side), DIAL_SPACING px between
+## neighbouring dials, so the player's nearest-interactable pick (range 40)
+## is clear.
+const DIAL_ROW_Y := -20.0
+const DIAL_SPACING := 20.0
+## Dial positions, dial 1 first. Dial 1 is the LEFTMOST dial and dial 3 the
+## rightmost, so the boxes read 4 1 7 left to right, the same as the number in
+## «کد: ۴۱۷» (digits are left-to-right even inside right-to-left text).
+const DIAL_OFFSETS: Array[Vector2] = [
+	Vector2(-DIAL_SPACING, DIAL_ROW_Y),
+	Vector2(0.0, DIAL_ROW_Y),
+	Vector2(DIAL_SPACING, DIAL_ROW_Y)]
 
 @export var interact_label: String = "بررسی کابینت"
 
@@ -113,12 +122,15 @@ func dials() -> Array[Node2D]:
 	return _dials
 
 
-## The dials' digits as a Persian string with spaces: "۰ ۰ ۰".
+## The dials' digits as ONE Persian number, dial 1 first, no spaces: "۰۰۰".
+## Persian digits are bidi class EN: as one run they keep their left-to-right
+## order inside the right-to-left HUD text («کد: ۴۱۷» reads 4 1 7); with
+## spaces between them the paragraph direction would reverse them.
 func code_text() -> String:
-	var parts: PackedStringArray = PackedStringArray()
+	var text := ""
 	for dial in _dials:
-		parts.append(PERSIAN_DIGITS[int(dial.digit)])
-	return " ".join(parts)
+		text += PERSIAN_DIGITS[int(dial.digit)]
+	return text
 
 
 func _on_dial_turned(_index: int) -> void:

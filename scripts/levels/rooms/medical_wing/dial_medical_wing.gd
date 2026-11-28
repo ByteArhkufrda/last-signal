@@ -21,6 +21,16 @@ const COLOR_RIM := Color(0.62, 0.66, 0.74)
 const COLOR_PLATE := Color(0.13, 0.15, 0.2)
 const COLOR_DIGIT := Color(0.85, 1.0, 0.9)
 const DIGIT_FONT_SIZE := 10
+## The digit's Label is 16 x 16 px around the dial's centre and centres its
+## LINE BOX, not the ink of the digit. Vazirmatn's line box at
+## DIGIT_FONT_SIZE 10 is ~15.6 px (ascent 2100/2048 em = 10.3 px, descent
+## 1100/2048 em = 5.4 px) and a Persian digit is ~6.5 px tall (1336/2048 em)
+## and sits on the baseline with no descender, so where the ink lands inside
+## the box depends on how the Label places that line. This offset moves the
+## whole Label (px, negative = up) to put the ink in the middle of the plate;
+## it was started at -2 from the playtest (the digit looked too low) and is
+## the one number to tune by eye.
+const DIGIT_Y_OFFSET := -2.0
 
 ## 1-based position in the code (dial 1 is the first digit).
 @export var dial_index: int = 1
@@ -44,7 +54,7 @@ func _ready() -> void:
 	add_child(plate)
 	_label = Label.new()
 	_label.size = Vector2(16, 16)
-	_label.position = Vector2(-8, -8)
+	_label.position = Vector2(-8.0, -8.0 + DIGIT_Y_OFFSET)
 	_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_label.mouse_filter = Control.MOUSE_FILTER_IGNORE

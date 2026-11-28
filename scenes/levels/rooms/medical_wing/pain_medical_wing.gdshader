@@ -23,8 +23,9 @@ uniform vec2 rect_size = vec2(1320.0, 1048.0);
 uniform vec4 view_rect = vec4(0.0, 0.0, 640.0, 360.0);
 // Opacity at the screen edge (the script drives it: pulse x presence x relief).
 uniform float strength : hint_range(0.0, 1.0) = 0.0;
-// Colour of the vignette (a very dark red).
-uniform vec4 vignette_color : source_color = vec4(0.1, 0.0, 0.02, 1.0);
+// Colour of the vignette (a clearly red, still dark tone; the script sets
+// the same value).
+uniform vec4 vignette_color : source_color = vec4(0.5, 0.02, 0.05, 1.0);
 
 // Fraction of the half-screen that stays completely clear in the middle.
 const float CLEAR_FRACTION = 0.55;

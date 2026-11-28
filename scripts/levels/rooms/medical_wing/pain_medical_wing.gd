@@ -37,7 +37,7 @@ extends Node2D
 
 const SHADER: Shader = preload("res://scenes/levels/rooms/medical_wing/pain_medical_wing.gdshader")
 ## Opacity of the vignette at the screen edge at the peak of a pulse.
-const MAX_ALPHA := 0.35
+const MAX_ALPHA := 0.55
 ## Seconds of one full pulse (clear -> darkest -> clear).
 const PULSE_PERIOD := 2.5
 ## Seconds the vignette takes to fade in / out when the player enters /
@@ -45,8 +45,9 @@ const PULSE_PERIOD := 2.5
 const ENTER_FADE_SECONDS := 0.3
 ## Seconds the vignette takes to fade out for good once the medicine is taken.
 const RELIEF_FADE_SECONDS := 1.5
-## Colour of the vignette (a very dark red; its alpha is the script's).
-const VIGNETTE_COLOR := Color(0.1, 0.0, 0.02)
+## Colour of the vignette (a clearly red, still dark tone; its alpha is the
+## script's). The same value is the shader uniform's default.
+const VIGNETTE_COLOR := Color(0.5, 0.02, 0.05)
 ## How far the covered rect reaches beyond the room's rect on every side, in
 ## world px: more than half a screen at zoom 1 (320 x 180), so it covers the
 ## whole view whenever the player is in the room.
