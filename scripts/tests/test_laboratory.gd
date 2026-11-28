@@ -124,7 +124,7 @@ func test_research_vault() -> bool:
 	var holder := Node2D.new()
 	root.add_child(holder)
 	var vault: Node = load(RESEARCH_VAULT_SCENE).instantiate()
-	vault.position = Vector2(552, 312)
+	vault.position = Vector2(80, 464)
 	holder.add_child(vault)
 	var d1: Node = vault.get_node("Dial1")
 	var d2: Node = vault.get_node("Dial2")
@@ -148,7 +148,7 @@ func test_research_vault() -> bool:
 	assert_true(vault.is_solved, "vault: code 137 solves")
 	assert_true(vault.keycard_spawned, "vault: keycard spawns on solve")
 	assert_true(holder.get_node_or_null("KeycardPickup") != null, "vault: keycard node exists")
-	assert_eq((holder.get_node("KeycardPickup") as Node2D).position, Vector2(512, 312), "vault: keycard spawns beside the vault")
+	assert_eq((holder.get_node("KeycardPickup") as Node2D).position, Vector2(40, 464), "vault: keycard spawns beside the vault")
 	holder.queue_free()
 	await process_frame
 	await process_frame
@@ -274,20 +274,20 @@ func test_hud_feedback_fits() -> bool:
 	var msg_label: Label = hud.get_node("MessageLabel") as Label
 	var font: Font = msg_label.get_theme_font("font")
 	# Wrong power flip.
-	await _press_e_near(player, Vector2(204, 200))
+	await _press_e_near(player, Vector2(80, 360))
 	assert_true(_hud_text_fits(msg_label, font), "hud-fit: wrong power flip toast fits")
 	# Analyzer while the power is off.
-	await _press_e_near(player, Vector2(516, 72))
+	await _press_e_near(player, Vector2(496, 248))
 	assert_true(_hud_text_fits(msg_label, font), "hud-fit: locked analyzer toast fits")
 	# Solve the power, then a wrong pattern.
-	await _press_e_near(player, Vector2(204, 152))
-	await _press_e_near(player, Vector2(204, 176))
-	await _press_e_near(player, Vector2(204, 200))
+	await _press_e_near(player, Vector2(80, 312))
+	await _press_e_near(player, Vector2(80, 336))
+	await _press_e_near(player, Vector2(80, 360))
 	assert_true(_hud_text_fits(msg_label, font), "hud-fit: power solved toast fits")
-	await _press_e_near(player, Vector2(516, 72))
+	await _press_e_near(player, Vector2(496, 248))
 	assert_true(_hud_text_fits(msg_label, font), "hud-fit: wrong pattern toast fits")
 	# Vault dial while locked.
-	await _press_e_near(player, Vector2(528, 340))
+	await _press_e_near(player, Vector2(56, 492))
 	assert_true(_hud_text_fits(msg_label, font), "hud-fit: locked vault toast fits")
 	play.queue_free()
 	await process_frame
@@ -610,17 +610,17 @@ func test_full_chain_live() -> bool:
 	assert_true(not analyzer.unlocked, "live: analyzer locked at start")
 	assert_true(not vault.unlocked, "live: vault locked at start")
 	# Puzzle 1: power, cooling → stabilizer → containment.
-	await _press_e_near(player, Vector2(204, 152))
-	await _press_e_near(player, Vector2(204, 176))
-	await _press_e_near(player, Vector2(204, 200))
+	await _press_e_near(player, Vector2(80, 312))
+	await _press_e_near(player, Vector2(80, 336))
+	await _press_e_near(player, Vector2(80, 360))
 	assert_true(panel.is_solved, "live: power panel solves")
 	assert_true(room.chamber_active, "live: chamber lights up after power")
 	assert_true(analyzer.unlocked, "live: power unlocks the analyzer")
 	assert_eq(mission.puzzles_solved, 1, "live: mission counts 1 puzzle")
 	# Puzzle 2: wrong pattern first, then C.
-	await _press_e_near(player, Vector2(516, 72))
+	await _press_e_near(player, Vector2(496, 248))
 	assert_true(not analyzer.is_solved, "live: pattern A does not solve")
-	await _press_e_near(player, Vector2(516, 120))
+	await _press_e_near(player, Vector2(496, 296))
 	assert_true(analyzer.is_solved, "live: pattern C solves")
 	assert_true(vault.unlocked, "live: signal unlocks the vault")
 	assert_eq(mission.puzzles_solved, 2, "live: mission counts 2 puzzles")
@@ -628,16 +628,16 @@ func test_full_chain_live() -> bool:
 	assert_true(wiring._log_overlay != null and wiring._log_overlay.visible, "live: scientist log panel shows")
 	assert_true(str(wiring._log_label.text).contains("دانشمند"), "live: scientist log text shown")
 	# Puzzle 3: dials to 1-3-7.
-	await _press_e_near(player, Vector2(528, 340))
+	await _press_e_near(player, Vector2(56, 492))
 	for i in 3:
-		await _press_e_near(player, Vector2(552, 340))
+		await _press_e_near(player, Vector2(80, 492))
 	for i in 7:
-		await _press_e_near(player, Vector2(576, 340))
+		await _press_e_near(player, Vector2(104, 492))
 	assert_true(vault.is_solved, "live: vault solves with 137")
 	assert_true(room.get_node_or_null("KeycardPickup") != null, "live: keycard spawns")
 	assert_eq(mission.current_stage(), 1, "live: mission reaches keycard stage")
 	# Take the keycard: mission completes and the ending starts.
-	await _press_e_near(player, Vector2(512, 340))
+	await _press_e_near(player, Vector2(40, 432))
 	assert_true(int(player.inventory.get("keycard", 0)) >= 1, "live: keycard in inventory")
 	assert_true(mission.is_complete, "live: mission completes on keycard")
 	assert_true(wiring.ending_phase >= 1, "live: ending starts")

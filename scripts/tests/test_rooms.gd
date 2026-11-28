@@ -68,15 +68,15 @@ const ROOM_CHECKS := {
 		"towers": 0, "puzzles": 0, "enemies": 1, "wall_children": 18,
 	},
 	"laboratory": {
-		"area": "آزمایشگاه تحقیقاتی", "tile_rect": Rect2i(0, 0, 40, 23),
+		"area": "آزمایشگاه تحقیقاتی", "tile_rect": Rect2i(0, 0, 40, 36),
 		"offset": Vector2i(0, 23),
-		"spawn": Vector2(320, 32), "target_cell": Vector2i(10, 7),
-		"nodes": {"LabRobot": Vector2(200, 192),
-			"PowerPanel": Vector2(240, 176), "SignalAnalyzer": Vector2(552, 96),
-			"ResearchVault": Vector2(552, 312), "SampleChamber": Vector2(320, 176),
-			"ResearchLogConsole": Vector2(80, 64), "WaveMonitor": Vector2(224, 64),
-			"Note01": Vector2(80, 128), "Note03": Vector2(480, 80), "Note07": Vector2(144, 64)},
-		"towers": 0, "puzzles": 3, "enemies": 1, "wall_children": 18,
+		"spawn": Vector2(208, 336), "target_cell": Vector2i(10, 7),
+		"nodes": {"LabRobot": Vector2(144, 304), "LabRobot2": Vector2(464, 400),
+			"PowerPanel": Vector2(48, 336), "SignalAnalyzer": Vector2(528, 272),
+			"ResearchVault": Vector2(80, 464), "SampleChamber": Vector2(336, 240),
+			"ResearchLogConsole": Vector2(48, 48), "WaveMonitor": Vector2(304, 80),
+			"Note01": Vector2(400, 272), "Note03": Vector2(480, 464), "Note07": Vector2(64, 112)},
+		"towers": 0, "puzzles": 3, "enemies": 2, "wall_children": 24,
 	},
 	"engine_room": {
 		"area": "نیروگاه", "tile_rect": Rect2i(0, 0, 40, 23),
@@ -170,11 +170,20 @@ func _test_room_standalone(room_key: String) -> bool:
 	# add_child), and a frame would let its robot walk off its spawn.
 	var room: Node2D = play.room
 	var tile_rect: Rect2i = check["tile_rect"]
-	# Standalone floor: exactly the room's tile rect, no more, no less.
-	var floor_layer: TileMapLayer = room.get_node_or_null("Floor")
-	assert_true(floor_layer != null, "%s standalone floor exists" % room_key)
-	if floor_layer != null:
-		assert_eq(floor_layer.get_used_cells().size(), tile_rect.get_area(), "%s floor covers its tile rect" % room_key)
+	# Standalone floor: exactly the room's tile rect, no more, no
+	# less. Most rooms build it as a TileMapLayer; the laboratory
+	# uses one smooth Sprite2D (its floor is painted from the MAP).
+	var floor_node: Node = room.get_node_or_null("Floor")
+	assert_true(floor_node != null, "%s standalone floor exists" % room_key)
+	if floor_node != null:
+		if floor_node is TileMapLayer:
+			assert_eq((floor_node as TileMapLayer).get_used_cells().size(), tile_rect.get_area(), "%s floor covers its tile rect" % room_key)
+		elif floor_node is Sprite2D:
+			var floor_tex: Texture2D = (floor_node as Sprite2D).texture
+			assert_true(floor_tex != null and floor_tex.get_size() == Vector2(tile_rect.size * 16), "%s floor covers its tile rect" % room_key)
+			assert_eq((floor_node as Sprite2D).position, Vector2(tile_rect.size * 16) / 2.0, "%s floor is centred" % room_key)
+		else:
+			assert_true(false, "%s floor is a TileMapLayer or a Sprite2D" % room_key)
 	# Expected nodes at their exact positions.
 	for node_name in (check["nodes"] as Dictionary).keys():
 		var node: Node2D = room.get_node_or_null(node_name)
@@ -496,13 +505,20 @@ func test_standalone_room_fixes() -> bool:
 	var grid: AStarGrid2D = level.get("_nav_grid")
 	assert_true(grid.is_point_solid(Vector2i(50, 0)), "assembled grid: medical north edge is solid")
 	assert_true(grid.is_point_solid(Vector2i(0, 30)), "assembled grid: laboratory west edge is solid")
-	# Through-wall interact (E1): the FuseBox is 39 px from the lab
-	# side of the divider — in range, but behind a wall.
+	# Through-wall interact (E1): the FuseBox sits north of the
+	# divider, and the lab side is cut off from it twice over.
+	# The fuse hugs its wall at y 336; the nearest lab floor is
+	# y 408, so no lab point is within the 40 px interact range
+	# any more (the old 39 px "in range but blocked" setup died
+	# with the 32 px walls). This asserts the real mechanism
+	# directly: from (200, 408) the ray to the fuse crosses the
+	# lab's solid north wall (x 213-267 at y 368-400, well clear
+	# of the 288-320 exit gap), and nothing becomes interactable.
 	var fuse: Node2D = level.get_node("FuseBox")
 	var lplayer: CharacterBody2D = level.get_node("Player")
-	lplayer.global_position = Vector2(320, 375)
+	lplayer.global_position = Vector2(200, 408)
 	for i in 5:
 		await physics_frame
-	assert_true(lplayer.global_position.distance_to(fuse.global_position) < 40.0, "player is within interact range of the fuse box")
+	assert_true(not lplayer._has_line_of_sight(fuse), "fuse box ray crosses the divider wall")
 	assert_true(lplayer.get("_current_interactable") == null, "fuse box is not interactable through the wall")
 	return true

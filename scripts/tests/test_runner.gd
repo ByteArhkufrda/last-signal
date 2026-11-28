@@ -2111,21 +2111,25 @@ func test_one_robot_per_area() -> bool:
 	root.add_child(level)
 	await process_frame
 	var rects: Array[Rect2] = [
-		Rect2(0, 0, 640, 368), Rect2(640, 0, 640, 368), Rect2(0, 368, 640, 368),
+		Rect2(0, 0, 640, 368), Rect2(640, 0, 640, 368), Rect2(0, 368, 640, 576),
 		Rect2(640, 368, 640, 368), Rect2(640, 736, 640, 192),
 	]
+	# The laboratory has two patrol robots now (main.gd's two
+	# routes); every other area has one.
+	var expected_counts: Array[int] = [1, 1, 2, 1, 1]
 	var enemies: Array = []
 	for node in get_nodes_in_group("enemies"):
 		if level.is_ancestor_of(node):
 			enemies.append(node)
-	assert_eq(enemies.size(), 5, "level has five robots in total")
-	for rect in rects:
+	assert_eq(enemies.size(), 6, "level has six robots in total")
+	for i in rects.size():
 		var count := 0
 		for enemy in enemies:
-			if rect.has_point(enemy.global_position):
+			if rects[i].has_point(enemy.global_position):
 				count += 1
-		assert_eq(count, 1, "exactly one robot in area rect %s" % rect)
+		assert_eq(count, expected_counts[i], "robot count in area rect %s" % rects[i])
 	assert_true(level.get_node_or_null("LabRobot") != null, "Lab robot exists")
+	assert_true(level.get_node_or_null("LabRobot2") != null, "Lab robot 2 exists")
 	assert_true(level.get_node_or_null("PowerScanner") != null, "Power scanner exists")
 	assert_true(level.get_node_or_null("YardRobot") != null, "Yard robot exists")
 	level.queue_free()
@@ -2140,7 +2144,7 @@ func test_robots_patrol_own_area() -> bool:
 	root.add_child(level)
 	await process_frame
 	var rects: Array[Rect2] = [
-		Rect2(0, 0, 640, 368), Rect2(640, 0, 640, 368), Rect2(0, 368, 640, 368),
+		Rect2(0, 0, 640, 368), Rect2(640, 0, 640, 368), Rect2(0, 368, 640, 576),
 		Rect2(640, 368, 640, 368), Rect2(640, 736, 640, 192),
 	]
 	for node in get_nodes_in_group("enemies"):

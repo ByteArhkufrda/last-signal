@@ -20,7 +20,7 @@ const STAGE_HINTS := {
 	2: "Keycard را داری — به Core Chamber برو",
 }
 const AREA_HINT := "آزمایشگاه ORION — نمونه‌ی ناشناخته؛ اول گزارش تحقیقاتی را بخوان"
-const _DEFAULT_PATROL: Array[Vector2] = [Vector2(200, 120), Vector2(440, 120), Vector2(440, 280), Vector2(200, 280)]
+const _DEFAULT_PATROL: Array[Vector2] = [Vector2(144, 304), Vector2(496, 304)]
 
 ## The scientist's recovered audio log (puzzle 2), shown as text —
 ## no audio file is needed.
@@ -67,7 +67,7 @@ var _log_read_position: Vector2 = Vector2.ZERO
 ## Where a caught player respawns. The full game uses the entrance
 ## (LevelData.SPAWN); a standalone room passes its own spawn point
 ## (2026-11-19: the entrance is outside every other room but Central).
-var _respawn_point: Vector2 = Vector2(320, 184)
+var _respawn_point: Vector2 = Vector2(208, 336)
 
 
 ## Wire `root` (the level, or a standalone room's root). The room
@@ -189,9 +189,12 @@ func _hide_log() -> void:
 
 
 func _set_robot_reading_paused(value: bool) -> void:
-	var enemy: Node = _root.get_tree().get_first_node_in_group("enemies")
-	if enemy != null and enemy.has_method("set_reading_paused"):
-		enemy.set_reading_paused(value)
+	# ALL robots pause while the player reads (two robots now: the
+	# old first-only call let the second one keep patrolling into
+	# the reading player).
+	for enemy: Node in _root.get_tree().get_nodes_in_group("enemies"):
+		if enemy.has_method("set_reading_paused"):
+			enemy.set_reading_paused(value)
 
 
 func _process(_delta: float) -> void:
@@ -329,6 +332,11 @@ func _wire_interactables() -> void:
 			node.revealed.connect(_on_interacted)
 		if node.has_signal("collected"):
 			node.collected.connect(_on_item_collected)
+	# Two robots, two routes (main.gd): robot N runs route N from
+	# the room's patrol_routes_local(); a robot past the routes list
+	# falls back to route 1, and Central's loop only if the room
+	# offers nothing at all.
+	var enemy_index := 0
 	for enemy in _root.get_tree().get_nodes_in_group("enemies"):
 		if not _root.is_ancestor_of(enemy):
 			continue
@@ -339,10 +347,16 @@ func _wire_interactables() -> void:
 			var post_points: Array[Vector2] = [enemy.global_position]
 			enemy.patrol_points = post_points
 		else:
-			# One robot per area: patrol this room's own loop
-			# (local coordinates); Central's loop is only the fallback.
-			var local_points: Array[Vector2] = _standalone_room.patrol_points_local()
-			enemy.patrol_points = local_points if not local_points.is_empty() else _DEFAULT_PATROL
+			var routes: Array = _standalone_room.patrol_routes_local()
+			var route_points: Array[Vector2] = []
+			if enemy_index < routes.size():
+				var raw: Array = routes[enemy_index]
+				for p in raw:
+					route_points.append(p)
+			if route_points.is_empty():
+				route_points = _standalone_room.patrol_points_local()
+			enemy.patrol_points = route_points if not route_points.is_empty() else _DEFAULT_PATROL
+			enemy_index += 1
 		_player.pulse_emitted.connect(enemy.investigate)
 		enemy.player_caught.connect(_on_player_caught)
 	for puzzle in _root.get_tree().get_nodes_in_group("puzzles"):

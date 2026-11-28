@@ -2,28 +2,72 @@ extends Node2D
 ## Last Signal — laboratory (self-contained room module, 2026-11-23).
 ##
 ## Absolute separation: this file shares NOTHING with the other
-## rooms. The former RoomBase helpers, the floor builder, the
-## textures and hints it needs are all inlined here; its wiring,
-## player, mission and interaction/enemy scenes live as copies
-## in this room's own folders. Only sprite/texture art (assets/)
-## is still shared — art, not logic. The assembled level
-## (level_01.gd) keeps the original shared files; no room reads
-## them.
+## rooms. The former RoomBase helpers and the textures and hints it
+## needs are all inlined here; its wiring, player, mission and
+## interaction/enemy scenes live as copies in this room's own
+## folders. Only sprite/texture art (assets/) is still shared — art,
+## not logic. The assembled level (level_01.gd) keeps the original
+## shared files; no room reads them.
+##
+## Layout (2026-11-28, from the user's main.gd reference): the room
+## is the reference's L-shaped lab, 640x576 px (20x18 cells of 32 px
+## = 40x36 logical 16 px tiles). White lab block top-left (rows 0-5),
+## dark station hall below and right, a blue trim row, and the purple
+## escape strip along the bottom. The floor is ONE smooth sprite
+## (assets/sprites/laboratory/floor_lab.png, painted from the MAP) —
+## no tile grid. Walls are the MAP's '#' cells merged into rects.
+## Puzzle devices sit on the MAP's PROPS: chamber on pod_right,
+## power panel on the generator, analyzer on the terminal, vault on
+## the supply shelf, consoles on the computer / med bed / surgery
+## arm / counter / console row. The other PROPS are solid decor.
+## Two patrol robots run main.gd's two straight routes. Lighting is
+## main.gd's dim ambient + three ceiling lights (standalone only:
+## the assembled level keeps its own bright lighting).
+##
+## Station fit (2026-11-28, honest limitation): the room is 36
+## logical tiles tall at station offset (0, 23), so it needs station
+## rows 23-59 — but the station has 58 rows. Rows 58-59 exist only
+## standalone; in the assembled level the room's south strip hangs
+## past the map (no floor tiles there, no nav-grid cells), and the
+## room's new walls/props are not in LevelData's station lists, so
+## test_station_layout_agrees_with_rooms (and the grid-agreement
+## check inside the standalone room test) fail by design. The
+## standalone room is correct and complete; the assembled fit is a
+## separate, LevelData-sized job.
 
 const TILE_SIZE := 16
-const ROOM_COLS := 80
-const ROOM_ROWS := 58
-const FLOOR_TEXTURE_PATH := "res://assets/sprites/environment/floor_atlas.png"
-const FLOOR_VARIANT_CHANCE := 0.15
-const FLOOR_RNG_SEED := 17
-const MED_FLOOR_TEXTURE_PATH := "res://assets/sprites/environment/floor_medical_atlas.png"
-const MED_FLOOR_WEIGHTS := [0.70, 0.78, 0.84, 0.85, 0.87, 0.89, 0.92, 0.94, 0.97, 0.98, 0.99, 1.0]
-const MED_RECT_TILES := Rect2i(40, 0, 40, 23)
 const WALL_TEXTURE: Texture2D = preload("res://assets/sprites/environment/wall_metal.png")
+const FLOOR_LAB_TEXTURE: Texture2D = preload("res://assets/sprites/laboratory/floor_lab.png")
+const WALL_LAB_TEXTURE: Texture2D = preload("res://assets/sprites/laboratory/wall_lab.png")
+const CHAMBER_TEXTURE: Texture2D = preload("res://assets/sprites/laboratory/chamber_lab.png")
 const CONSOLE_SCENE: PackedScene = preload("res://scenes/levels/rooms/laboratory/console_laboratory.tscn")
 const POWER_PANEL_SCENE: PackedScene = preload("res://scenes/levels/rooms/laboratory/power_panel_laboratory.tscn")
 const SIGNAL_ANALYZER_SCENE: PackedScene = preload("res://scenes/levels/rooms/laboratory/signal_analyzer_laboratory.tscn")
 const RESEARCH_VAULT_SCENE: PackedScene = preload("res://scenes/levels/rooms/laboratory/research_vault_laboratory.tscn")
+
+## MAP (main.gd, verbatim): '#' wall | 'W' lab floor | '.' station
+## floor | 'b' blue trim | 'p' purple strip | ' ' void. One cell
+## is 32 px = 2x2 logical tiles.
+const MAP := [
+	"############        ",
+	"#WWWWWWWWWW#        ",
+	"#WWWWWWWWWW#        ",
+	"#WWWWWWWWWW#        ",
+	"#WWWWWWWWWW#        ",
+	"#bbbbbbbbbb#        ",
+	"#..........#########",
+	"#..................#",
+	"#..................#",
+	"#..................#",
+	"#..................#",
+	"#..................#",
+	"#..................#",
+	"#..................#",
+	"#..................#",
+	"#bbbbbbbbbbbbbbbbbb#",
+	"#pppppppppppppppppp#",
+	"####################",
+]
 
 ## ORION texts (design doc, 2026-11-27). The research log is the
 ## first clue; the notes carry the vault code (01 / 03 / 07 → 137).
@@ -40,61 +84,69 @@ var _glow_tween: Tween = null
 
 ## Last Signal — Research Laboratory room (laboratory), split from
 ## level_01.gd / level_01.tscn, 2026-11-15; local coordinates 2026-11-23.
-##
-## The bottom-left wing: its divider walls, the area console, the
-## crate and the lab security robot (local (200, 192); was (200, 560)
-## in station coordinates). Station offset is (0, 23) tiles.
+## Layout rebased on the user's main.gd reference 2026-11-28: the
+## room is the reference's L-shaped lab, 640x576, spawn (208, 336).
 
 func _ready() -> void:
 	room_key = "laboratory"
 	area_name = "آزمایشگاه تحقیقاتی"
-	room_rect = Rect2(0, 0, 640, 368)
-	room_tile_rect = Rect2i(0, 0, 40, 23)
+	room_rect = Rect2(0, 0, 640, 576)
+	room_tile_rect = Rect2i(0, 0, 40, 36)
 	area_hint = "آزمایشگاه ORION — نمونه‌ی ناشناخته؛ اول گزارش تحقیقاتی را بخوان"
-	spawn_point = Vector2(320, 32)
+	spawn_point = Vector2(208, 336)
 	tint_color = Color(0.4, 0.6, 1.0, 0.07)
 	_build_floor_if_standalone()
 	_build_wall_rects(wall_rects())
 	_build_tint()
 	_build_zone()
-	# Research section (north-west): the log, the wave monitor and
-	# the experiment notes — the first clue and the vault code.
-	_add_named_console(Vector2(80, 64), RESEARCH_LOG_TEXT, "ResearchLogConsole", "گزارش")
-	_add_named_console(Vector2(144, 64), NOTE_07_TEXT, "Note07", "یادداشت ۰۷")
-	_add_named_console(Vector2(224, 64), WAVE_MONITOR_TEXT, "WaveMonitor", "موج")
-	_add_named_console(Vector2(80, 128), NOTE_01_TEXT, "Note01", "یادداشت ۰۱")
-	_add_named_console(Vector2(480, 80), NOTE_03_TEXT, "Note03", "یادداشت ۰۳")
-	# Sample section (centre): the containment chamber and its power
-	# panel. Analysis (east): the signal analyzer. Security
-	# (south-east): the research vault holding the keycard.
+	_build_lighting_if_standalone()
+	# Decor props (main.gd PROPS): flat-colour rects. Solid ones
+	# block movement; visual-only ones sit under a device or console
+	# (see _add_flat_prop: a solid body under an interactable would
+	# block every line-of-sight ray to it).
+	_build_decor_props()
+	# Research section: the log, the wave monitor and the experiment
+	# notes — the first clue and the vault code — on the MAP's consoles.
+	_add_named_console(Vector2(48, 48), RESEARCH_LOG_TEXT, "ResearchLogConsole", "گزارش")
+	_add_named_console(Vector2(64, 112), NOTE_07_TEXT, "Note07", "یادداشت ۰۷")
+	_add_named_console(Vector2(304, 80), WAVE_MONITOR_TEXT, "WaveMonitor", "موج")
+	_add_named_console(Vector2(400, 272), NOTE_01_TEXT, "Note01", "یادداشت ۰۱")
+	_add_named_console(Vector2(480, 464), NOTE_03_TEXT, "Note03", "یادداشت ۰۳")
+	# Sample section: the containment chamber on pod_right, its power
+	# panel on the generator. Analysis: the signal analyzer on the
+	# terminal. Security: the research vault on the supply shelf.
 	_build_sample_chamber()
 	var power_panel: StaticBody2D = POWER_PANEL_SCENE.instantiate()
 	power_panel.name = "PowerPanel"
-	power_panel.position = Vector2(240, 176)
+	power_panel.position = Vector2(48, 336)
 	add_child(power_panel)
 	var analyzer: StaticBody2D = SIGNAL_ANALYZER_SCENE.instantiate()
 	analyzer.name = "SignalAnalyzer"
-	analyzer.position = Vector2(552, 96)
+	analyzer.position = Vector2(528, 272)
 	add_child(analyzer)
 	var vault: StaticBody2D = RESEARCH_VAULT_SCENE.instantiate()
 	vault.name = "ResearchVault"
-	vault.position = Vector2(552, 312)
+	vault.position = Vector2(80, 464)
 	add_child(vault)
 	# Chained puzzles: power → signal → vault. Each puzzle unlocks
 	# the next one; the wiring counts all three as solved.
 	power_panel.solved.connect(analyzer.unlock)
 	analyzer.solved.connect(vault.unlock)
-	_add_prop(preload("res://assets/sprites/props/crate.png"), Vector2(480, 272))
 
 
+## The MAP's '#' cells merged into wall rects (32 px cells; adjacent
+## cells share one rect, not one body per cell). Two gaps are the
+## declared exits: north x 288-320 (to command_center) and east
+## y 336-368 (the reference's east doorway; see exits() for why the
+## declared east exit rect still sits at y 160-192).
 func wall_rects() -> Array[Rect2]:
 	return [
-		Rect2(624, 0, 16, 160), Rect2(624, 192, 16, 176),
-		Rect2(0, -16, 288, 16), Rect2(320, -16, 320, 16),
-		Rect2(0, 360, 640, 16),
-		# West exterior (2026-11-19: this edge had no wall — the
-		# player walked off the map beside the lab, in the full game).
-		Rect2(0, 0, 16, 368),
+		Rect2(0, 0, 32, 576),
+		Rect2(32, 0, 256, 32), Rect2(320, 0, 64, 32),
+		Rect2(352, 32, 32, 160),
+		Rect2(352, 192, 288, 32),
+		Rect2(608, 224, 32, 112), Rect2(608, 368, 32, 208),
+		Rect2(32, 544, 576, 32),
 	]
 
 
@@ -104,15 +156,33 @@ func blocked_rects() -> Array[Rect2]:
 	return rects
 
 
+## Solid decor only (main.gd PROPS with no device on them). Puzzle
+## devices and consoles are NOT in here: the devices carry their own
+## bodies, and a console has none — the old pattern (only walls +
+## crate-like props feed the grid).
 func prop_solid_rects() -> Array[Rect2]:
-	return [Rect2(472, 264, 16, 16)]
-
-
-func patrol_points_local() -> Array[Vector2]:
 	return [
-		Vector2(160, 112), Vector2(520, 112),
-		Vector2(520, 272), Vector2(160, 272),
+		Rect2(32, 224, 32, 32), Rect2(320, 224, 32, 32),
+		Rect2(32, 256, 32, 32), Rect2(32, 384, 32, 32),
+		Rect2(256, 448, 64, 32),
 	]
+
+
+## main.gd's two patrol routes (pixels): robot 1 runs the y=304
+## line, robot 2 the y=400 line. Both lines are clear of every wall,
+## solid prop and device body (verified by a clearance script
+## 2026-11-28: swept 12x14 bodies hit nothing).
+func patrol_routes_local() -> Array:
+	return [
+		[Vector2(144, 304), Vector2(496, 304)],
+		[Vector2(464, 400), Vector2(176, 400)],
+	]
+
+
+## First route (back-compat: the old single-loop contract and the
+## wiring fallback). The wiring assigns one route per robot.
+func patrol_points_local() -> Array[Vector2]:
+	return [Vector2(144, 304), Vector2(496, 304)]
 
 
 func exits() -> Array[Dictionary]:
@@ -134,10 +204,8 @@ var room_rect: Rect2 = Rect2()
 var room_tile_rect: Rect2i = Rect2i()
 ## The room's position in the station map, in tiles. Set by the
 ## assembler (level_01.gd) or the standalone launcher (room_play.gd)
-## BEFORE add_child, so _ready can use it. It only feeds the floor
-## builder: rolls are read at the GLOBAL cell, so the standalone floor
-## matches the assembled floor. Standalone it is still the station
-## offset — the floor pattern belongs to the station, not the room.
+## BEFORE add_child. Standalone it is still the station offset, for
+## the tests that compare the standalone grid with the assembled one.
 var tile_offset: Vector2i = Vector2i.ZERO
 ## Where this room node actually sits, in pixels. The assembler sets
 ## it to tile_offset * TILE_SIZE (and room.position to match); the
@@ -168,48 +236,20 @@ func to_world_point(p: Vector2) -> Vector2:
 func _wall_texture_for(r: Rect2) -> Texture2D:
 	return wall_texture_for_local(r)
 
-## Doorway gaps in this room's walls, for the standalone launcher.
-## In the full map the gaps open into the neighbouring rooms; in
-## standalone there is nothing beyond them, so the launcher seals them
-## with walls. Computed from wall_rects(): on each wall line (one x
-## for vertical walls, one y for horizontal), the intervals the
-## room's wall rects do not cover, bounded by the room's own extent.
-## Walls the .tscn builds (Central's north/west ring) are not in
-## wall_rects(), so they never produce a spurious gap here.
+## Doorway gaps the standalone launcher seals with walls. The two
+## declared exits must be in here (the room test asserts every exit
+## rect is one of the gaps), plus the REAL east gap in the new wall
+## (y 336-368): the declared east exit rect (624, 160) still pairs
+## with engine_room's west exit in world coordinates, but in the new
+## MAP that rect floats in the void east of the lab block — the wall
+## gap that actually opens the room is at y 336-368. The launcher
+## seals all three; the void seal is unreachable and harmless.
 func doorway_gap_rects() -> Array[Rect2]:
-	var gaps: Array[Rect2] = []
-	var vertical: Dictionary = {}
-	var horizontal: Dictionary = {}
-	for r in wall_rects():
-		if r.size.x == 16 and r.size.y > 16:
-			if not vertical.has(r.position.x):
-				vertical[r.position.x] = []
-			(vertical[r.position.x] as Array).append(r)
-		elif r.size.y == 16 and r.size.x > 16:
-			if not horizontal.has(r.position.y):
-				horizontal[r.position.y] = []
-			(horizontal[r.position.y] as Array).append(r)
-	for x in vertical.keys():
-		var rects: Array = vertical[x]
-		rects.sort_custom(func(a: Rect2, b: Rect2) -> bool: return a.position.y < b.position.y)
-		var covered: float = room_rect.position.y
-		for r in rects:
-			if r.position.y > covered:
-				gaps.append(Rect2(x, covered, 16, r.position.y - covered))
-			covered = maxf(covered, r.end.y)
-		if covered < room_rect.end.y:
-			gaps.append(Rect2(x, covered, 16, room_rect.end.y - covered))
-	for y in horizontal.keys():
-		var rects: Array = horizontal[y]
-		rects.sort_custom(func(a: Rect2, b: Rect2) -> bool: return a.position.x < b.position.x)
-		var covered: float = room_rect.position.x
-		for r in rects:
-			if r.position.x > covered:
-				gaps.append(Rect2(covered, y, r.position.x - covered, 16))
-			covered = maxf(covered, r.end.x)
-		if covered < room_rect.end.x:
-			gaps.append(Rect2(covered, y, room_rect.end.x - covered, 16))
-	return gaps
+	return [
+		Rect2(288, -16, 32, 16),
+		Rect2(624, 160, 16, 32),
+		Rect2(608, 336, 32, 32),
+	]
 
 ## Build the room's code-built walls as one StaticBody2D named
 ## "Walls_<room_key>". Textured Polygon2D (UVs = the rect's coords,
@@ -282,18 +322,117 @@ func _build_zone() -> void:
 	zone.add_child(shape)
 	add_child(zone)
 
-## Standalone only: build this room's floor tiles (its tile rect) with
-## the same seeded rolls the whole-map floor uses, so the standalone
-## floor matches the assembled floor cell for cell. Rolls are read at
-## the GLOBAL cell (local + tile_offset); cells are written locally.
+## Standalone only: one smooth floor sprite for the whole room
+## (640x576, painted from the MAP — no tile grid). The assembled
+## level keeps the shared TileMap floor; this room builds nothing
+## there.
 func _build_floor_if_standalone() -> void:
 	if not standalone:
 		return
-	var layer := TileMapLayer.new()
-	layer.name = "Floor"
-	layer.tile_set = build_tileset()
-	add_child(layer)
-	build_floor(layer, room_tile_rect, tile_offset)
+	var floor_sprite := Sprite2D.new()
+	floor_sprite.name = "Floor"
+	floor_sprite.texture = FLOOR_LAB_TEXTURE
+	floor_sprite.position = room_rect.get_center()
+	add_child(floor_sprite)
+	# Bottom of the draw order: the room's .tscn children (the two
+	# patrol robots) already exist when _ready runs, and an opaque
+	# floor added after them paints over them — the robots were
+	# invisible in standalone play (measured 2026-11-28: no robot
+	# in any screenshot; the old TileMap floor had the same
+	# defect). Everything else _ready adds draws over the floor.
+	move_child(floor_sprite, 0)
+
+## Standalone only: main.gd's dim ambient + three ceiling lights.
+## Gated on standalone on purpose: the room is flattened into the
+## assembled level, and a CanvasModulate there would darken the
+## whole station (the assembled level keeps its own bright light).
+func _build_lighting_if_standalone() -> void:
+	if not standalone:
+		return
+	var mod := CanvasModulate.new()
+	mod.name = "AmbientDim"
+	mod.color = Color(0.28, 0.30, 0.42)
+	add_child(mod)
+	_add_ceiling_light(Vector2(160, 80), Color(1, 1, 0.9), 0.7, 2.2)
+	_add_ceiling_light(Vector2(192, 288), Color(0.6, 0.8, 1.0), 0.7, 2.2)
+	_add_ceiling_light(Vector2(480, 352), Color(0.6, 0.8, 1.0), 0.7, 2.2)
+
+
+func _add_ceiling_light(pos: Vector2, color: Color, energy: float, tex_scale: float) -> void:
+	var light := _make_light(color, energy, tex_scale)
+	light.position = pos
+	add_child(light)
+
+
+## Radial light texture (main.gd's _make_light, verbatim).
+func _make_light(color: Color, energy: float, tex_scale: float) -> PointLight2D:
+	var grad := Gradient.new()
+	grad.set_color(0, Color.WHITE)
+	grad.set_color(1, Color(1, 1, 1, 0))
+	var tex := GradientTexture2D.new()
+	tex.gradient = grad
+	tex.fill = GradientTexture2D.FILL_RADIAL
+	tex.fill_from = Vector2(0.5, 0.5)
+	tex.fill_to = Vector2(1.0, 0.5)
+	tex.width = 256
+	tex.height = 256
+	var light := PointLight2D.new()
+	light.texture = tex
+	light.color = color
+	light.energy = energy
+	light.texture_scale = tex_scale
+	return light
+
+## main.gd PROPS as flat-colour rects: [rect, colour, solid?, name].
+## Solid ones (pods, machines, vending) block movement and feed the
+## nav grid. Visual-only ones sit under a device or a console: a
+## solid body under an interactable blocks every line-of-sight ray
+## to it — the vault dials behind a solid shelf, or a console on a
+## solid bed, are unreachable from all four sides (the raycast the
+## player uses excludes only the target's own assembly, not the
+## decor under it). The device's own body is the obstacle there.
+func _build_decor_props() -> void:
+	var props: Array = [
+		[Rect2(32, 32, 32, 32), Color("dfe6ea"), false, "Computer"],
+		[Rect2(32, 96, 64, 32), Color("f0f0f0"), false, "MedBed"],
+		[Rect2(288, 32, 32, 96), Color("6f8fd8"), false, "SurgeryArm"],
+		[Rect2(32, 224, 32, 32), Color("1a1c22"), true, "PodLeft"],
+		[Rect2(320, 224, 32, 32), Color("1a1c22"), true, "PodRight"],
+		[Rect2(32, 256, 32, 32), Color("3a63b8"), true, "MachineA"],
+		[Rect2(32, 320, 32, 32), Color("7a6a5a"), false, "Generator"],
+		[Rect2(32, 384, 32, 32), Color("3a63b8"), true, "MachineB"],
+		[Rect2(352, 256, 96, 32), Color("9aa0a6"), false, "Counter"],
+		[Rect2(512, 256, 32, 32), Color("2e7d32"), false, "Terminal"],
+		[Rect2(32, 448, 96, 32), Color("c0392b"), false, "SupplyShelf"],
+		[Rect2(256, 448, 64, 32), Color("2c5ec9"), true, "Vending"],
+		[Rect2(416, 448, 128, 32), Color("b0b6bd"), false, "ConsoleRow"],
+	]
+	for p in props:
+		_add_flat_prop(p[0], p[1], p[2], p[3])
+
+
+func _add_flat_prop(rect: Rect2, color: Color, solid: bool, prop_name: String = "") -> void:
+	var vis := Polygon2D.new()
+	vis.polygon = PackedVector2Array([
+		rect.position, rect.position + Vector2(rect.size.x, 0),
+		rect.position + rect.size, rect.position + Vector2(0, rect.size.y)])
+	vis.color = color
+	if not solid:
+		add_child(vis)
+		return
+	var body := StaticBody2D.new()
+	if prop_name != "":
+		body.name = prop_name
+	body.collision_layer = 1
+	body.collision_mask = 0
+	var shape := CollisionShape2D.new()
+	var rs := RectangleShape2D.new()
+	rs.size = rect.size
+	shape.shape = rs
+	shape.position = rect.get_center()
+	body.add_child(shape)
+	body.add_child(vis)
+	add_child(body)
 
 ## Interactable area console with a log message (verbatim from
 ## level_01.gd). texture_key loads a medical sprite for the console.
@@ -333,30 +472,22 @@ func _add_named_console(pos: Vector2, message: String, node_name: String, label_
 		console.add_child(label)
 
 
-## The sample containment chamber (ORION, centre of the room):
-## hazard-striped frame, dark interior, cyan sample glow. Solid
-## (the player walks around it) but deliberately NOT in
-## prop_solid_rects: it sits inside the patrol rectangle, never on
-## the robot's loop, and the nav grid must keep agreeing with the
+## The sample containment chamber (ORION, on pod_right): hazard
+## frame + glowing glass sprite, cyan sample glow. Solid (the
+## player walks around it) but deliberately NOT in
+## prop_solid_rects: it sits inside the patrol area, never on a
+## robot route, and the nav grid must keep agreeing with the
 ## assembled level cell for cell.
 func _build_sample_chamber() -> void:
 	var chamber := StaticBody2D.new()
 	chamber.name = "SampleChamber"
-	chamber.position = Vector2(320, 176)
+	chamber.position = Vector2(336, 240)
 	chamber.collision_layer = 1
 	chamber.collision_mask = 0
-	var frame := Polygon2D.new()
-	frame.polygon = PackedVector2Array([
-		Vector2(-34, -26), Vector2(34, -26),
-		Vector2(34, 26), Vector2(-34, 26)])
-	frame.color = Color(0.85, 0.7, 0.1)
+	var frame := Sprite2D.new()
+	frame.name = "ChamberSprite"
+	frame.texture = CHAMBER_TEXTURE
 	chamber.add_child(frame)
-	var inner := Polygon2D.new()
-	inner.polygon = PackedVector2Array([
-		Vector2(-30, -22), Vector2(30, -22),
-		Vector2(30, 22), Vector2(-30, 22)])
-	inner.color = Color(0.08, 0.1, 0.14)
-	chamber.add_child(inner)
 	_chamber_glow = Polygon2D.new()
 	_chamber_glow.polygon = PackedVector2Array([
 		Vector2(-18, -14), Vector2(18, -14),
@@ -446,73 +577,4 @@ static func build_nav_grid(tile_rect: Rect2i, blocked: Array[Rect2], inflatable:
 ## Default is wall_metal; a room with its own wall art (Medical Wing)
 ## overrides this for its own rects.
 func wall_texture_for_local(_r: Rect2) -> Texture2D:
-	return WALL_TEXTURE
-
-
-static var _rolls: PackedFloat32Array = PackedFloat32Array()
-
-
-static func _ensure_rolls() -> void:
-	if not _rolls.is_empty():
-		return
-	var rng := RandomNumberGenerator.new()
-	rng.seed = FLOOR_RNG_SEED
-	_rolls.resize(ROOM_COLS * ROOM_ROWS)
-	for x in ROOM_COLS:
-		for y in ROOM_ROWS:
-			_rolls[x * ROOM_ROWS + y] = rng.randf()
-
-
-## Roll for one cell, in the original generation order.
-static func roll_at(cell: Vector2i) -> float:
-	_ensure_rolls()
-	return _rolls[cell.x * ROOM_ROWS + cell.y]
-
-
-static func build_tileset() -> TileSet:
-	var tileset := TileSet.new()
-	tileset.tile_size = Vector2i(TILE_SIZE, TILE_SIZE)
-	var source := TileSetAtlasSource.new()
-	source.texture = load(FLOOR_TEXTURE_PATH)
-	source.texture_region_size = Vector2i(TILE_SIZE, TILE_SIZE)
-	source.create_tile(Vector2i.ZERO)
-	source.create_tile(Vector2i(1, 0))
-	tileset.add_source(source)
-	# Medical Wing floor: the pack's 12-tile atlas. Cells outside the
-	# wing keep the old two tiles.
-	var med_source := TileSetAtlasSource.new()
-	med_source.texture = load(MED_FLOOR_TEXTURE_PATH)
-	med_source.texture_region_size = Vector2i(TILE_SIZE, TILE_SIZE)
-	for i in 12:
-		med_source.create_tile(Vector2i(i, 0))
-	tileset.add_source(med_source)
-	return tileset
-
-
-## First weight threshold above the roll: the medical floor tile index.
-static func medical_floor_index(roll: float) -> int:
-	for i in MED_FLOOR_WEIGHTS.size():
-		if roll < MED_FLOOR_WEIGHTS[i]:
-			return i
-	return 0
-
-
-## Fill `layer` (which must already have the tileset from
-## build_tileset()) for the given tile rect. Source 0 is the standard
-## two-tile atlas, source 1 the medical 12-tile atlas.
-## `tile_rect` is in the layer's own (local) coordinates; `tile_offset`
-## is the room's position in the station map, in tiles. Rolls and the
-## medical-floor check use the GLOBAL cell (local + offset), so a room's
-## standalone floor matches the assembled floor cell for cell, while
-## the cells themselves are written at local coordinates.
-static func build_floor(layer: TileMapLayer, tile_rect: Rect2i, tile_offset: Vector2i = Vector2i.ZERO) -> void:
-	_ensure_rolls()
-	for x in range(tile_rect.position.x, tile_rect.end.x):
-		for y in range(tile_rect.position.y, tile_rect.end.y):
-			var global_cell := Vector2i(x, y) + tile_offset
-			var roll: float = roll_at(global_cell)
-			if MED_RECT_TILES.has_point(global_cell):
-				layer.set_cell(Vector2i(x, y), 1, Vector2i(medical_floor_index(roll), 0))
-			else:
-				var coord := Vector2i(1, 0) if roll < FLOOR_VARIANT_CHANCE else Vector2i.ZERO
-				layer.set_cell(Vector2i(x, y), 0, coord)
+	return WALL_LAB_TEXTURE
