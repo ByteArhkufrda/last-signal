@@ -1,0 +1,764 @@
+{
+ "picks": [
+  {
+   "id": 1,
+   "fa": "هسته‌ی AI",
+   "file": "445536_ai_core.png",
+   "subject": "ai core",
+   "caption": "cylindrical ai core with a cracked casing",
+   "split": "train",
+   "row_id": 445536,
+   "shard": "train-04.parquet",
+   "term": "subject:ai core",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 2,
+   "fa": "تورت لیزری",
+   "file": "434845_laser_turret.png",
+   "subject": "laser turret",
+   "caption": "rotating laser turret with cooling fins",
+   "split": "train",
+   "row_id": 434845,
+   "shard": "train-04.parquet",
+   "term": "subject:laser turret",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 3,
+   "fa": "تورت نگهبان",
+   "file": "441270_sentry_turret.png",
+   "subject": "sentry turret",
+   "caption": "makeshift sentry turret with a camera lens",
+   "split": "train",
+   "row_id": 441270,
+   "shard": "train-04.parquet",
+   "term": "subject:sentry turret",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 4,
+   "fa": "دوربین امنیتی",
+   "file": "3326_security_camera.png",
+   "subject": "security camera",
+   "caption": "vintage security camera",
+   "split": "train",
+   "row_id": 3326,
+   "shard": "train-000.parquet",
+   "term": "subject:security camera",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 5,
+   "fa": "هولوپد",
+   "file": "3233_hologram_projector.png",
+   "subject": "hologram projector",
+   "caption": "gray hologram projector",
+   "split": "train",
+   "row_id": 3233,
+   "shard": "train-000.parquet",
+   "term": "subject:hologram projector",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 6,
+   "fa": "ماژول قانون AI",
+   "file": "2316_data_chip.png",
+   "subject": "data chip",
+   "caption": "prototype data chip with purple energy",
+   "split": "train",
+   "row_id": 2316,
+   "shard": "train-000.parquet",
+   "term": "subject:data chip",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 7,
+   "fa": "تلپورتر",
+   "file": "8739_teleporter_pad.png",
+   "subject": "teleporter pad",
+   "caption": "tiny teleporter pad with a small antenna",
+   "split": "train",
+   "row_id": 8739,
+   "shard": "train-000.parquet",
+   "term": "subject:teleporter pad",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 8,
+   "fa": "بیکن سیگنال",
+   "file": "2679_signal_beacon.png",
+   "subject": "signal beacon",
+   "caption": "blue signal beacon with orange warning stripes",
+   "split": "train",
+   "row_id": 2679,
+   "shard": "train-000.parquet",
+   "term": "subject:signal beacon",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 9,
+   "fa": "ترمینال کامپیوتر",
+   "file": "447834_computer_terminal.png",
+   "subject": "computer terminal",
+   "caption": "three-quarter-view boxy black computer terminal with a few scratches in flat colors",
+   "split": "train",
+   "row_id": 447834,
+   "shard": "train-04.parquet",
+   "term": "subject:computer terminal",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 10,
+   "fa": "مانیتور کامپیوتر",
+   "file": "1903_computer_monitor.png",
+   "subject": "computer monitor",
+   "caption": "computer monitor with a black screen",
+   "split": "validation",
+   "row_id": 1903,
+   "shard": "validation-000.parquet",
+   "term": "subject:computer monitor",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 11,
+   "fa": "نمایشگر وضعیت",
+   "file": "146_television.png",
+   "subject": "television",
+   "caption": "retro purple television",
+   "split": "train",
+   "row_id": 146,
+   "shard": "train-000.parquet",
+   "term": "subject:television",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 12,
+   "fa": "رک سرور",
+   "file": "437950_server_rack.png",
+   "subject": "server rack",
+   "caption": "half-full white server rack",
+   "split": "train",
+   "row_id": 437950,
+   "shard": "train-04.parquet",
+   "term": "subject:server rack",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 13,
+   "fa": "مادربرد",
+   "file": "120_motherboard.png",
+   "subject": "motherboard",
+   "caption": "old gray motherboard with a blue accent",
+   "split": "train",
+   "row_id": 120,
+   "shard": "train-000.parquet",
+   "term": "subject:motherboard",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 14,
+   "fa": "برد مدار",
+   "file": "1143_circuit_board.png",
+   "subject": "circuit board",
+   "caption": "circuit board",
+   "split": "train",
+   "row_id": 1143,
+   "shard": "train-000.parquet",
+   "term": "subject:circuit board",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 15,
+   "fa": "دیش ماهواره",
+   "file": "812_satellite_dish.png",
+   "subject": "satellite dish",
+   "caption": "shiny green satellite dish",
+   "split": "train",
+   "row_id": 812,
+   "shard": "train-000.parquet",
+   "term": "subject:satellite dish",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 16,
+   "fa": "دیش رادار",
+   "file": "51_radar_dish.png",
+   "subject": "radar dish",
+   "caption": "damaged radar dish",
+   "split": "train",
+   "row_id": 51,
+   "shard": "train-000.parquet",
+   "term": "subject:radar dish",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 17,
+   "fa": "ماهواره",
+   "file": "7005_satellite.png",
+   "subject": "satellite",
+   "caption": "satellite",
+   "split": "train",
+   "row_id": 7005,
+   "shard": "train-000.parquet",
+   "term": "subject:satellite",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 18,
+   "fa": "سایبورگ",
+   "file": "426741_cyborg.png",
+   "subject": "cyborg",
+   "caption": "top-down scarred cyborg",
+   "split": "train",
+   "row_id": 426741,
+   "shard": "train-04.parquet",
+   "term": "subject:cyborg",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 19,
+   "fa": "ربات انسان‌نما",
+   "file": "426774_humanoid_robot.png",
+   "subject": "humanoid robot",
+   "caption": "white humanoid robot with ear modules",
+   "split": "train",
+   "row_id": 426774,
+   "shard": "train-04.parquet",
+   "term": "subject:humanoid robot",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 20,
+   "fa": "ربات نگهبان",
+   "file": "434668_robot_soldier.png",
+   "subject": "robot soldier",
+   "caption": "robot soldier",
+   "split": "train",
+   "row_id": 434668,
+   "shard": "train-04.parquet",
+   "term": "subject:robot soldier",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 21,
+   "fa": "پهپاد",
+   "file": "213_drone.png",
+   "subject": "drone",
+   "caption": "overloaded drone",
+   "split": "train",
+   "row_id": 213,
+   "shard": "train-000.parquet",
+   "term": "subject:drone",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 22,
+   "fa": "چشم سایبرنتیک",
+   "file": "1676_cybernetic_eye.png",
+   "subject": "cybernetic eye",
+   "caption": "high-tech cybernetic eye",
+   "split": "train",
+   "row_id": 1676,
+   "shard": "train-000.parquet",
+   "term": "subject:cybernetic eye",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 23,
+   "fa": "مغز شناور",
+   "file": "434887_floating_brain.png",
+   "subject": "floating brain",
+   "caption": "floating brain with tiny tentacles in muted colors",
+   "split": "train",
+   "row_id": 434887,
+   "shard": "train-04.parquet",
+   "term": "subject:floating brain",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 24,
+   "fa": "اسباب‌بازی AI",
+   "file": "2335_toy_robot.png",
+   "subject": "toy robot",
+   "caption": "green toy robot with red trim",
+   "split": "train",
+   "row_id": 2335,
+   "shard": "train-000.parquet",
+   "term": "subject:toy robot",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 25,
+   "fa": "در امنیتی",
+   "file": "437091_vault_door.png",
+   "subject": "vault door",
+   "caption": "vault door with a time lock panel in muted colors",
+   "split": "train",
+   "row_id": 437091,
+   "shard": "train-04.parquet",
+   "term": "subject:vault door",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 26,
+   "fa": "در کشویی",
+   "file": "14069_sliding_door.png",
+   "subject": "sliding door",
+   "caption": "ancient iron sliding door with a heavy chain",
+   "split": "train",
+   "row_id": 14069,
+   "shard": "train-000.parquet",
+   "term": "subject:sliding door",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 27,
+   "fa": "کابل",
+   "file": "435749_usb_cable.png",
+   "subject": "usb cable",
+   "caption": "top-down usb cable with a plug on each end",
+   "split": "train",
+   "row_id": 435749,
+   "shard": "train-04.parquet",
+   "term": "subject:usb cable",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 28,
+   "fa": "لوله",
+   "file": "3589_elbow_pipe.png",
+   "subject": "elbow pipe",
+   "caption": "dusty bronze elbow pipe",
+   "split": "train",
+   "row_id": 3589,
+   "shard": "train-000.parquet",
+   "term": "subject:elbow pipe",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 29,
+   "fa": "دریچه تهویه",
+   "file": "446297_vent_grille.png",
+   "subject": "vent grille",
+   "caption": "side-view louvered iron vent grille",
+   "split": "train",
+   "row_id": 446297,
+   "shard": "train-04.parquet",
+   "term": "subject:vent grille",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 30,
+   "fa": "چراغ سقفی",
+   "file": "551_ceiling_lamp.png",
+   "subject": "ceiling lamp",
+   "caption": "sleek white ceiling lamp",
+   "split": "train",
+   "row_id": 551,
+   "shard": "train-000.parquet",
+   "term": "subject:ceiling lamp",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 31,
+   "fa": "چراغ هشدار",
+   "file": "1368_warning_beacon_light.png",
+   "subject": "warning beacon light",
+   "caption": "giant warning beacon light with a reflective stripe",
+   "split": "train",
+   "row_id": 1368,
+   "shard": "train-000.parquet",
+   "term": "subject:warning beacon light",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 32,
+   "fa": "کلید چراغ",
+   "file": "2704_light_switch.png",
+   "subject": "light switch",
+   "caption": "dusty white light switch",
+   "split": "train",
+   "row_id": 2704,
+   "shard": "train-000.parquet",
+   "term": "subject:light switch",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 33,
+   "fa": "آلارم آتش",
+   "file": "2132_fire_alarm_bell.png",
+   "subject": "fire alarm bell",
+   "caption": "fire alarm bell",
+   "split": "train",
+   "row_id": 2132,
+   "shard": "train-000.parquet",
+   "term": "subject:fire alarm bell",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 34,
+   "fa": "دتکتور دود",
+   "file": "1469_smoke_detector.png",
+   "subject": "smoke detector",
+   "caption": "cute smoke detector",
+   "split": "train",
+   "row_id": 1469,
+   "shard": "train-000.parquet",
+   "term": "subject:smoke detector",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 35,
+   "fa": "رادیو",
+   "file": "583_radio.png",
+   "subject": "radio",
+   "caption": "dusty green radio",
+   "split": "train",
+   "row_id": 583,
+   "shard": "train-000.parquet",
+   "term": "subject:radio",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 36,
+   "fa": "بلندگوی اعلان",
+   "file": "293_loudspeaker.png",
+   "subject": "loudspeaker",
+   "caption": "orange loudspeaker",
+   "split": "train",
+   "row_id": 293,
+   "shard": "train-000.parquet",
+   "term": "subject:loudspeaker",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 37,
+   "fa": "تابلوی هشدار",
+   "file": "424_warning_sign.png",
+   "subject": "warning sign",
+   "caption": "red warning sign",
+   "split": "train",
+   "row_id": 424,
+   "shard": "train-000.parquet",
+   "term": "subject:warning sign",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 38,
+   "fa": "کپسول آتش‌نشانی",
+   "file": "204_fire_extinguisher.png",
+   "subject": "fire extinguisher",
+   "caption": "fire extinguisher",
+   "split": "train",
+   "row_id": 204,
+   "shard": "train-000.parquet",
+   "term": "subject:fire extinguisher",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 39,
+   "fa": "پنل کنترل",
+   "file": "436321_control_panel.png",
+   "subject": "control panel",
+   "caption": "boxy control panel with scuffed paint",
+   "split": "train",
+   "row_id": 436321,
+   "shard": "train-04.parquet",
+   "term": "subject:control panel",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 40,
+   "fa": "جعبه فیوز",
+   "file": "437029_fuse_box.png",
+   "subject": "fuse box",
+   "caption": "wall-mounted black fuse box",
+   "split": "train",
+   "row_id": 437029,
+   "shard": "train-04.parquet",
+   "term": "subject:fuse box",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 41,
+   "fa": "ژنراتور برق",
+   "file": "8948_electric_generator.png",
+   "subject": "electric generator",
+   "caption": "heavy-duty orange electric generator",
+   "split": "train",
+   "row_id": 8948,
+   "shard": "train-000.parquet",
+   "term": "subject:electric generator",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 42,
+   "fa": "هسته‌ی برق",
+   "file": "327_power_core.png",
+   "subject": "power core",
+   "caption": "giant purple power core",
+   "split": "train",
+   "row_id": 327,
+   "shard": "train-000.parquet",
+   "term": "subject:power core",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 43,
+   "fa": "باتری",
+   "file": "1116_battery.png",
+   "subject": "battery",
+   "caption": "scratched red battery with tiny sparks",
+   "split": "train",
+   "row_id": 1116,
+   "shard": "train-000.parquet",
+   "term": "subject:battery",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 44,
+   "fa": "صفحه‌کلید",
+   "file": "245_keyboard.png",
+   "subject": "keyboard",
+   "caption": "keyboard",
+   "split": "train",
+   "row_id": 245,
+   "shard": "train-000.parquet",
+   "term": "subject:keyboard",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 45,
+   "fa": "کامپیوتر رومیزی",
+   "file": "2_desktop_computer.png",
+   "subject": "desktop computer",
+   "caption": "sleek desktop computer",
+   "split": "train",
+   "row_id": 2,
+   "shard": "train-000.parquet",
+   "term": "subject:desktop computer",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 46,
+   "fa": "میز",
+   "file": "16_table.png",
+   "subject": "table",
+   "caption": "old wooden table",
+   "split": "train",
+   "row_id": 16,
+   "shard": "train-000.parquet",
+   "term": "subject:table",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 47,
+   "fa": "صندلی اداری",
+   "file": "12224_office_chair.png",
+   "subject": "office chair",
+   "caption": "comfy white office chair",
+   "split": "train",
+   "row_id": 12224,
+   "shard": "train-000.parquet",
+   "term": "subject:office chair",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 48,
+   "fa": "کمد بایگانی",
+   "file": "1669_filing_cabinet.png",
+   "subject": "filing cabinet",
+   "caption": "worn gray filing cabinet",
+   "split": "train",
+   "row_id": 1669,
+   "shard": "train-000.parquet",
+   "term": "subject:filing cabinet",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 49,
+   "fa": "پنجره‌ی میله‌دار",
+   "file": "6510_barred_window.png",
+   "subject": "barred window",
+   "caption": "barred window",
+   "split": "train",
+   "row_id": 6510,
+   "shard": "train-000.parquet",
+   "term": "subject:barred window",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 50,
+   "fa": "فن خنک‌کننده",
+   "file": "437203_cooling_fan.png",
+   "subject": "cooling fan",
+   "caption": "cooling fan with corner screw holes in high contrast",
+   "split": "train",
+   "row_id": 437203,
+   "shard": "train-04.parquet",
+   "term": "subject:cooling fan",
+   "size": [
+    16,
+    16
+   ]
+  }
+ ],
+ "missing": [
+  {
+   "id": 51,
+   "fa": "جعبه سیاه"
+  },
+  {
+   "id": 52,
+   "fa": "ایستگاه شارژ"
+  }
+ ]
+}

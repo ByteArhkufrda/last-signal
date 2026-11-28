@@ -1,0 +1,734 @@
+{
+ "picks": [
+  {
+   "id": 1,
+   "fa": "صندلی کاپیتان",
+   "file": "9_armchair.png",
+   "subject": "armchair",
+   "caption": "purple armchair",
+   "split": "train",
+   "row_id": 9,
+   "shard": "train-000.parquet",
+   "term": "subject:armchair",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 2,
+   "fa": "صندلی افسر",
+   "file": "807_office_chair.png",
+   "subject": "office chair",
+   "caption": "royal office chair",
+   "split": "train",
+   "row_id": 807,
+   "shard": "train-000.parquet",
+   "term": "subject:office chair",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 3,
+   "fa": "گلدان",
+   "file": "1083_flower_pot.png",
+   "subject": "flower pot",
+   "caption": "flower pot",
+   "split": "train",
+   "row_id": 1083,
+   "shard": "train-000.parquet",
+   "term": "subject:flower pot",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 4,
+   "fa": "کنسول فرماندهی",
+   "file": "436321_control_panel.png",
+   "subject": "control panel",
+   "caption": "boxy control panel with scuffed paint",
+   "split": "train",
+   "row_id": 436321,
+   "shard": "train-04.parquet",
+   "term": "subject:control panel",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 5,
+   "fa": "ترمینال کامپیوتر",
+   "file": "447834_computer_terminal.png",
+   "subject": "computer terminal",
+   "caption": "three-quarter-view boxy black computer terminal with a few scratches in flat colors",
+   "split": "train",
+   "row_id": 447834,
+   "shard": "train-04.parquet",
+   "term": "subject:computer terminal",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 6,
+   "fa": "مانیتور بزرگ",
+   "file": "1903_computer_monitor.png",
+   "subject": "computer monitor",
+   "caption": "computer monitor with a black screen",
+   "split": "validation",
+   "row_id": 1903,
+   "shard": "validation-000.parquet",
+   "term": "subj_like:monitor",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 7,
+   "fa": "صفحه نمایش وضعیت",
+   "file": "2575_crt_monitor.png",
+   "subject": "crt monitor",
+   "caption": "crt monitor",
+   "split": "train",
+   "row_id": 2575,
+   "shard": "train-000.parquet",
+   "term": "subj_like:radar",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 8,
+   "fa": "تله‌اسکرین",
+   "file": "146_television.png",
+   "subject": "television",
+   "caption": "retro purple television",
+   "split": "train",
+   "row_id": 146,
+   "shard": "train-000.parquet",
+   "term": "subject:television",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 9,
+   "fa": "هولوپد",
+   "file": "3233_hologram_projector.png",
+   "subject": "hologram projector",
+   "caption": "gray hologram projector",
+   "split": "train",
+   "row_id": 3233,
+   "shard": "train-000.parquet",
+   "term": "subj_like:hologram",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 10,
+   "fa": "تله‌پورتر",
+   "file": "8739_teleporter_pad.png",
+   "subject": "teleporter pad",
+   "caption": "tiny teleporter pad with a small antenna",
+   "split": "train",
+   "row_id": 8739,
+   "shard": "train-000.parquet",
+   "term": "subj_like:teleporter",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 11,
+   "fa": "میز جلسه",
+   "file": "16_table.png",
+   "subject": "table",
+   "caption": "old wooden table",
+   "split": "train",
+   "row_id": 16,
+   "shard": "train-000.parquet",
+   "term": "cap_like:wooden table",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 12,
+   "fa": "میز تقویت‌شده",
+   "file": "13690_table.png",
+   "subject": "table",
+   "caption": "sturdy mahogany table with white paint",
+   "split": "train",
+   "row_id": 13690,
+   "shard": "train-000.parquet",
+   "term": "subject:table",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 13,
+   "fa": "کیف امنیتی",
+   "file": "726_briefcase.png",
+   "subject": "briefcase",
+   "caption": "heavy briefcase",
+   "split": "train",
+   "row_id": 726,
+   "shard": "train-000.parquet",
+   "term": "subject:briefcase",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 14,
+   "fa": "پرچم",
+   "file": "507_golf_hole_flag.png",
+   "subject": "golf hole flag",
+   "caption": "giant golf hole flag",
+   "split": "train",
+   "row_id": 507,
+   "shard": "train-000.parquet",
+   "term": "subj_like: flag",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 15,
+   "fa": "تابلوی اعلانات",
+   "file": "11292_notice_board.png",
+   "subject": "notice board",
+   "caption": "giant wooden notice board with cobwebs",
+   "split": "train",
+   "row_id": 11292,
+   "shard": "train-000.parquet",
+   "term": "subject:notice board",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 16,
+   "fa": "پوستر",
+   "file": "426783_wanted_poster.png",
+   "subject": "wanted poster",
+   "caption": "small beige wanted poster in earthy colors",
+   "split": "train",
+   "row_id": 426783,
+   "shard": "train-04.parquet",
+   "term": "subj_like: poster",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 17,
+   "fa": "تلفن قرمز",
+   "file": "543889_telephone_handset.png",
+   "subject": "telephone handset",
+   "caption": "curved red telephone handset in warm colors",
+   "split": "train",
+   "row_id": 543889,
+   "shard": "train-05.parquet",
+   "term": "cap_like:red telephone",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 18,
+   "fa": "رادیو",
+   "file": "583_radio.png",
+   "subject": "radio",
+   "caption": "dusty green radio",
+   "split": "train",
+   "row_id": 583,
+   "shard": "train-000.parquet",
+   "term": "subject:radio",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 19,
+   "fa": "بی‌سیم",
+   "file": "5720_walkie_talkie.png",
+   "subject": "walkie-talkie",
+   "caption": "worn white walkie-talkie",
+   "split": "train",
+   "row_id": 5720,
+   "shard": "train-000.parquet",
+   "term": "subject:walkie-talkie",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 20,
+   "fa": "کمد امنیتی",
+   "file": "1854_cabinet.png",
+   "subject": "cabinet",
+   "caption": "rustic walnut cabinet",
+   "split": "train",
+   "row_id": 1854,
+   "shard": "train-000.parquet",
+   "term": "subject:cabinet",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 21,
+   "fa": "کمد لباس",
+   "file": "1728_wardrobe.png",
+   "subject": "wardrobe",
+   "caption": "worn oak wardrobe",
+   "split": "train",
+   "row_id": 1728,
+   "shard": "train-000.parquet",
+   "term": "subject:wardrobe",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 22,
+   "fa": "گاوصندوق",
+   "file": "1334_strongbox.png",
+   "subject": "strongbox",
+   "caption": "cursed strongbox with sparkles around it",
+   "split": "train",
+   "row_id": 1334,
+   "shard": "train-000.parquet",
+   "term": "subject:strongbox",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 23,
+   "fa": "در ایرلاک",
+   "file": "1526_sliding_door.png",
+   "subject": "sliding door",
+   "caption": "wooden sliding door",
+   "split": "train",
+   "row_id": 1526,
+   "shard": "train-000.parquet",
+   "term": "subject:sliding door",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 24,
+   "fa": "نرده",
+   "file": "128_railing.png",
+   "subject": "railing",
+   "caption": "red railing",
+   "split": "train",
+   "row_id": 128,
+   "shard": "train-000.parquet",
+   "term": "subject:railing",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 25,
+   "fa": "پنجره",
+   "file": "10156_window.png",
+   "subject": "window",
+   "caption": "broken window with cobwebs in the corner",
+   "split": "train",
+   "row_id": 10156,
+   "shard": "train-000.parquet",
+   "term": "subject:window",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 26,
+   "fa": "فکس",
+   "file": "440814_fax_machine.png",
+   "subject": "fax machine",
+   "caption": "flat blue fax machine",
+   "split": "train",
+   "row_id": 440814,
+   "shard": "train-04.parquet",
+   "term": "subj_like:fax",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 27,
+   "fa": "فتوکپی",
+   "file": "438709_photocopier.png",
+   "subject": "photocopier",
+   "caption": "open-lid black photocopier",
+   "split": "train",
+   "row_id": 438709,
+   "shard": "train-04.parquet",
+   "term": "subject:photocopier",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 28,
+   "fa": "کمد پرونده",
+   "file": "1669_filing_cabinet.png",
+   "subject": "filing cabinet",
+   "caption": "worn gray filing cabinet",
+   "split": "train",
+   "row_id": 1669,
+   "shard": "train-000.parquet",
+   "term": "subject:filing cabinet",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 29,
+   "fa": "قفسه کتاب",
+   "file": "3128_bookshelf.png",
+   "subject": "bookshelf",
+   "caption": "walnut bookshelf with brass accents",
+   "split": "train",
+   "row_id": 3128,
+   "shard": "train-000.parquet",
+   "term": "subject:bookshelf",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 30,
+   "fa": "تخته",
+   "file": "1304_chalkboard_sign.png",
+   "subject": "chalkboard sign",
+   "caption": "chalkboard sign with cobwebs",
+   "split": "train",
+   "row_id": 1304,
+   "shard": "train-000.parquet",
+   "term": "subj_like:chalkboard",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 31,
+   "fa": "تخت کاپیتان",
+   "file": "899_bed.png",
+   "subject": "bed",
+   "caption": "fancy orange bed with gold trim",
+   "split": "train",
+   "row_id": 899,
+   "shard": "train-000.parquet",
+   "term": "subject:bed",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 32,
+   "fa": "دوربین امنیتی",
+   "file": "950_security_camera.png",
+   "subject": "security camera",
+   "caption": "scratched security camera",
+   "split": "train",
+   "row_id": 950,
+   "shard": "train-000.parquet",
+   "term": "subject:security camera",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 33,
+   "fa": "آلارم آتش",
+   "file": "2132_fire_alarm_bell.png",
+   "subject": "fire alarm bell",
+   "caption": "fire alarm bell",
+   "split": "train",
+   "row_id": 2132,
+   "shard": "train-000.parquet",
+   "term": "subj_like:fire alarm",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 34,
+   "fa": "کلید چراغ",
+   "file": "2704_light_switch.png",
+   "subject": "light switch",
+   "caption": "dusty white light switch",
+   "split": "train",
+   "row_id": 2704,
+   "shard": "train-000.parquet",
+   "term": "subject:light switch",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 35,
+   "fa": "چراغ وضعیت",
+   "file": "1368_warning_beacon_light.png",
+   "subject": "warning beacon light",
+   "caption": "giant warning beacon light with a reflective stripe",
+   "split": "train",
+   "row_id": 1368,
+   "shard": "train-000.parquet",
+   "term": "subj_like:beacon",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 37,
+   "fa": "قهوه‌ساز",
+   "file": "2016_coffee_maker.png",
+   "subject": "coffee maker",
+   "caption": "cream coffee maker with a blue light",
+   "split": "train",
+   "row_id": 2016,
+   "shard": "train-000.parquet",
+   "term": "subject:coffee maker",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 38,
+   "fa": "دستگاه فروش",
+   "file": "442072_vending_machine.png",
+   "subject": "vending machine",
+   "caption": "half-empty vending machine with peeling paint in warm colors",
+   "split": "train",
+   "row_id": 442072,
+   "shard": "train-04.parquet",
+   "term": "subject:vending machine",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 39,
+   "fa": "ساعت بزرگ",
+   "file": "2195_grandfather_clock.png",
+   "subject": "grandfather clock",
+   "caption": "worn grandfather clock with engraved markings",
+   "split": "train",
+   "row_id": 2195,
+   "shard": "train-000.parquet",
+   "term": "subject:grandfather clock",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 40,
+   "fa": "مدال",
+   "file": "3751_medal.png",
+   "subject": "medal",
+   "caption": "old medal with a star emblem",
+   "split": "train",
+   "row_id": 3751,
+   "shard": "train-000.parquet",
+   "term": "subject:medal",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 41,
+   "fa": "شومینه",
+   "file": "436241_fireplace.png",
+   "subject": "fireplace",
+   "caption": "arched fireplace with mantel corbels in bright colors",
+   "split": "train",
+   "row_id": 436241,
+   "shard": "train-04.parquet",
+   "term": "subject:fireplace",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 42,
+   "fa": "ویترین",
+   "file": "7665_display_case.png",
+   "subject": "display case",
+   "caption": "red display case",
+   "split": "train",
+   "row_id": 7665,
+   "shard": "train-000.parquet",
+   "term": "subject:display case",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 43,
+   "fa": "مجسمه طلایی",
+   "file": "8436_statue_on_pedestal.png",
+   "subject": "statue on pedestal",
+   "caption": "gold statue on pedestal",
+   "split": "train",
+   "row_id": 8436,
+   "shard": "train-000.parquet",
+   "term": "cap_like:gold statue",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 45,
+   "fa": "دیسک هسته‌ای",
+   "file": "1429_floppy_disk.png",
+   "subject": "floppy disk",
+   "caption": "retro blue floppy disk",
+   "split": "train",
+   "row_id": 1429,
+   "shard": "train-000.parquet",
+   "term": "subject:floppy disk",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 46,
+   "fa": "کارت شناسایی",
+   "file": "440654_id_card.png",
+   "subject": "id card",
+   "caption": "clipped id card with a fold line in flat colors",
+   "split": "train",
+   "row_id": 440654,
+   "shard": "train-04.parquet",
+   "term": "subject:id card",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 47,
+   "fa": "کارت‌خوان",
+   "file": "446750_keycard.png",
+   "subject": "keycard",
+   "caption": "rounded green keycard with a photo",
+   "split": "train",
+   "row_id": 446750,
+   "shard": "train-04.parquet",
+   "term": "subject:keycard",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 48,
+   "fa": "مهر",
+   "file": "1847_rubber_stamp.png",
+   "subject": "rubber stamp",
+   "caption": "dusty rubber stamp with a yellow accent",
+   "split": "train",
+   "row_id": 1847,
+   "shard": "train-000.parquet",
+   "term": "subj_like:rubber stamp",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 49,
+   "fa": "پوشه اسناد",
+   "file": "436479_file_folder.png",
+   "subject": "file folder",
+   "caption": "bulging blue file folder",
+   "split": "train",
+   "row_id": 436479,
+   "shard": "train-04.parquet",
+   "term": "subj_like:file folder",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 50,
+   "fa": "کلیپ‌بورد",
+   "file": "669_clipboard.png",
+   "subject": "clipboard",
+   "caption": "vintage yellow clipboard with a blue accent",
+   "split": "train",
+   "row_id": 669,
+   "shard": "train-000.parquet",
+   "term": "subject:clipboard",
+   "size": [
+    16,
+    16
+   ]
+  }
+ ],
+ "missing": [
+  {
+   "id": 36,
+   "fa": "آب‌سردکن"
+  },
+  {
+   "id": 44,
+   "fa": "بمب هسته‌ای"
+  }
+ ]
+}

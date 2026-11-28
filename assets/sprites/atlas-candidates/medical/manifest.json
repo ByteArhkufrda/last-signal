@@ -1,0 +1,669 @@
+{
+ "picks": [
+  {
+   "id": 1,
+   "fa": "تخت بیمار",
+   "file": "1711_hospital_bed.png",
+   "subject": "hospital bed",
+   "caption": "hospital bed",
+   "split": "train",
+   "row_id": 1711,
+   "shard": "train-000.parquet",
+   "term": "subject:hospital bed",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 3,
+   "fa": "پایه سرم",
+   "file": "435377_iv_stand.png",
+   "subject": "iv stand",
+   "caption": "bent iv stand with a drip tube",
+   "split": "train",
+   "row_id": 435377,
+   "shard": "train-04.parquet",
+   "term": "subject:iv stand",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 4,
+   "fa": "دفیبریلاتور",
+   "file": "438259_defibrillator.png",
+   "subject": "defibrillator",
+   "caption": "cart-mounted defibrillator with a heart symbol",
+   "split": "train",
+   "row_id": 438259,
+   "shard": "train-04.parquet",
+   "term": "subject:defibrillator",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 5,
+   "fa": "کپسول کرایو",
+   "file": "434770_stasis_pod.png",
+   "subject": "stasis pod",
+   "caption": "open stasis pod with base clamps",
+   "split": "train",
+   "row_id": 434770,
+   "shard": "train-04.parquet",
+   "term": "subj_like:stasis pod",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 6,
+   "fa": "سینک",
+   "file": "4928_bathroom_sink.png",
+   "subject": "bathroom sink",
+   "caption": "ceramic bathroom sink with water droplets",
+   "split": "train",
+   "row_id": 4928,
+   "shard": "train-000.parquet",
+   "term": "subj_like:sink (alt: bathroom sink)",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 7,
+   "fa": "آینه",
+   "file": "1213_mirror.png",
+   "subject": "mirror",
+   "caption": "silver mirror with gold trim",
+   "split": "train",
+   "row_id": 1213,
+   "shard": "train-000.parquet",
+   "term": "subject:mirror",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 8,
+   "fa": "برانکارد",
+   "file": "1573_stretcher.png",
+   "subject": "stretcher",
+   "caption": "spotless green stretcher",
+   "split": "train",
+   "row_id": 1573,
+   "shard": "train-000.parquet",
+   "term": "subj_like:stretcher",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 9,
+   "fa": "کپسول اکسیژن",
+   "file": "4374_oxygen_tank.png",
+   "subject": "oxygen tank",
+   "caption": "red oxygen tank with a sparkle",
+   "split": "train",
+   "row_id": 4374,
+   "shard": "train-000.parquet",
+   "term": "subj_like:oxygen tank",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 10,
+   "fa": "جعبه کمک‌های اولیه",
+   "file": "2571_first_aid_kit.png",
+   "subject": "first aid kit",
+   "caption": "tiny red first aid kit",
+   "split": "train",
+   "row_id": 2571,
+   "shard": "train-000.parquet",
+   "term": "subj_like:first aid kit",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 11,
+   "fa": "نیمکت مبل",
+   "file": "4135_bench.png",
+   "subject": "bench",
+   "caption": "brand new pine bench with carved legs",
+   "split": "train",
+   "row_id": 4135,
+   "shard": "train-000.parquet",
+   "term": "subject:bench",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 12,
+   "fa": "صندلی چرخ‌دار",
+   "file": "429_wheelchair.png",
+   "subject": "wheelchair",
+   "caption": "wheelchair",
+   "split": "train",
+   "row_id": 429,
+   "shard": "train-000.parquet",
+   "term": "subject:wheelchair",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 15,
+   "fa": "دوش",
+   "file": "2973_shower_head.png",
+   "subject": "shower head",
+   "caption": "silver shower head",
+   "split": "train",
+   "row_id": 2973,
+   "shard": "train-000.parquet",
+   "term": "subj_like:shower",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 16,
+   "fa": "توالت",
+   "file": "7323_toilet.png",
+   "subject": "toilet",
+   "caption": "spotless ceramic toilet",
+   "split": "train",
+   "row_id": 7323,
+   "shard": "train-000.parquet",
+   "term": "subject:toilet",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 17,
+   "fa": "کمد لباس",
+   "file": "3794_footlocker.png",
+   "subject": "footlocker",
+   "caption": "footlocker",
+   "split": "train",
+   "row_id": 3794,
+   "shard": "train-000.parquet",
+   "term": "subj_like:locker",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 18,
+   "fa": "یخچال پزشکی",
+   "file": "2039_refrigerator.png",
+   "subject": "refrigerator",
+   "caption": "refrigerator",
+   "split": "train",
+   "row_id": 2039,
+   "shard": "train-000.parquet",
+   "term": "subject:refrigerator",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 21,
+   "fa": "هاون و دسته‌هاون",
+   "file": "8954_mortar_and_pestle.png",
+   "subject": "mortar and pestle",
+   "caption": "oak mortar and pestle",
+   "split": "train",
+   "row_id": 8954,
+   "shard": "train-000.parquet",
+   "term": "subj_like:mortar and pestle",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 22,
+   "fa": "ترمینال کامپیوتر",
+   "file": "447834_computer_terminal.png",
+   "subject": "computer terminal",
+   "caption": "three-quarter-view boxy black computer terminal with a few scratches in flat colors",
+   "split": "train",
+   "row_id": 447834,
+   "shard": "train-04.parquet",
+   "term": "subj_like:computer terminal",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 23,
+   "fa": "لپ‌تاپ",
+   "file": "501_laptop.png",
+   "subject": "laptop",
+   "caption": "futuristic gray laptop",
+   "split": "train",
+   "row_id": 501,
+   "shard": "train-000.parquet",
+   "term": "subject:laptop",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 24,
+   "fa": "کاف فشار خون",
+   "file": "437138_blood_pressure_cuff.png",
+   "subject": "blood pressure cuff",
+   "caption": "clean blood pressure cuff with a tube pair",
+   "split": "train",
+   "row_id": 437138,
+   "shard": "train-04.parquet",
+   "term": "subj_like:blood pressure cuff",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 25,
+   "fa": "کپسول استازیس",
+   "file": "435362_stasis_pod.png",
+   "subject": "stasis pod",
+   "caption": "front-view frosted stasis pod with a cracked casing",
+   "split": "train",
+   "row_id": 435362,
+   "shard": "train-04.parquet",
+   "term": "subj_like:stasis pod",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 26,
+   "fa": "دستگاه فروش دارو",
+   "file": "442072_vending_machine.png",
+   "subject": "vending machine",
+   "caption": "half-empty vending machine with peeling paint in warm colors",
+   "split": "train",
+   "row_id": 442072,
+   "shard": "train-04.parquet",
+   "term": "subject:vending machine",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 27,
+   "fa": "ساعت زنگی",
+   "file": "1134_alarm_clock.png",
+   "subject": "alarm clock",
+   "caption": "ornate silver alarm clock",
+   "split": "train",
+   "row_id": 1134,
+   "shard": "train-000.parquet",
+   "term": "subj_like:clock",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 28,
+   "fa": "دستگاه فکس",
+   "file": "440814_fax_machine.png",
+   "subject": "fax machine",
+   "caption": "flat blue fax machine",
+   "split": "train",
+   "row_id": 440814,
+   "shard": "train-04.parquet",
+   "term": "subject:fax machine",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 29,
+   "fa": "مایکروویو",
+   "file": "766_microwave_oven.png",
+   "subject": "microwave oven",
+   "caption": "dusty microwave oven",
+   "split": "train",
+   "row_id": 766,
+   "shard": "train-000.parquet",
+   "term": "subj_like:microwave",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 30,
+   "fa": "تلویزیون",
+   "file": "146_television.png",
+   "subject": "television",
+   "caption": "retro purple television",
+   "split": "train",
+   "row_id": 146,
+   "shard": "train-000.parquet",
+   "term": "subject:television",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 31,
+   "fa": "پروژکتور هولوگرام",
+   "file": "3233_hologram_projector.png",
+   "subject": "hologram projector",
+   "caption": "gray hologram projector",
+   "split": "train",
+   "row_id": 3233,
+   "shard": "train-000.parquet",
+   "term": "subj_like:hologram projector",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 32,
+   "fa": "نرده فلزی",
+   "file": "128_railing.png",
+   "subject": "railing",
+   "caption": "red railing",
+   "split": "train",
+   "row_id": 128,
+   "shard": "train-000.parquet",
+   "term": "subj_like:railing",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 33,
+   "fa": "کپسول آتش‌نشانی",
+   "file": "204_fire_extinguisher.png",
+   "subject": "fire extinguisher",
+   "caption": "fire extinguisher",
+   "split": "train",
+   "row_id": 204,
+   "shard": "train-000.parquet",
+   "term": "subject:fire extinguisher",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 35,
+   "fa": "مخزن سوخت",
+   "file": "335_propane_tank.png",
+   "subject": "propane tank",
+   "caption": "sturdy propane tank",
+   "split": "train",
+   "row_id": 335,
+   "shard": "train-000.parquet",
+   "term": "subj_like:fuel tank (alt: propane tank)",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 36,
+   "fa": "دستگاه تهویه هوا",
+   "file": "616_air_conditioner.png",
+   "subject": "air conditioner",
+   "caption": "black air conditioner with a green light",
+   "split": "train",
+   "row_id": 616,
+   "shard": "train-000.parquet",
+   "term": "subj_like:air purifier (alt: air conditioner)",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 37,
+   "fa": "پمپ",
+   "file": "1310_water_pump_handle.png",
+   "subject": "water pump handle",
+   "caption": "iron water pump handle",
+   "split": "train",
+   "row_id": 1310,
+   "shard": "train-000.parquet",
+   "term": "subj_like:water pump",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 39,
+   "fa": "قفسه کتاب",
+   "file": "3128_bookshelf.png",
+   "subject": "bookshelf",
+   "caption": "walnut bookshelf with brass accents",
+   "split": "train",
+   "row_id": 3128,
+   "shard": "train-000.parquet",
+   "term": "subj_like:bookshelf",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 41,
+   "fa": "میز کار فلزی",
+   "file": "2115_workbench.png",
+   "subject": "workbench",
+   "caption": "oak workbench with iron fittings",
+   "split": "train",
+   "row_id": 2115,
+   "shard": "train-000.parquet",
+   "term": "subj_like:workbench",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 42,
+   "fa": "صندلی اداری",
+   "file": "12224_office_chair.png",
+   "subject": "office chair",
+   "caption": "comfy white office chair",
+   "split": "train",
+   "row_id": 12224,
+   "shard": "train-000.parquet",
+   "term": "subj_like:office chair (alt: comfy white)",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 43,
+   "fa": "چهارپایه",
+   "file": "2960_stool.png",
+   "subject": "stool",
+   "caption": "white stool",
+   "split": "train",
+   "row_id": 2960,
+   "shard": "train-000.parquet",
+   "term": "subject:stool",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 44,
+   "fa": "صندلی راحتی",
+   "file": "9_armchair.png",
+   "subject": "armchair",
+   "caption": "purple armchair",
+   "split": "train",
+   "row_id": 9,
+   "shard": "train-000.parquet",
+   "term": "subj_like:armchair",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 45,
+   "fa": "مبل",
+   "file": "996_sofa.png",
+   "subject": "sofa",
+   "caption": "old yellow sofa",
+   "split": "train",
+   "row_id": 996,
+   "shard": "train-000.parquet",
+   "term": "subject:sofa",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 46,
+   "fa": "تابلوی هشدار",
+   "file": "424_warning_sign.png",
+   "subject": "warning sign",
+   "caption": "red warning sign",
+   "split": "train",
+   "row_id": 424,
+   "shard": "train-000.parquet",
+   "term": "subj_like:warning sign",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 48,
+   "fa": "جعبه قفل‌دار",
+   "file": "9621_lockbox.png",
+   "subject": "lockbox",
+   "caption": "lockbox",
+   "split": "train",
+   "row_id": 9621,
+   "shard": "train-000.parquet",
+   "term": "subj_like:safe (alt: lockbox)",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 49,
+   "fa": "جعبه بار",
+   "file": "1066_crate.png",
+   "subject": "crate",
+   "caption": "oak crate",
+   "split": "train",
+   "row_id": 1066,
+   "shard": "train-000.parquet",
+   "term": "subject:crate",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 51,
+   "fa": "ماسک تنفسی",
+   "file": "10505_respirator_mask.png",
+   "subject": "respirator mask",
+   "caption": "orange respirator mask with scuff marks",
+   "split": "train",
+   "row_id": 10505,
+   "shard": "train-000.parquet",
+   "term": "subj_like:respirator",
+   "size": [
+    16,
+    16
+   ]
+  }
+ ],
+ "missing": [
+  {
+   "id": 2,
+   "fa": "میز عمل جراحی"
+  },
+  {
+   "id": 13,
+   "fa": "کمد دارو"
+  },
+  {
+   "id": 14,
+   "fa": "سردخانه مورگ"
+  },
+  {
+   "id": 19,
+   "fa": "دیسپنسر شیمیایی"
+  },
+  {
+   "id": 20,
+   "fa": "دستگاه آزمایشگاهی"
+  },
+  {
+   "id": 34,
+   "fa": "مخزن آب"
+  },
+  {
+   "id": 38,
+   "fa": "کپسول گاز"
+  },
+  {
+   "id": 40,
+   "fa": "میز شیشه‌ای"
+  },
+  {
+   "id": 47,
+   "fa": "آب‌سردکن"
+  },
+  {
+   "id": 50,
+   "fa": "میز معاینه"
+  },
+  {
+   "id": 52,
+   "fa": "دستگاه دیالیز"
+  },
+  {
+   "id": 53,
+   "fa": "چراغ جراحی"
+  }
+ ]
+}

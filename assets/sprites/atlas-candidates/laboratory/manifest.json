@@ -1,0 +1,755 @@
+{
+ "picks": [
+  {
+   "id": 1,
+   "fa": "میکروسکوپ",
+   "file": "01_microscope.png",
+   "subject": "microscope",
+   "caption": "dusty gray microscope with a green accent",
+   "split": "train",
+   "row_id": 6349,
+   "shard": "train-000.parquet",
+   "term": "subject:microscope",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 2,
+   "fa": "لوله آزمایش",
+   "file": "02_test_tube.png",
+   "subject": "test tube",
+   "caption": "crystal test tube",
+   "split": "train",
+   "row_id": 855,
+   "shard": "train-000.parquet",
+   "term": "subject:test tube",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 3,
+   "fa": "بشر آزمایشگاهی",
+   "file": "03_beaker.png",
+   "subject": "beaker",
+   "caption": "glowing emerald green beaker",
+   "split": "train",
+   "row_id": 1015,
+   "shard": "train-000.parquet",
+   "term": "subject:beaker",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 4,
+   "fa": "فلاسک ارلن",
+   "file": "04_erlenmeyer_flask.png",
+   "subject": "erlenmeyer flask",
+   "caption": "dusty erlenmeyer flask",
+   "split": "train",
+   "row_id": 6772,
+   "shard": "train-000.parquet",
+   "term": "subject:erlenmeyer flask",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 5,
+   "fa": "سانتریفیوژ",
+   "file": "05_centrifuge.png",
+   "subject": "centrifuge",
+   "caption": "black centrifuge",
+   "split": "train",
+   "row_id": 1807,
+   "shard": "train-000.parquet",
+   "term": "subj_like:centrifuge",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 6,
+   "fa": "پتری دیش",
+   "file": "06_petri_dish.png",
+   "subject": "petri dish",
+   "caption": "tiny glass petri dish with a few droplets",
+   "split": "train",
+   "row_id": 7300,
+   "shard": "train-000.parquet",
+   "term": "subj_like:petri dish",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 7,
+   "fa": "شعله آزمایشگاهی",
+   "file": "07_lab_burner.png",
+   "subject": "lab burner",
+   "caption": "red lab burner with a black finish",
+   "split": "train",
+   "row_id": 471,
+   "shard": "train-000.parquet",
+   "term": "subject:lab burner",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 8,
+   "fa": "پیپت",
+   "file": "08_pipette.png",
+   "subject": "pipette",
+   "caption": "brand new pipette with red liquid",
+   "split": "train",
+   "row_id": 89,
+   "shard": "train-000.parquet",
+   "term": "subj_like:pipette",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 9,
+   "fa": "ویال نمونه",
+   "file": "09_potion_vial.png",
+   "subject": "potion vial",
+   "caption": "ancient potion vial with a rope around the neck",
+   "split": "train",
+   "row_id": 3221,
+   "shard": "train-000.parquet",
+   "term": "subj_like:vial",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 10,
+   "fa": "سرنگ",
+   "file": "10_syringe.png",
+   "subject": "syringe",
+   "caption": "tiny syringe with a blue stripe",
+   "split": "train",
+   "row_id": 4761,
+   "shard": "train-000.parquet",
+   "term": "subject:syringe",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 11,
+   "fa": "رک لوله آزمایش",
+   "file": "11_test_tube_rack.png",
+   "subject": "test tube rack",
+   "caption": "old test tube rack with a green accent",
+   "split": "train",
+   "row_id": 4394,
+   "shard": "train-000.parquet",
+   "term": "subject:test tube rack",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 12,
+   "fa": "مانیتور کامپیوتر",
+   "file": "12_computer_monitor.png",
+   "subject": "computer monitor",
+   "caption": "computer monitor with a black screen",
+   "split": "validation",
+   "row_id": 1903,
+   "shard": "validation-000.parquet",
+   "term": "subj_like:computer monitor",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 13,
+   "fa": "کنسول کنترل",
+   "file": "13_control_panel.png",
+   "subject": "control panel",
+   "caption": "boxy control panel with scuffed paint",
+   "split": "train",
+   "row_id": 436321,
+   "shard": "train-04.parquet",
+   "term": "subj_like:control panel",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 14,
+   "fa": "رک سرور",
+   "file": "14_server_rack.png",
+   "subject": "server rack",
+   "caption": "half-full white server rack",
+   "split": "train",
+   "row_id": 437950,
+   "shard": "train-04.parquet",
+   "term": "subj_like:server rack",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 15,
+   "fa": "مخزن آزمایش",
+   "file": "15_propane_tank.png",
+   "subject": "propane tank",
+   "caption": "sturdy propane tank",
+   "split": "train",
+   "row_id": 335,
+   "shard": "train-000.parquet",
+   "term": "subj_like:tank",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 16,
+   "fa": "کپسول کرایو",
+   "file": "16_stasis_pod.png",
+   "subject": "stasis pod",
+   "caption": "open stasis pod with base clamps",
+   "split": "train",
+   "row_id": 434770,
+   "shard": "train-04.parquet",
+   "term": "subj_like:stasis pod",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 17,
+   "fa": "انکوباتور",
+   "file": "17_egg_incubator.png",
+   "subject": "egg incubator",
+   "caption": "round egg incubator with a full tray",
+   "split": "train",
+   "row_id": 443506,
+   "shard": "train-04.parquet",
+   "term": "subj_like:incubator",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 18,
+   "fa": "عینک ایمنی",
+   "file": "18_safety_goggles.png",
+   "subject": "safety goggles",
+   "caption": "gray safety goggles with a yellow stripe",
+   "split": "train",
+   "row_id": 2867,
+   "shard": "train-000.parquet",
+   "term": "subject:safety goggles",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 19,
+   "fa": "قفسه آزمایشگاه",
+   "file": "19_shelf_bracket.png",
+   "subject": "shelf bracket",
+   "caption": "tiny shelf bracket",
+   "split": "train",
+   "row_id": 1271,
+   "shard": "train-000.parquet",
+   "term": "subj_like:shelf",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 20,
+   "fa": "میز آزمایش",
+   "file": "20_desk.png",
+   "subject": "desk",
+   "caption": "desk",
+   "split": "train",
+   "row_id": 6,
+   "shard": "train-000.parquet",
+   "term": "subject:desk",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 21,
+   "fa": "صندلی آزمایشگاه",
+   "file": "21_chair.png",
+   "subject": "chair",
+   "caption": "old chair with a dark varnish",
+   "split": "train",
+   "row_id": 11803,
+   "shard": "train-000.parquet",
+   "term": "subject:chair",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 22,
+   "fa": "تخت پزشکی",
+   "file": "22_bed.png",
+   "subject": "bed",
+   "caption": "fancy orange bed with gold trim",
+   "split": "train",
+   "row_id": 899,
+   "shard": "train-000.parquet",
+   "term": "subject:bed",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 23,
+   "fa": "برانکارد",
+   "file": "23_stretcher.png",
+   "subject": "stretcher",
+   "caption": "spotless green stretcher",
+   "split": "train",
+   "row_id": 1573,
+   "shard": "train-000.parquet",
+   "term": "subj_like:stretcher",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 24,
+   "fa": "روشویی آزمایشگاه",
+   "file": "24_pedestal_sink.png",
+   "subject": "pedestal sink",
+   "caption": "enamel pedestal sink with gold trim",
+   "split": "train",
+   "row_id": 1871,
+   "shard": "train-000.parquet",
+   "term": "subj_like:sink",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 25,
+   "fa": "ترازوی آزمایشگاهی",
+   "file": "25_balance_scales.png",
+   "subject": "balance scales",
+   "caption": "balance scales with a column stand",
+   "split": "train",
+   "row_id": 442273,
+   "shard": "train-04.parquet",
+   "term": "subj_like:balance scale",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 26,
+   "fa": "ژنراتور",
+   "file": "26_force_field_generator.png",
+   "subject": "force field generator",
+   "caption": "force field generator",
+   "split": "train",
+   "row_id": 195,
+   "shard": "train-000.parquet",
+   "term": "subj_like:generator",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 27,
+   "fa": "باتری صنعتی",
+   "file": "27_nine_volt_battery.png",
+   "subject": "nine-volt battery",
+   "caption": "dusty black nine-volt battery",
+   "split": "train",
+   "row_id": 1013,
+   "shard": "train-000.parquet",
+   "term": "subj_like:battery",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 28,
+   "fa": "کپسول آتش‌نشانی",
+   "file": "28_fire_extinguisher.png",
+   "subject": "fire extinguisher",
+   "caption": "fire extinguisher",
+   "split": "train",
+   "row_id": 204,
+   "shard": "train-000.parquet",
+   "term": "subj_like:fire extinguisher",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 29,
+   "fa": "کپسول اکسیژن",
+   "file": "29_oxygen_tank.png",
+   "subject": "oxygen tank",
+   "caption": "red oxygen tank with a sparkle",
+   "split": "train",
+   "row_id": 4374,
+   "shard": "train-000.parquet",
+   "term": "subj_like:oxygen tank",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 30,
+   "fa": "جعبه کمک‌های اولیه",
+   "file": "30_first_aid_kit.png",
+   "subject": "first aid kit",
+   "caption": "tiny red first aid kit",
+   "split": "train",
+   "row_id": 2571,
+   "shard": "train-000.parquet",
+   "term": "subj_like:first aid kit",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 31,
+   "fa": "دفترچه یادداشت",
+   "file": "31_notebook.png",
+   "subject": "notebook",
+   "caption": "tiny leather notebook",
+   "split": "train",
+   "row_id": 1403,
+   "shard": "train-000.parquet",
+   "term": "subj_like:notebook",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 32,
+   "fa": "مدل DNA",
+   "file": "32_dna_model.png",
+   "subject": "dna model",
+   "caption": "scratched dna model with a white finish",
+   "split": "validation",
+   "row_id": 2770,
+   "shard": "validation-000.parquet",
+   "term": "subj_like:dna",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 33,
+   "fa": "بطری شیمیایی",
+   "file": "33_cough_syrup_bottle.png",
+   "subject": "cough syrup bottle",
+   "caption": "cough syrup bottle with a red stripe",
+   "split": "train",
+   "row_id": 65,
+   "shard": "train-000.parquet",
+   "term": "subj_like:bottle",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 34,
+   "fa": "شیشه نمونه",
+   "file": "34_specimen_jar.png",
+   "subject": "specimen jar",
+   "caption": "spotless specimen jar with a few droplets",
+   "split": "train",
+   "row_id": 1437,
+   "shard": "train-000.parquet",
+   "term": "subject:specimen jar",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 35,
+   "fa": "لوله فلزی",
+   "file": "35_pipe.png",
+   "subject": "pipe",
+   "caption": "steel pipe with a steam puff",
+   "split": "train",
+   "row_id": 306,
+   "shard": "train-000.parquet",
+   "term": "subject:pipe",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 36,
+   "fa": "شیر صنعتی",
+   "file": "36_valve_wheel.png",
+   "subject": "valve wheel",
+   "caption": "dusty iron valve wheel",
+   "split": "train",
+   "row_id": 416,
+   "shard": "train-000.parquet",
+   "term": "subj_like:valve",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 37,
+   "fa": "گیج فشار",
+   "file": "37_pressure_gauge.png",
+   "subject": "pressure gauge",
+   "caption": "heavy copper pressure gauge",
+   "split": "train",
+   "row_id": 1598,
+   "shard": "train-000.parquet",
+   "term": "subj_like:pressure gauge",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 38,
+   "fa": "دماسنج",
+   "file": "38_thermometer.png",
+   "subject": "thermometer",
+   "caption": "thermometer",
+   "split": "train",
+   "row_id": 1120,
+   "shard": "train-000.parquet",
+   "term": "subj_like:thermometer",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 39,
+   "fa": "چراغ آزمایشگاه",
+   "file": "39_ceiling_lamp.png",
+   "subject": "ceiling lamp",
+   "caption": "sleek white ceiling lamp",
+   "split": "train",
+   "row_id": 551,
+   "shard": "train-000.parquet",
+   "term": "subj_like:lamp",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 40,
+   "fa": "دریچه تهویه",
+   "file": "40_vent_grille.png",
+   "subject": "vent grille",
+   "caption": "side-view louvered iron vent grille",
+   "split": "train",
+   "row_id": 446297,
+   "shard": "train-04.parquet",
+   "term": "subj_like:vent grille",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 41,
+   "fa": "دوربین امنیتی",
+   "file": "41_security_camera.png",
+   "subject": "security camera",
+   "caption": "scratched security camera",
+   "split": "train",
+   "row_id": 950,
+   "shard": "train-000.parquet",
+   "term": "subj_like:security camera",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 42,
+   "fa": "ربات آزمایشگاه",
+   "file": "42_robot_head.png",
+   "subject": "robot head",
+   "caption": "broken orange robot head",
+   "split": "train",
+   "row_id": 8,
+   "shard": "train-000.parquet",
+   "term": "subj_like:robot",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 43,
+   "fa": "صفحه‌کلید",
+   "file": "43_keyboard.png",
+   "subject": "keyboard",
+   "caption": "keyboard",
+   "split": "train",
+   "row_id": 245,
+   "shard": "train-000.parquet",
+   "term": "subj_like:keyboard",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 44,
+   "fa": "پرینتر",
+   "file": "44_printer.png",
+   "subject": "printer",
+   "caption": "printer",
+   "split": "train",
+   "row_id": 3,
+   "shard": "train-000.parquet",
+   "term": "subj_like:printer",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 45,
+   "fa": "تلسکوپ",
+   "file": "45_telescope.png",
+   "subject": "telescope",
+   "caption": "worn telescope with a small red jewel",
+   "split": "train",
+   "row_id": 2275,
+   "shard": "train-000.parquet",
+   "term": "subject:telescope",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 46,
+   "fa": "آنتن ماهواره",
+   "file": "46_satellite_dish.png",
+   "subject": "satellite dish",
+   "caption": "shiny green satellite dish",
+   "split": "train",
+   "row_id": 812,
+   "shard": "train-000.parquet",
+   "term": "subject:satellite dish",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 47,
+   "fa": "رادیو",
+   "file": "47_radio.png",
+   "subject": "radio",
+   "caption": "dusty green radio",
+   "split": "train",
+   "row_id": 583,
+   "shard": "train-000.parquet",
+   "term": "subject:radio",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 48,
+   "fa": "بلندگو",
+   "file": "48_loudspeaker.png",
+   "subject": "loudspeaker",
+   "caption": "orange loudspeaker",
+   "split": "train",
+   "row_id": 293,
+   "shard": "train-000.parquet",
+   "term": "subj_like:speaker",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 49,
+   "fa": "کمد آزمایشگاه",
+   "file": "49_cabinet.png",
+   "subject": "cabinet",
+   "caption": "rustic walnut cabinet",
+   "split": "train",
+   "row_id": 1854,
+   "shard": "train-000.parquet",
+   "term": "subject:cabinet",
+   "size": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": 50,
+   "fa": "قفسه کتاب",
+   "file": "50_bookshelf.png",
+   "subject": "bookshelf",
+   "caption": "walnut bookshelf with brass accents",
+   "split": "train",
+   "row_id": 3128,
+   "shard": "train-000.parquet",
+   "term": "subj_like:bookshelf",
+   "size": [
+    16,
+    16
+   ]
+  }
+ ],
+ "missing": []
+}

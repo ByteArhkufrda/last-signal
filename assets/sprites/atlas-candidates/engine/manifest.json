@@ -1,0 +1,770 @@
+{
+ "picks": [
+  {
+   "id": 1,
+   "fa": "کریستال سوپرمتر",
+   "file": "5769_fusion_reactor_core.png",
+   "subject": "fusion reactor core",
+   "caption": "overloaded gold fusion reactor core",
+   "split": "train",
+   "row_id": 5769,
+   "shard": "train-000.parquet",
+   "term": "subject:fusion reactor core",
+   "size": [
+    16,
+    16
+   ],
+   "dmm": "/obj/machinery/power/supermatter_crystal/engine (x1)"
+  },
+  {
+   "id": 2,
+   "fa": "ژنراتور میدان",
+   "file": "195_force_field_generator.png",
+   "subject": "force field generator",
+   "caption": "force field generator",
+   "split": "train",
+   "row_id": 195,
+   "shard": "train-000.parquet",
+   "term": "subject:force field generator",
+   "size": [
+    16,
+    16
+   ],
+   "dmm": "/obj/machinery/field/generator (x5)"
+  },
+  {
+   "id": 3,
+   "fa": "ژنراتور گرانش",
+   "file": "4413_electric_motor.png",
+   "subject": "electric motor",
+   "caption": "sparking white electric motor",
+   "split": "train",
+   "row_id": 4413,
+   "shard": "train-000.parquet",
+   "term": "subject:electric motor",
+   "size": [
+    16,
+    16
+   ],
+   "dmm": "/obj/machinery/gravity_generator/main (x1)"
+  },
+  {
+   "id": 4,
+   "fa": "ژنراتور قابل‌حمل",
+   "file": "8948_electric_generator.png",
+   "subject": "electric generator",
+   "caption": "heavy-duty orange electric generator",
+   "split": "train",
+   "row_id": 8948,
+   "shard": "train-000.parquet",
+   "term": "subject:electric generator",
+   "size": [
+    16,
+    16
+   ],
+   "dmm": "/obj/machinery/power/port_gen/pacman (x1)"
+  },
+  {
+   "id": 5,
+   "fa": "ذخیره‌ساز انرژی (SMES)",
+   "file": "4950_battery_pack.png",
+   "subject": "battery pack",
+   "caption": "brand new battery pack with a yellow stripe",
+   "split": "train",
+   "row_id": 4950,
+   "shard": "train-000.parquet",
+   "term": "subject:battery pack",
+   "size": [
+    16,
+    16
+   ],
+   "dmm": "/obj/machinery/power/smes/engineering (x3)"
+  },
+  {
+   "id": 6,
+   "fa": "تسلا کویل",
+   "file": "434835_tesla_coil.png",
+   "subject": "tesla coil",
+   "caption": "squat tesla coil with a wound column in earthy colors",
+   "split": "train",
+   "row_id": 434835,
+   "shard": "train-04.parquet",
+   "term": "subject:tesla coil",
+   "size": [
+    16,
+    16
+   ],
+   "dmm": "/obj/machinery/power/energy_accumulator/tesla_coil/anchored (x4)"
+  },
+  {
+   "id": 7,
+   "fa": "امیتر",
+   "file": "249_laser_emitter.png",
+   "subject": "laser emitter",
+   "caption": "gold laser emitter",
+   "split": "train",
+   "row_id": 249,
+   "shard": "train-000.parquet",
+   "term": "subject:laser emitter",
+   "size": [
+    16,
+    16
+   ],
+   "dmm": "/obj/machinery/power/emitter (x4)"
+  },
+  {
+   "id": 9,
+   "fa": "جعبه فیوز",
+   "file": "437029_fuse_box.png",
+   "subject": "fuse box",
+   "caption": "wall-mounted black fuse box",
+   "split": "train",
+   "row_id": 437029,
+   "shard": "train-04.parquet",
+   "term": "subject:fuse box",
+   "size": [
+    16,
+    16
+   ],
+   "dmm": "/obj/machinery/power/apc/auto_name (x6+)"
+  },
+  {
+   "id": 10,
+   "fa": "کنسول کنترل اتمسفر",
+   "file": "436321_control_panel.png",
+   "subject": "control panel",
+   "caption": "boxy control panel with scuffed paint",
+   "split": "train",
+   "row_id": 436321,
+   "shard": "train-04.parquet",
+   "term": "subject:control panel",
+   "size": [
+    16,
+    16
+   ],
+   "dmm": "/obj/machinery/computer/atmos_control (x7)"
+  },
+  {
+   "id": 11,
+   "fa": "مانیتور هشدار",
+   "file": "1903_computer_monitor.png",
+   "subject": "computer monitor",
+   "caption": "computer monitor with a black screen",
+   "split": "validation",
+   "row_id": 1903,
+   "shard": "validation-000.parquet",
+   "term": "subject:computer monitor",
+   "size": [
+    16,
+    16
+   ],
+   "dmm": "/obj/machinery/computer/atmos_alert (x2)"
+  },
+  {
+   "id": 12,
+   "fa": "باتری صنعتی",
+   "file": "1116_battery.png",
+   "subject": "battery",
+   "caption": "scratched red battery with tiny sparks",
+   "split": "train",
+   "row_id": 1116,
+   "shard": "train-000.parquet",
+   "term": "subject:battery",
+   "size": [
+    16,
+    16
+   ],
+   "dmm": "/obj/item/stock_parts/power_store/cell/high (x5)"
+  },
+  {
+   "id": 13,
+   "fa": "خازن",
+   "file": "3678_capacitor.png",
+   "subject": "capacitor",
+   "caption": "capacitor",
+   "split": "train",
+   "row_id": 3678,
+   "shard": "train-000.parquet",
+   "term": "subject:capacitor",
+   "size": [
+    16,
+    16
+   ],
+   "dmm": "/obj/item/stock_parts/capacitor (x1)"
+  },
+  {
+   "id": 15,
+   "fa": "لوله",
+   "file": "13794_pipe.png",
+   "subject": "pipe",
+   "caption": "dusty bronze pipe",
+   "split": "train",
+   "row_id": 13794,
+   "shard": "train-000.parquet",
+   "term": "subject:pipe",
+   "size": [
+    16,
+    16
+   ],
+   "dmm": "/obj/machinery/atmospherics/pipe/smart/* (x300+)"
+  },
+  {
+   "id": 16,
+   "fa": "شیر صنعتی",
+   "file": "1701_pipe_valve.png",
+   "subject": "pipe valve",
+   "caption": "wet brass pipe valve",
+   "split": "train",
+   "row_id": 1701,
+   "shard": "train-000.parquet",
+   "term": "subject:pipe valve",
+   "size": [
+    16,
+    16
+   ],
+   "dmm": "/obj/machinery/atmospherics/components/binary/valve (x3)"
+  },
+  {
+   "id": 17,
+   "fa": "درب آتش",
+   "file": "37699_sliding_door.png",
+   "subject": "sliding door",
+   "caption": "iron sliding door",
+   "split": "train",
+   "row_id": 37699,
+   "shard": "train-000.parquet",
+   "term": "subject:sliding door",
+   "size": [
+    16,
+    16
+   ],
+   "dmm": "/obj/machinery/door/firedoor (x23)"
+  },
+  {
+   "id": 18,
+   "fa": "پمپ اتمسفریک",
+   "file": "5736_water_pump.png",
+   "subject": "water pump",
+   "caption": "giant water pump",
+   "split": "train",
+   "row_id": 5736,
+   "shard": "train-000.parquet",
+   "term": "subject:water pump",
+   "size": [
+    16,
+    16
+   ],
+   "dmm": "/obj/machinery/atmospherics/components/binary/pump (x33)"
+  },
+  {
+   "id": 19,
+   "fa": "دریچه تهویه",
+   "file": "36568_steam_vent.png",
+   "subject": "steam vent",
+   "caption": "dark gray steam vent",
+   "split": "train",
+   "row_id": 36568,
+   "shard": "train-000.parquet",
+   "term": "subject:steam vent",
+   "size": [
+    16,
+    16
+   ],
+   "dmm": "/obj/machinery/atmospherics/components/unary/vent_pump (x20+)"
+  },
+  {
+   "id": 20,
+   "fa": "اسکرابر هوا",
+   "file": "616_air_conditioner.png",
+   "subject": "air conditioner",
+   "caption": "black air conditioner with a green light",
+   "split": "train",
+   "row_id": 616,
+   "shard": "train-000.parquet",
+   "term": "subject:air conditioner",
+   "size": [
+    16,
+    16
+   ],
+   "dmm": "/obj/machinery/atmospherics/components/unary/vent_scrubber (x20+)"
+  },
+  {
+   "id": 21,
+   "fa": "فیلتر گاز",
+   "file": "452752_water_filter.png",
+   "subject": "water filter",
+   "caption": "pump water filter with a cartridge in bright colors",
+   "split": "train",
+   "row_id": 452752,
+   "shard": "train-04.parquet",
+   "term": "subject:water filter",
+   "size": [
+    16,
+    16
+   ],
+   "dmm": "/obj/machinery/atmospherics/components/trinary/filter (x7+)"
+  },
+  {
+   "id": 23,
+   "fa": "هیتر فضایی",
+   "file": "436997_space_heater.png",
+   "subject": "space heater",
+   "caption": "side-view round space heater",
+   "split": "train",
+   "row_id": 436997,
+   "shard": "train-04.parquet",
+   "term": "subject:space heater",
+   "size": [
+    16,
+    16
+   ],
+   "dmm": "/obj/machinery/space_heater (x1) + thermomachine/heater"
+  },
+  {
+   "id": 24,
+   "fa": "گیج فشار",
+   "file": "1598_pressure_gauge.png",
+   "subject": "pressure gauge",
+   "caption": "heavy copper pressure gauge",
+   "split": "train",
+   "row_id": 1598,
+   "shard": "train-000.parquet",
+   "term": "subject:pressure gauge",
+   "size": [
+    16,
+    16
+   ],
+   "dmm": "/obj/machinery/meter (x30)"
+  },
+  {
+   "id": 25,
+   "fa": "قفسه",
+   "file": "437950_server_rack.png",
+   "subject": "server rack",
+   "caption": "half-full white server rack",
+   "split": "train",
+   "row_id": 437950,
+   "shard": "train-04.parquet",
+   "term": "subject:server rack",
+   "size": [
+    16,
+    16
+   ],
+   "dmm": "/obj/structure/rack (x21)"
+  },
+  {
+   "id": 26,
+   "fa": "تانک گاز قابل‌حمل",
+   "file": "441163_plasma_canister.png",
+   "subject": "plasma canister",
+   "caption": "side-view double plasma canister",
+   "split": "train",
+   "row_id": 441163,
+   "shard": "train-04.parquet",
+   "term": "subject:plasma canister",
+   "size": [
+    16,
+    16
+   ],
+   "dmm": "/obj/machinery/portable_atmospherics/canister (x6)"
+  },
+  {
+   "id": 27,
+   "fa": "تانک اکسیژن",
+   "file": "4374_oxygen_tank.png",
+   "subject": "oxygen tank",
+   "caption": "red oxygen tank with a sparkle",
+   "split": "train",
+   "row_id": 4374,
+   "shard": "train-000.parquet",
+   "term": "subject:oxygen tank",
+   "size": [
+    16,
+    16
+   ],
+   "dmm": "/obj/machinery/portable_atmospherics/canister/oxygen (x4)"
+  },
+  {
+   "id": 28,
+   "fa": "تانک سوخت",
+   "file": "335_propane_tank.png",
+   "subject": "propane tank",
+   "caption": "sturdy propane tank",
+   "split": "train",
+   "row_id": 335,
+   "shard": "train-000.parquet",
+   "term": "subject:propane tank",
+   "size": [
+    16,
+    16
+   ],
+   "dmm": "/obj/structure/reagent_dispensers/fueltank (x3)"
+  },
+  {
+   "id": 29,
+   "fa": "تانک آب",
+   "file": "1364_barrel.png",
+   "subject": "barrel",
+   "caption": "battered barrel with gold trim",
+   "split": "train",
+   "row_id": 1364,
+   "shard": "train-000.parquet",
+   "term": "subject:barrel",
+   "size": [
+    16,
+    16
+   ],
+   "dmm": "/obj/structure/reagent_dispensers/watertank (x2)"
+  },
+  {
+   "id": 30,
+   "fa": "رادیاتور",
+   "file": "437250_radiator.png",
+   "subject": "radiator",
+   "caption": "front-view tall radiator in high contrast",
+   "split": "train",
+   "row_id": 437250,
+   "shard": "train-04.parquet",
+   "term": "subject:radiator",
+   "size": [
+    16,
+    16
+   ],
+   "dmm": "/obj/machinery/atmospherics/pipe/heat_exchanging/junction (x2)"
+  },
+  {
+   "id": 31,
+   "fa": "کابل",
+   "file": "435749_usb_cable.png",
+   "subject": "usb cable",
+   "caption": "top-down usb cable with a plug on each end",
+   "split": "train",
+   "row_id": 435749,
+   "shard": "train-04.parquet",
+   "term": "subject:usb cable",
+   "size": [
+    16,
+    16
+   ],
+   "dmm": "/obj/structure/cable (x262)"
+  },
+  {
+   "id": 32,
+   "fa": "کویل کابل",
+   "file": "442226_wire_coil.png",
+   "subject": "wire coil",
+   "caption": "thick cobalt wire coil",
+   "split": "train",
+   "row_id": 442226,
+   "shard": "train-04.parquet",
+   "term": "subject:wire coil",
+   "size": [
+    16,
+    16
+   ],
+   "dmm": "/obj/item/stack/cable_coil (x7)"
+  },
+  {
+   "id": 33,
+   "fa": "آچار",
+   "file": "2912_pipe_wrench.png",
+   "subject": "pipe wrench",
+   "caption": "old pipe wrench with orange paint",
+   "split": "train",
+   "row_id": 2912,
+   "shard": "train-000.parquet",
+   "term": "subject:pipe wrench",
+   "size": [
+    16,
+    16
+   ],
+   "dmm": "/obj/item/wrench (x4)"
+  },
+  {
+   "id": 34,
+   "fa": "پیچ‌گوشتی",
+   "file": "576_screwdriver.png",
+   "subject": "screwdriver",
+   "caption": "worn screwdriver with a blue handle",
+   "split": "train",
+   "row_id": 576,
+   "shard": "train-000.parquet",
+   "term": "subject:screwdriver",
+   "size": [
+    16,
+    16
+   ],
+   "dmm": "/obj/item/screwdriver (x2)"
+  },
+  {
+   "id": 35,
+   "fa": "سیم‌چین",
+   "file": "1658_wire_cutters.png",
+   "subject": "wire cutters",
+   "caption": "old wire cutters",
+   "split": "train",
+   "row_id": 1658,
+   "shard": "train-000.parquet",
+   "term": "subject:wire cutters",
+   "size": [
+    16,
+    16
+   ],
+   "dmm": "/obj/item/wirecutters (x1)"
+  },
+  {
+   "id": 36,
+   "fa": "دستگاه جوش",
+   "file": "312_welding_torch.png",
+   "subject": "welding torch",
+   "caption": "welding torch",
+   "split": "train",
+   "row_id": 312,
+   "shard": "train-000.parquet",
+   "term": "subject:welding torch",
+   "size": [
+    16,
+    16
+   ],
+   "dmm": "/obj/item/weldingtool (x2)"
+  },
+  {
+   "id": 37,
+   "fa": "مولتی‌تول",
+   "file": "5665_multi_tool.png",
+   "subject": "multi-tool",
+   "caption": "rusty gray multi-tool with a yellow accent",
+   "split": "train",
+   "row_id": 5665,
+   "shard": "train-000.parquet",
+   "term": "subject:multi-tool",
+   "size": [
+    16,
+    16
+   ],
+   "dmm": "/obj/item/multitool (x6)"
+  },
+  {
+   "id": 38,
+   "fa": "کروبار",
+   "file": "8258_crowbar.png",
+   "subject": "crowbar",
+   "caption": "heavy-duty crowbar with green paint",
+   "split": "train",
+   "row_id": 8258,
+   "shard": "train-000.parquet",
+   "term": "subject:crowbar",
+   "size": [
+    16,
+    16
+   ],
+   "dmm": "/obj/item/crowbar (x3)"
+  },
+  {
+   "id": 39,
+   "fa": "اسکنر دستی",
+   "file": "439433_handheld_scanner.png",
+   "subject": "handheld scanner",
+   "caption": "three-quarter-view battered handheld scanner with a scanning window in bright colors",
+   "split": "train",
+   "row_id": 439433,
+   "shard": "train-04.parquet",
+   "term": "subject:handheld scanner",
+   "size": [
+    16,
+    16
+   ],
+   "dmm": "/obj/item/t_scanner (x4)"
+  },
+  {
+   "id": 40,
+   "fa": "شمارنده گایگر",
+   "file": "3785_geiger_counter.png",
+   "subject": "geiger counter",
+   "caption": "dusty blue geiger counter",
+   "split": "train",
+   "row_id": 3785,
+   "shard": "train-000.parquet",
+   "term": "subject:geiger counter",
+   "size": [
+    16,
+    16
+   ],
+   "dmm": "/obj/item/geiger_counter (x2)"
+  },
+  {
+   "id": 41,
+   "fa": "ماسک جوشکاری",
+   "file": "2060_welding_mask.png",
+   "subject": "welding mask",
+   "caption": "welding mask",
+   "split": "train",
+   "row_id": 2060,
+   "shard": "train-000.parquet",
+   "term": "subject:welding mask",
+   "size": [
+    16,
+    16
+   ],
+   "dmm": "/obj/item/clothing/head/utility/welding (x4)"
+  },
+  {
+   "id": 42,
+   "fa": "ماسک گاز",
+   "file": "1413_gas_mask.png",
+   "subject": "gas mask",
+   "caption": "orange gas mask with a black stripe",
+   "split": "train",
+   "row_id": 1413,
+   "shard": "train-000.parquet",
+   "term": "subject:gas mask",
+   "size": [
+    16,
+    16
+   ],
+   "dmm": "/obj/item/clothing/mask/gas (x5)"
+  },
+  {
+   "id": 43,
+   "fa": "عینک ایمنی",
+   "file": "2867_safety_goggles.png",
+   "subject": "safety goggles",
+   "caption": "gray safety goggles with a yellow stripe",
+   "split": "train",
+   "row_id": 2867,
+   "shard": "train-000.parquet",
+   "term": "subject:safety goggles",
+   "size": [
+    16,
+    16
+   ],
+   "dmm": "/obj/item/clothing/glasses/meson (x8)"
+  },
+  {
+   "id": 44,
+   "fa": "جعبه‌ابزار",
+   "file": "718_toolbox.png",
+   "subject": "toolbox",
+   "caption": "walnut toolbox with metal rivets",
+   "split": "train",
+   "row_id": 718,
+   "shard": "train-000.parquet",
+   "term": "subject:toolbox",
+   "size": [
+    16,
+    16
+   ],
+   "dmm": "/obj/item/storage/toolbox/electrical+mechanical (x6)"
+  },
+  {
+   "id": 45,
+   "fa": "میز کار",
+   "file": "2115_workbench.png",
+   "subject": "workbench",
+   "caption": "oak workbench with iron fittings",
+   "split": "train",
+   "row_id": 2115,
+   "shard": "train-000.parquet",
+   "term": "subject:workbench",
+   "size": [
+    16,
+    16
+   ],
+   "dmm": "/obj/structure/table (x47) + circuit_workshop"
+  },
+  {
+   "id": 46,
+   "fa": "کپسول آتش‌نشانی",
+   "file": "204_fire_extinguisher.png",
+   "subject": "fire extinguisher",
+   "caption": "fire extinguisher",
+   "split": "train",
+   "row_id": 204,
+   "shard": "train-000.parquet",
+   "term": "subject:fire extinguisher",
+   "size": [
+    16,
+    16
+   ],
+   "dmm": "/obj/structure/extinguisher_cabinet (x6)"
+  },
+  {
+   "id": 47,
+   "fa": "زنگ هشدار آتش",
+   "file": "2132_fire_alarm_bell.png",
+   "subject": "fire alarm bell",
+   "caption": "fire alarm bell",
+   "split": "train",
+   "row_id": 2132,
+   "shard": "train-000.parquet",
+   "term": "subject:fire alarm bell",
+   "size": [
+    16,
+    16
+   ],
+   "dmm": "/obj/machinery/firealarm (x15+)"
+  },
+  {
+   "id": 48,
+   "fa": "دوربین امنیتی",
+   "file": "950_security_camera.png",
+   "subject": "security camera",
+   "caption": "scratched security camera",
+   "split": "train",
+   "row_id": 950,
+   "shard": "train-000.parquet",
+   "term": "subject:security camera",
+   "size": [
+    16,
+    16
+   ],
+   "dmm": "/obj/machinery/camera (x24+)"
+  },
+  {
+   "id": 49,
+   "fa": "درب هوایی",
+   "file": "10450_sliding_door.png",
+   "subject": "sliding door",
+   "caption": "reinforced wooden sliding door with a heavy chain",
+   "split": "train",
+   "row_id": 10450,
+   "shard": "train-000.parquet",
+   "term": "subject:sliding door",
+   "size": [
+    16,
+    16
+   ],
+   "dmm": "/obj/machinery/door/airlock/engineering (x13+)"
+  },
+  {
+   "id": 50,
+   "fa": "چراغ‌قوه",
+   "file": "922_flashlight.png",
+   "subject": "flashlight",
+   "caption": "giant flashlight with light rays",
+   "split": "train",
+   "row_id": 922,
+   "shard": "train-000.parquet",
+   "term": "subject:flashlight",
+   "size": [
+    16,
+    16
+   ],
+   "dmm": "/obj/item/flashlight (x6)"
+  }
+ ],
+ "missing": [
+  {
+   "id": 8,
+   "fa": "میله اتصال زمین"
+  },
+  {
+   "id": 14,
+   "fa": "شارژر باتری"
+  },
+  {
+   "id": 22,
+   "fa": "میکسر گاز"
+  }
+ ]
+}
