@@ -17,6 +17,13 @@ const MISSION_SCRIPT: Script = preload("res://scripts/levels/rooms/laboratory/mi
 var passed := 0
 var failed := 0
 
+## Catches counted by test_spawn_is_safe (signal handler target).
+var _spawn_caught := 0
+
+
+func _on_spawn_caught() -> void:
+	_spawn_caught += 1
+
 
 func _initialize() -> void:
 	await run_tests()
@@ -50,6 +57,8 @@ func run_tests() -> void:
 			"test_robot_pauses_while_reading",
 			"test_log_panel_closes_when_walking_away",
 			"test_chamber_glow_pulses",
+			"test_room_geometry_v2", "test_spawn_is_safe",
+			"test_robot_routes_clear",
 			"test_full_chain_live"]:
 		paused = false
 		var v = await call(t)
@@ -274,20 +283,20 @@ func test_hud_feedback_fits() -> bool:
 	var msg_label: Label = hud.get_node("MessageLabel") as Label
 	var font: Font = msg_label.get_theme_font("font")
 	# Wrong power flip.
-	await _press_e_near(player, Vector2(80, 360))
+	await _press_e_near(player, Vector2(272, 264))
 	assert_true(_hud_text_fits(msg_label, font), "hud-fit: wrong power flip toast fits")
 	# Analyzer while the power is off.
-	await _press_e_near(player, Vector2(496, 248))
+	await _press_e_near(player, Vector2(368, 152))
 	assert_true(_hud_text_fits(msg_label, font), "hud-fit: locked analyzer toast fits")
 	# Solve the power, then a wrong pattern.
-	await _press_e_near(player, Vector2(80, 312))
-	await _press_e_near(player, Vector2(80, 336))
-	await _press_e_near(player, Vector2(80, 360))
+	await _press_e_near(player, Vector2(272, 216))
+	await _press_e_near(player, Vector2(272, 240))
+	await _press_e_near(player, Vector2(272, 264))
 	assert_true(_hud_text_fits(msg_label, font), "hud-fit: power solved toast fits")
-	await _press_e_near(player, Vector2(496, 248))
+	await _press_e_near(player, Vector2(368, 152))
 	assert_true(_hud_text_fits(msg_label, font), "hud-fit: wrong pattern toast fits")
 	# Vault dial while locked.
-	await _press_e_near(player, Vector2(56, 492))
+	await _press_e_near(player, Vector2(376, 464))
 	assert_true(_hud_text_fits(msg_label, font), "hud-fit: locked vault toast fits")
 	play.queue_free()
 	await process_frame
@@ -577,10 +586,10 @@ func test_unlock_changes_light_state() -> bool:
 	return true
 
 
-## Teleport next to `pos` and press E exactly once. The lab robot
-## patrols near the vault, so if it catches the player mid-sequence
-## (respawn at the spawn point) the helper re-teleports before
-## pressing — the 2 s catch grace then covers the press.
+## Teleport next to `pos` and press E exactly once. If a robot
+## catches the player mid-sequence (respawn at the spawn point) the
+## helper re-teleports before pressing — the 2 s catch grace then
+## covers the press.
 func _press_e_near(player: CharacterBody2D, pos: Vector2) -> void:
 	player.global_position = pos
 	for i in 5:
@@ -610,17 +619,17 @@ func test_full_chain_live() -> bool:
 	assert_true(not analyzer.unlocked, "live: analyzer locked at start")
 	assert_true(not vault.unlocked, "live: vault locked at start")
 	# Puzzle 1: power, cooling → stabilizer → containment.
-	await _press_e_near(player, Vector2(80, 312))
-	await _press_e_near(player, Vector2(80, 336))
-	await _press_e_near(player, Vector2(80, 360))
+	await _press_e_near(player, Vector2(272, 216))
+	await _press_e_near(player, Vector2(272, 240))
+	await _press_e_near(player, Vector2(272, 264))
 	assert_true(panel.is_solved, "live: power panel solves")
 	assert_true(room.chamber_active, "live: chamber lights up after power")
 	assert_true(analyzer.unlocked, "live: power unlocks the analyzer")
 	assert_eq(mission.puzzles_solved, 1, "live: mission counts 1 puzzle")
 	# Puzzle 2: wrong pattern first, then C.
-	await _press_e_near(player, Vector2(496, 248))
+	await _press_e_near(player, Vector2(368, 152))
 	assert_true(not analyzer.is_solved, "live: pattern A does not solve")
-	await _press_e_near(player, Vector2(496, 296))
+	await _press_e_near(player, Vector2(368, 200))
 	assert_true(analyzer.is_solved, "live: pattern C solves")
 	assert_true(vault.unlocked, "live: signal unlocks the vault")
 	assert_eq(mission.puzzles_solved, 2, "live: mission counts 2 puzzles")
@@ -628,16 +637,16 @@ func test_full_chain_live() -> bool:
 	assert_true(wiring._log_overlay != null and wiring._log_overlay.visible, "live: scientist log panel shows")
 	assert_true(str(wiring._log_label.text).contains("دانشمند"), "live: scientist log text shown")
 	# Puzzle 3: dials to 1-3-7.
-	await _press_e_near(player, Vector2(56, 492))
+	await _press_e_near(player, Vector2(376, 464))
 	for i in 3:
-		await _press_e_near(player, Vector2(80, 492))
+		await _press_e_near(player, Vector2(400, 464))
 	for i in 7:
-		await _press_e_near(player, Vector2(104, 492))
+		await _press_e_near(player, Vector2(424, 464))
 	assert_true(vault.is_solved, "live: vault solves with 137")
 	assert_true(room.get_node_or_null("KeycardPickup") != null, "live: keycard spawns")
 	assert_eq(mission.current_stage(), 1, "live: mission reaches keycard stage")
 	# Take the keycard: mission completes and the ending starts.
-	await _press_e_near(player, Vector2(40, 432))
+	await _press_e_near(player, Vector2(360, 464))
 	assert_true(int(player.inventory.get("keycard", 0)) >= 1, "live: keycard in inventory")
 	assert_true(mission.is_complete, "live: mission completes on keycard")
 	assert_true(wiring.ending_phase >= 1, "live: ending starts")
@@ -649,6 +658,109 @@ func test_full_chain_live() -> bool:
 	wiring._apply_ending_phase(4)
 	assert_eq(wiring.ending_phase, 4, "live: ending reaches phase 4")
 	assert_true(not wiring.blackout_active, "live: blackout lifts at the end")
+	play.queue_free()
+	await process_frame
+	await process_frame
+	return true
+
+
+## Stage 4 (2026-11-28, 24x24 rebuild): the room is 768x768 on the
+## user's MAP, every device/console/robot sits on its prompt cell,
+## and the wall body is 27 merged rects x 3 children.
+func test_room_geometry_v2() -> bool:
+	var play: Node2D = load(PLAY_SCENE).instantiate()
+	root.add_child(play)
+	var room: Node2D = play.room
+	assert_eq(room.room_rect, Rect2(0, 0, 768, 768), "geo: room is 768x768")
+	assert_eq(room.room_tile_rect, Rect2i(0, 0, 48, 48), "geo: tile rect is 48x48")
+	assert_eq(room.spawn_point, Vector2(688, 688), "geo: spawn at the corridor bottom")
+	assert_eq(room.wall_rects().size(), 27, "geo: 27 merged wall rects")
+	var walls: Node = room.get_node_or_null("Walls_laboratory")
+	assert_true(walls != null, "geo: wall body exists")
+	if walls != null:
+		assert_eq(walls.get_child_count(), 81, "geo: 3 children per wall rect")
+	var exits: Array = room.exits()
+	assert_eq(exits.size(), 2, "geo: two exits")
+	assert_eq(exits[0]["rect"], Rect2(640, -16, 32, 16), "geo: north exit above the corridor")
+	assert_eq(exits[1]["rect"], Rect2(752, 352, 16, 32), "geo: east exit through the corridor wall")
+	var nodes := {
+		"PowerPanel": Vector2(240, 240), "SignalAnalyzer": Vector2(400, 176),
+		"ResearchVault": Vector2(400, 496), "SampleChamber": Vector2(368, 400),
+		"ResearchLogConsole": Vector2(240, 304), "WaveMonitor": Vector2(432, 208),
+		"Note01": Vector2(80, 400), "Note03": Vector2(112, 400), "Note07": Vector2(720, 336),
+		"LabRobot": Vector2(272, 352), "LabRobot2": Vector2(528, 304),
+	}
+	for n in nodes.keys():
+		var node: Node2D = room.get_node_or_null(n)
+		assert_true(node != null, "geo: %s exists" % n)
+		if node != null:
+			assert_eq(node.position, nodes[n], "geo: %s at the prompt cell" % n)
+	var robot: Node = room.get_node("LabRobot")
+	assert_eq(robot.get("detection_radius"), 60.0, "geo: robot vision radius is 60")
+	play.queue_free()
+	await process_frame
+	await process_frame
+	return true
+
+
+## Stage 4 (2026-11-28): the spawn must be safe — the old spawn sat
+## inside robot 1's sight and the player was caught ~1.5 s in. Ten
+## seconds idle at the new spawn: no robot may spot the player
+## (state leaves PATROL) or catch them.
+func test_spawn_is_safe() -> bool:
+	var play: Node2D = load(PLAY_SCENE).instantiate()
+	root.add_child(play)
+	var player: CharacterBody2D = play.player
+	assert_eq(player.global_position, Vector2(688, 688), "spawn: player starts at the corridor bottom")
+	var robots: Array = play.get_tree().get_nodes_in_group("enemies")
+	assert_eq(robots.size(), 2, "spawn: two patrol robots")
+	_spawn_caught = 0
+	for r in robots:
+		(r as Node).player_caught.connect(_on_spawn_caught)
+	var spotted := false
+	for i in 600:
+		await physics_frame
+		for r in robots:
+			if int((r as Node).get("state")) != 0:
+				spotted = true
+	assert_true(not spotted, "spawn: no robot spots the idle player in 10 s")
+	assert_eq(_spawn_caught, 0, "spawn: no catch in 10 s at spawn")
+	play.queue_free()
+	await process_frame
+	await process_frame
+	return true
+
+
+## Stage 4 (2026-11-28): both patrol routes must run clear of every
+## wall and every device body — a route through a wall or a device
+## leaves the robot stuck sliding on it.
+func test_robot_routes_clear() -> bool:
+	var play: Node2D = load(PLAY_SCENE).instantiate()
+	root.add_child(play)
+	var room: Node2D = play.room
+	var routes: Array = room.patrol_routes_local()
+	assert_eq(routes.size(), 2, "routes: two patrol routes")
+	var solids: Array[Rect2] = room.blocked_rects()
+	solids.append(Rect2(232, 204, 16, 72))  # PowerPanel body
+	solids.append(Rect2(392, 140, 16, 72))  # SignalAnalyzer body
+	solids.append(Rect2(364, 488, 72, 16))  # ResearchVault body
+	solids.append(Rect2(334, 374, 68, 52))  # SampleChamber body
+	for ri in routes.size():
+		var route: Array = routes[ri]
+		for i in range(route.size() - 1):
+			var a: Vector2 = route[i]
+			var b: Vector2 = route[i + 1]
+			var steps: int = int(a.distance_to(b) / 8.0) + 1
+			var blocked := false
+			for s in range(steps + 1):
+				var p: Vector2 = a.lerp(b, float(s) / float(steps))
+				for r in solids:
+					if r.has_point(p):
+						blocked = true
+						break
+				if blocked:
+					break
+			assert_true(not blocked, "routes: route %d leg %d is clear" % [ri + 1, i + 1])
 	play.queue_free()
 	await process_frame
 	await process_frame

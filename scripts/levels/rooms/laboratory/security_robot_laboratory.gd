@@ -32,7 +32,11 @@ signal player_caught
 @export var patrol_speed: float = 70.0
 @export var investigate_speed: float = 110.0
 @export var chase_speed: float = 140.0
-@export var detection_radius: float = 100.0
+## Vision radius 60 (2026-11-28, the user's decision): at 100 the
+## spawn sat inside robot 1's sight and the player was caught ~1.5 s
+## after spawning. 60 keeps every puzzle device reachable while the
+## corridor spawn stays out of sight.
+@export var detection_radius: float = 60.0
 @export var vision_half_angle: float = 0.7
 @export var lose_radius: float = 150.0
 @export var lose_delay: float = 1.5

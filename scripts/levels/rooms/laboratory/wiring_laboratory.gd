@@ -20,7 +20,7 @@ const STAGE_HINTS := {
 	2: "Keycard را داری — به Core Chamber برو",
 }
 const AREA_HINT := "آزمایشگاه ORION — نمونه‌ی ناشناخته؛ اول گزارش تحقیقاتی را بخوان"
-const _DEFAULT_PATROL: Array[Vector2] = [Vector2(144, 304), Vector2(496, 304)]
+const _DEFAULT_PATROL: Array[Vector2] = [Vector2(272, 352), Vector2(496, 352)]
 
 ## The scientist's recovered audio log (puzzle 2), shown as text —
 ## no audio file is needed.
@@ -67,7 +67,7 @@ var _log_read_position: Vector2 = Vector2.ZERO
 ## Where a caught player respawns. The full game uses the entrance
 ## (LevelData.SPAWN); a standalone room passes its own spawn point
 ## (2026-11-19: the entrance is outside every other room but Central).
-var _respawn_point: Vector2 = Vector2(208, 336)
+var _respawn_point: Vector2 = Vector2(688, 688)
 
 
 ## Wire `root` (the level, or a standalone room's root). The room

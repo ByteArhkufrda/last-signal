@@ -7,9 +7,9 @@
 script = ExtResource("1_room")
 
 [node name="LabRobot" parent="." instance=ExtResource("2_enemy")]
-position = Vector2(144, 304)
+position = Vector2(272, 352)
 patrol_speed = 60.0
 
 [node name="LabRobot2" parent="." instance=ExtResource("2_enemy")]
-position = Vector2(464, 400)
+position = Vector2(528, 304)
 patrol_speed = 60.0
